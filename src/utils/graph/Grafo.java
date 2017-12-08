@@ -8,18 +8,10 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * OVERVIEW = Rappresenta un Grafo G = (V,E),dove V sono i vertici,E gli archi.
- * 
- * AF = (adj,isOriented),dove:
- *      1) adj = f: keys -> values ,dove keys = { x | x /in E } && values = { y| y /in Nodo<E>} tale che forall i. 0 < i < keys.size() -> f(keys.get(i)) = values.get(i) e' definito.
- *      2) isOriented /in boolean
- *      3) DEFAULT_WEIGHT /in const of int
- * 
- * IR = forall i,j. 0 < i != j < keys.size() -> keys.get(i).getKey() != keys.get(j).getKey && keys != null && values != null
- *      && keys.size() == values.size() && + IR(Nodo<E>) && +IR(Arco<E>)
+ * Rappresenta la struttura dati di un grafo,composto da vertici ed archi.
+ * @author Gionatha Sturba
  *
- * @author Gionatha Sturba.
- * @param <E> tipo generico delle chiave dei vertici.
+ * @param <E> parametro generico dei valori dei vertici
  */
 public final class Grafo<E>
 {
