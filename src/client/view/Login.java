@@ -9,7 +9,14 @@ import java.awt.Font;
 import javax.swing.JPasswordField;
 import javax.swing.JButton;
 import javax.swing.JTextField;
+
+import client.RequestSender;
+
 import java.awt.event.ActionListener;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.Socket;
 import java.awt.event.ActionEvent;
 
 public class Login {
@@ -55,7 +62,7 @@ public class Login {
 		btnLogin.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) 
 			{
-				//TODO inviare form al server
+				LoginRequest();
 			}
 		});
 		btnLogin.setBounds(312, 397, 117, 48);
@@ -71,6 +78,43 @@ public class Login {
 		lblBenvenutoInSocialgossip.setFont(new Font("DejaVu Serif", Font.BOLD, 26));
 		lblBenvenutoInSocialgossip.setBounds(224, 51, 409, 55);
 		frame.getContentPane().add(lblBenvenutoInSocialgossip);
+	}
+	
+	private void LoginRequest()
+	{
+		Thread thread = new Thread(new Runnable() {
+			public void run() {
+				RequestSender sender = new RequestSender();
+				Socket connection = null;
+				
+				try {
+					//invio la richiesta di login al server
+					connection = sender.sendLoginRequest();
+					
+					//attendo risposta server
+					//TODO creare classe responseAnalyzer
+					BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+					
+					JOptionPane.showMessageDialog(null,reader.readLine());
+					
+					
+				} catch (IOException e) {
+					JOptionPane.showMessageDialog(null,"Errore nella richiesta di login");
+					e.printStackTrace();
+				}
+				finally {
+					if(connection != null)
+						try {
+							connection.close();
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+				}
+			}
+		});
+		
+		thread.start();
 	}
 	
 	public void showWindow()
