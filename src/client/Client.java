@@ -1,20 +1,21 @@
 package client;
 
-import java.awt.EventQueue;
+import client.view.Login;
 
 public class Client 
 {
 	/**
-	 * Launch the application.
+	 * Avvio client
 	 */
 	public static void main(String[] args) 
 	{
 		try 
 		{
-			//avvio con schermata di Login
+			//avvio client con schermata di Login
 			Login login = new Login();
 			login.showWindow();
-		} catch (Exception e) 
+		} 
+		catch (Exception e) 
 		{
 			e.printStackTrace();
 		}

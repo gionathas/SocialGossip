@@ -1,22 +1,16 @@
-package client;
+package client.view;
 
-import java.awt.EventQueue;
 
 import javax.swing.JFrame;
-import java.awt.BorderLayout;
-import java.awt.FlowLayout;
-import com.jgoodies.forms.layout.FormLayout;
-import com.jgoodies.forms.layout.ColumnSpec;
-import com.jgoodies.forms.layout.RowSpec;
-import java.awt.GridLayout;
-import javax.swing.GroupLayout;
-import javax.swing.GroupLayout.Alignment;
-import javax.swing.BoxLayout;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+
 import java.awt.Font;
 import javax.swing.JPasswordField;
 import javax.swing.JButton;
 import javax.swing.JTextField;
+import java.awt.event.ActionListener;
+import java.awt.event.ActionEvent;
 
 public class Login {
 
@@ -28,18 +22,13 @@ public class Login {
 	 * Create the application.
 	 */
 	public Login() {
-		initialize();
+		initializeWindowContent();
 	}
 	
-	public void showWindow()
-	{
-		frame.setVisible(true);
-	}
-
 	/**
-	 * Initialize the contents of the frame.
+	 * Inizializza il contenuto della finestra
 	 */
-	private void initialize() {
+	private void initializeWindowContent() {
 		frame = new JFrame();
 		frame.setBounds(100, 100, 800, 600);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -61,6 +50,14 @@ public class Login {
 		frame.getContentPane().add(passwordField);
 		
 		JButton btnLogin = new JButton("Login");
+		
+		//al click su login
+		btnLogin.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) 
+			{
+				//TODO inviare form al server
+			}
+		});
 		btnLogin.setBounds(312, 397, 117, 48);
 		frame.getContentPane().add(btnLogin);
 		
@@ -75,4 +72,16 @@ public class Login {
 		lblBenvenutoInSocialgossip.setBounds(224, 51, 409, 55);
 		frame.getContentPane().add(lblBenvenutoInSocialgossip);
 	}
+	
+	public void showWindow()
+	{
+		frame.setVisible(true);
+	}
+	
+	private void closeWindow()
+	{
+		frame.setVisible(false);
+		frame.dispose();
+	}
+
 }

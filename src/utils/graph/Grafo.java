@@ -75,18 +75,6 @@ public final class Grafo<E>
         }
     }
     
-//    /**
-//     * 
-//     */
-//    public void resetGraph()
-//    {
-//        for(Nodo<E> i : adj.values())
-//        {
-//            i.setParent(null);
-//            i.setVisited(false);
-//            i.setMinDistance(Double.POSITIVE_INFINITY);
-//        }
-//    }
     
     /**
      * Aggiunge un vertice al grafo
@@ -110,6 +98,7 @@ public final class Grafo<E>
      * @param dest vertice destinazione
      * @param w peso dell'arco
      * @return true se l'arco e' stato aggiunto,false altrimenti
+     * @throws NoVertexFound se almeno uno o entrambi i vertici non fanno parte del grafo
      */
     public boolean addArco(E src,E dest,double w)
     {
