@@ -10,13 +10,19 @@ import javax.swing.JPasswordField;
 import javax.swing.JButton;
 import javax.swing.JTextField;
 
-import client.RequestSender;
+import utils.IOStream;
 
 import java.awt.event.ActionListener;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.net.ConnectException;
 import java.net.Socket;
+import java.net.UnknownHostException;
 import java.awt.event.ActionEvent;
 
 public class Login {
@@ -57,14 +63,6 @@ public class Login {
 		frame.getContentPane().add(passwordField);
 		
 		JButton btnLogin = new JButton("Login");
-		
-		//al click su login
-		btnLogin.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) 
-			{
-				LoginRequest();
-			}
-		});
 		btnLogin.setBounds(312, 397, 117, 48);
 		frame.getContentPane().add(btnLogin);
 		
@@ -78,30 +76,68 @@ public class Login {
 		lblBenvenutoInSocialgossip.setFont(new Font("DejaVu Serif", Font.BOLD, 26));
 		lblBenvenutoInSocialgossip.setBounds(224, 51, 409, 55);
 		frame.getContentPane().add(lblBenvenutoInSocialgossip);
+		
+		/* EVENT LISTENER */
+		//al click su login
+		btnLogin.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) 
+			{
+				LoginRequest();
+			}
+		});
 	}
 	
+	/**
+	 * Effettua la richiesta di Login al server
+	 */
 	private void LoginRequest()
 	{
+		/* Un thread si occupera' di gestire la comunicazione con il server */
 		Thread thread = new Thread(new Runnable() {
-			public void run() {
-				RequestSender sender = new RequestSender();
+			public void run() 
+			{
 				Socket connection = null;
 				
-				try {
+				try 
+				{
+					//apro connessione con server e creo stream per lettura scrittura
+					connection = new Socket("localhost",5000);
+					DataInputStream in = new DataInputStream(connection.getInputStream());
+					DataOutputStream out = new DataOutputStream(connection.getOutputStream());
+					
+					//TODO implementare classe creatore messaggi richieste
+
 					//invio la richiesta di login al server
-					connection = sender.sendLoginRequest();
+					out.writeUTF("login request\nciao");
 					
 					//attendo risposta server
-					//TODO creare classe responseAnalyzer
-					BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+					String response = in.readUTF();
 					
-					JOptionPane.showMessageDialog(null,reader.readLine());
+					//mostro risposta server
+					JOptionPane.showMessageDialog(null,response);
 					
+					in.close();
+					out.close();
 					
-				} catch (IOException e) {
+				}
+				catch(ConnectException e)
+				{
+					JOptionPane.showMessageDialog(null,"Servizio offline");
+					e.printStackTrace();
+
+				}
+				catch(UnknownHostException e)
+				{
+					JOptionPane.showMessageDialog(null,"Server non trovato");
+					e.printStackTrace();
+
+				}
+				catch (IOException e) 
+				{
 					JOptionPane.showMessageDialog(null,"Errore nella richiesta di login");
 					e.printStackTrace();
 				}
+				
 				finally {
 					if(connection != null)
 						try {
@@ -114,6 +150,7 @@ public class Login {
 			}
 		});
 		
+		//avvio thread comunicazione
 		thread.start();
 	}
 	

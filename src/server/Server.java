@@ -1,11 +1,12 @@
 package server;
 
-import java.io.BufferedReader;
+import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
+
 import java.net.ServerSocket;
 import java.net.Socket;
+
 
 public class Server 
 {
@@ -17,19 +18,17 @@ public class Server
 			while(true)
 			{
 				Socket clientSocket = servSocket.accept();
-				BufferedReader fromClient = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-				DataOutputStream toClient = new DataOutputStream(clientSocket.getOutputStream());
+				DataInputStream in = new DataInputStream(clientSocket.getInputStream());
+				DataOutputStream out = new DataOutputStream(clientSocket.getOutputStream());
 				
-				String data;
-				//leggo contenuto del client
-				while(fromClient.ready() && (data = fromClient.readLine()) != null)
-				{
-					System.out.println("Received: "+data);
-				}
+				String request = in.readUTF();
+				System.out.println("received: "+request);
 				
 				//rispondo al client
-				toClient.writeUTF("Login Request received\n");
+				out.writeUTF("login request received\ntest");
 				
+				in.close();
+				out.close();
 				clientSocket.close();
 				
 			}
