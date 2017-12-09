@@ -1,7 +1,5 @@
 package utils.test;
 
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
 import utils.messages.Message;
@@ -17,7 +15,8 @@ public class testMessage
 {
 	public static void main(String[] args) throws ParseException 
 	{
-		RequestAccessMessage msg = new RequestAccessMessage("gio","ciao");
+		char[] pass = {'c','i','a','o'};
+		RequestAccessMessage msg = new RequestAccessMessage("gio",pass);
 		System.out.println(msg.getJsonMessage());
 		Message msg2 = new Message(Message.Type.REQUEST);
 		//System.out.println(msg2.getJsonMessage());

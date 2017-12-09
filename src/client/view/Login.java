@@ -10,6 +10,7 @@ import javax.swing.JPasswordField;
 import javax.swing.JButton;
 import javax.swing.JTextField;
 
+import utils.messages.RequestAccessMessage;
 
 import java.awt.event.ActionListener;
 import java.io.DataInputStream;
@@ -24,7 +25,7 @@ public class Login {
 
 	private JFrame frame;
 	private JPasswordField passwordField;
-	private JTextField textField;
+	private JTextField usernameField;
 
 	/**
 	 * Create the application.
@@ -61,11 +62,11 @@ public class Login {
 		btnLogin.setBounds(312, 397, 117, 48);
 		frame.getContentPane().add(btnLogin);
 		
-		textField = new JTextField();
-		textField.setFont(new Font("Dialog", Font.PLAIN, 18));
-		textField.setBounds(284, 183, 310, 48);
-		frame.getContentPane().add(textField);
-		textField.setColumns(10);
+		usernameField = new JTextField();
+		usernameField.setFont(new Font("Dialog", Font.PLAIN, 18));
+		usernameField.setBounds(284, 183, 310, 48);
+		frame.getContentPane().add(usernameField);
+		usernameField.setColumns(10);
 		
 		JLabel lblBenvenutoInSocialgossip = new JLabel("Benvenuto in SocialGossip");
 		lblBenvenutoInSocialgossip.setFont(new Font("DejaVu Serif", Font.BOLD, 26));
@@ -88,66 +89,93 @@ public class Login {
 	 */
 	private void sendLoginRequest()
 	{
+		
+		//TODO implementare operazione in corso,per non mandare piu richieste contemporaneamente
+		
+		//TODO inserire numero caratteri minimo nell'interfaccia
+		
 		/* Un thread si occupera' di gestire la comunicazione con il server */
 		Thread thread = new Thread(new Runnable() {
 			public void run() 
 			{
-				Socket connection = null;
-				
-				try 
+				//prima di inviare la richiesta controllo i dati inseriti
+				if(checkInput(usernameField.getText(),passwordField.getPassword()))
 				{
-					//apro connessione con server e creo stream per lettura scrittura
-					connection = new Socket("localhost",5000);
-					DataInputStream in = new DataInputStream(connection.getInputStream());
-					DataOutputStream out = new DataOutputStream(connection.getOutputStream());
+					Socket connection = null;
 					
-					//TODO implementare classe creatore messaggi richieste
+					try 
+					{
+						//apro connessione con server e creo stream per lettura scrittura
+						connection = new Socket("localhost",5000);
+						DataInputStream in = new DataInputStream(connection.getInputStream());
+						DataOutputStream out = new DataOutputStream(connection.getOutputStream());
+												
+						//creo il messaggio di richiesta di login
+						RequestAccessMessage request = new RequestAccessMessage(usernameField.getText(),passwordField.getPassword());
 
-					//invio la richiesta di login al server
-					out.writeUTF("login request\nciao");
-					
-					//attendo risposta server
-					String response = in.readUTF();
-					
-					//mostro risposta server
-					JOptionPane.showMessageDialog(null,response);
-					
-					in.close();
-					out.close();
-					
-				}
-				catch(ConnectException e)
-				{
-					JOptionPane.showMessageDialog(null,"Servizio offline");
-					e.printStackTrace();
+						//invio la richiesta di login al server
+						out.writeUTF(request.getJsonMessage());
+						
+						//attendo risposta server
+						String response = in.readUTF();
+						
+						//mostro risposta server
+						JOptionPane.showMessageDialog(null,response);
+						
+						in.close();
+						out.close();
+						
+					}
+					catch(ConnectException e)
+					{
+						JOptionPane.showMessageDialog(null,"Servizio offline");
+						e.printStackTrace();
 
-				}
-				catch(UnknownHostException e)
-				{
-					JOptionPane.showMessageDialog(null,"Server non trovato");
-					e.printStackTrace();
+					}
+					catch(UnknownHostException e)
+					{
+						JOptionPane.showMessageDialog(null,"Server non trovato");
+						e.printStackTrace();
 
-				}
-				catch (IOException e) 
-				{
-					JOptionPane.showMessageDialog(null,"Errore nella richiesta di login");
-					e.printStackTrace();
-				}
-				
-				finally {
-					if(connection != null)
-						try {
-							connection.close();
-						} catch (IOException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						}
+					}
+					catch (IOException e) 
+					{
+						JOptionPane.showMessageDialog(null,"Errore nella richiesta di login");
+						e.printStackTrace();
+					}
+					
+					finally {
+						if(connection != null)
+							try {
+								connection.close();
+							} catch (IOException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+					}
 				}
 			}
+				
 		});
 		
 		//avvio thread comunicazione
 		thread.start();
+	}
+	
+	private boolean checkInput(String nick,char[] password)
+	{
+		final int MIN_PASS_CHAR = 5;
+		final int MIN_USER_CHAR = 3;
+		
+		if(nick == null || password == null || nick.isEmpty() || nick.length() < MIN_USER_CHAR || password.length < MIN_PASS_CHAR ||
+				nick.contains(" "))
+		{
+			JOptionPane.showMessageDialog(null,"Username o password non validi");
+			return false;
+		}
+		else {
+			return true;
+		}
 	}
 	
 	public void showWindow()

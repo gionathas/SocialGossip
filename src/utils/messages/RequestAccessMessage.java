@@ -5,10 +5,10 @@ public class RequestAccessMessage extends RequestMessage
 {
 	public static final String FIELD_REQUEST_ACCESS_PASSWORD = "password";
 	
-	private String password;
+	private char[] password;
 	protected String requestAccessType;
 	
-	public RequestAccessMessage(String nickname,String password) 
+	public RequestAccessMessage(String nickname,char[] password) 
 	{
 		//creo stato interno
 		super(RequestMessage.Type.ACCESS,nickname);
@@ -17,7 +17,7 @@ public class RequestAccessMessage extends RequestMessage
 		jsonMessage.put(this.FIELD_REQUEST_ACCESS_PASSWORD,password);
 	}
 	
-	public String getPassword() {
+	public char[] getPassword() {
 		return this.password;
 	}
 }
