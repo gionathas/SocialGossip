@@ -1,4 +1,4 @@
-package utils.messages;
+package communication.messages;
 
 import org.json.simple.JSONObject;
 

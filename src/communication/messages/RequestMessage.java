@@ -1,4 +1,4 @@
-package utils.messages;
+package communication.messages;
 
 /**
  * Rappresenta un generico messaggio di richiesta tra client e server.

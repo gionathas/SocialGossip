@@ -2,7 +2,7 @@ package client;
 
 import client.view.Login;
 
-public class Client 
+public class SocialGossipClient 
 {
 	/**
 	 * Avvio client
@@ -11,6 +11,8 @@ public class Client
 	{
 		try 
 		{
+			//TODO parse config file
+			
 			//avvio client con schermata di Login
 			Login login = new Login();
 			login.showWindow();

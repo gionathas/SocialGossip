@@ -1,10 +1,10 @@
-package utils.test;
+package communication.test;
 
 import org.json.simple.parser.ParseException;
 
-import utils.messages.Message;
-import utils.messages.RequestAccessMessage;
-import utils.messages.RequestMessage;
+import communication.messages.LoginRequest;
+import communication.messages.Message;
+import communication.messages.RequestMessage;
 
 /**
  * test funzionamento struttura messaggi
@@ -16,7 +16,7 @@ public class testMessage
 	public static void main(String[] args) throws ParseException 
 	{
 		char[] pass = {'c','i','a','o'};
-		RequestAccessMessage msg = new RequestAccessMessage("gio",pass);
+		LoginRequest msg = new LoginRequest("gio",pass);
 		System.out.println(msg.getJsonMessage());
 		Message msg2 = new Message(Message.Type.REQUEST);
 		//System.out.println(msg2.getJsonMessage());
