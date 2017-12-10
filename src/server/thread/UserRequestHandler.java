@@ -1,6 +1,5 @@
-package thread;
+package server.thread;
 
-import java.awt.TrayIcon.MessageType;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -13,8 +12,11 @@ import communication.MessageAnalyzer;
 import communication.messages.Message;
 import communication.messages.RequestAccessMessage;
 import communication.messages.RequestMessage;
-import server.model.Utente;
-import utils.graph.Grafo;
+import server.model.SocialGossipNetwork;
+import server.model.exception.PasswordMismatchingException;
+import server.model.exception.UserNotFindException;
+import server.model.exception.UserStatusException;
+import server.model.User;
 
 /**
  * Thread del server che si occupa di gestire una nuova richiesta da parte di un client
@@ -24,18 +26,18 @@ import utils.graph.Grafo;
 public class UserRequestHandler implements Runnable
 {
 	private Socket client;
-	private Grafo<Utente> reteSG; //rete social Gossip
+	private SocialGossipNetwork reteSG; //rete social Gossip
 
 	
-	public UserRequestHandler(Socket client,Grafo<Utente> rete)
+	public UserRequestHandler(Socket client,SocialGossipNetwork reteSG)
 	{
 		super();
 
-		if(client == null || rete == null)
+		if(client == null || reteSG == null)
 			throw new NullPointerException();
 		
 		this.client = client;
-		this.reteSG = rete;
+		this.reteSG = reteSG;
 		
 	}
 	
@@ -58,7 +60,7 @@ public class UserRequestHandler implements Runnable
 			analyzeRequestMessage(request,out);
 			
 			//rispondo al client
-			out.writeUTF("login request received\ntest");
+			out.writeUTF("request received");
 			
 		} 
 		catch (IOException e) 
@@ -95,6 +97,7 @@ public class UserRequestHandler implements Runnable
 			if(MessageAnalyzer.getMessageType(message) != Message.Type.REQUEST)
 			{
 				//TODO inviare messaggio di errore messaggio invalido
+				return;
 			}
 			
 			//essendo un messaggio di richiesta,posso prendere il nickname dell'utente
@@ -104,6 +107,7 @@ public class UserRequestHandler implements Runnable
 			if(nickname == null)
 			{
 				//TODO messaggio di errore
+				return;
 			}
 			
 			//controlliamo di che tipo di messaggio di richiesta si tratta
@@ -114,23 +118,77 @@ public class UserRequestHandler implements Runnable
 			{
 				//richiesta di accesso al sistema
 				case ACCESS:
-					//controllo tipo della richiesta di accesso
+					//essendo una richiesta di accesso,prendo la password
+					char password[] = MessageAnalyzer.getPassword(message);
+					
+					//caso password non trovata
+					if(password == null)
+					{
+						//TODO messaggio di errore
+						return;
+					}
+					
+					//leggo tipo richiesta di accesso
 					RequestAccessMessage.Type requestAccessType = MessageAnalyzer.getRequestAccessMessageType(message);
 					
-					//TODO 
+					//controllo i possibili casi di richiesta di accesso
+					switch (requestAccessType) 
+					{
+						case LOGIN:
+							User userToLog = new User(nickname,password);
+							
+						//avvio procedura di login
+						try 
+						{
+							reteSG.logInUtente(userToLog);
+							
+						} 
+						catch (PasswordMismatchingException e) 
+						{
+							//TODO inviare messaggio di errore password non corrispondenti
+							e.printStackTrace();
+							return;
+						} 
+						catch (UserStatusException e) 
+						{
+							// TODO inviare messaggio di errore utente gia online
+							e.printStackTrace();
+							return;
+						}
+							
+							break;
+						
+						case REGISTER:
+							
+							break;
+							
+						
+						default:
+							//TODO messaggio di errore
+							return;
+					}
+					
+					//TODO se l'operazione e' andata a buon fine mando un messaggio di OK
 					break;
 	
 				default:
-					//invio messaggio di errore
-					break;
+					//TODO invio messaggio di errore
+					return;
 			}
 			
 			
 		} 
-		catch (ParseException  | NullPointerException e1) 
+		catch (ParseException  | NullPointerException e) 
 		{
 			//TODO inviare una risposta di errore di messaggio non valido
-			e1.printStackTrace();
+			e.printStackTrace();
+			return;
 		}
+		catch (UserNotFindException e) 
+		{
+			// TODO inviare messaggio di errore utente richiesto non trovato
+			e.printStackTrace();
+			return;
+		} 
 	}
 }

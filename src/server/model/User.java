@@ -1,31 +1,30 @@
 package server.model;
 
 /**
- * Rappresenta un utente del Social Network
+ * Rappresenta un generico utente della rete di Social Gossip
  * @author Gionatha Sturba
  *
  */
-public class Utente 
+public class User 
 {
 	private String nickname;
 	private char[] password;
-	private boolean isOnline;
+	private boolean online; // se l'utente e' attualmente loggato,quindi online
 	
 	/**
 	 * Crea un nuovo utente offline
 	 * @param nickname
 	 * @param password
 	 */
-	public Utente(String nickname,char[] password)
+	public User(String nickname,char[] password)
 	{
 		if(nickname == null || password == null)
 		{
 			throw new IllegalArgumentException();
 		}
-		
 		this.nickname = nickname;
 		this.password = password;
-		isOnline = false;
+		this.online = false;
 	}
 	
 	/**
@@ -36,20 +35,16 @@ public class Utente
 		return nickname;
 	}
 	
-	/**
-	 * 
-	 * @return se questo utente e' attualmente online
-	 */
-	public boolean isOnline() {
-		return isOnline;
+	public char[] getPassword() {
+		return password;
 	}
 	
-	/**
-	 * 
-	 * @param isOnline per settare lo status di online di questo utente
-	 */
-	public void setOnline(boolean isOnline) {
-		this.isOnline = isOnline;
+	public boolean isOnline() {
+		return online;
+	}
+	
+	public void setOnline(boolean status) {
+		online = status;
 	}
 	
 	/**
@@ -75,7 +70,6 @@ public class Utente
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + (isOnline ? 1231 : 1237);
 		result = prime * result + ((nickname == null) ? 0 : nickname.hashCode());
 		result = prime * result + ((password == null) ? 0 : password.hashCode());
 		return result;
@@ -90,7 +84,7 @@ public class Utente
 		if (getClass() != obj.getClass())
 			return false;
 		
-		Utente other = (Utente) obj;
+		User other = (User) obj;
 		
 		//2 utenti sono "uguali" se hanno lo stesso nickname
 		if (nickname == null) {

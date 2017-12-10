@@ -212,6 +212,26 @@ public final class Grafo<E>
         return adj.containsKey(vertice);
     }
     
+    /**
+     * @param src vertice da cercare e ritornare
+     * @return vertice cercato se esiste,altrimenti null
+     */
+    public E getVertice(E src)
+    {
+    	if(src == null)
+    		throw new NullPointerException();
+    	
+    	//cerco vertice
+    	for (E key : adj.keySet()) 
+    	{
+    		//se ho trovato il vertice che cercavo
+			if(key.equals(src))
+				return key;
+		}
+    	
+    	return null;
+    }
+    
     /*METODI PRIVATI*/
     
     private void checkVertici(E src,E dest) throws NullPointerException,NoVertexFound
