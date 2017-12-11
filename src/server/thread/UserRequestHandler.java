@@ -121,6 +121,8 @@ public class UserRequestHandler implements Runnable
 			{
 				//richiesta di accesso al sistema
 				case ACCESS:
+					
+					//sistema per gestire gli accessi a social Gossip
 					SocialGossipAccessService accessSystem = reteSG;
 					
 					//essendo una richiesta di accesso,prendo la password
