@@ -94,12 +94,12 @@ public class MessageAnalyzer
 	 * @param JsonMessage messaggio di richiesta di accesso
 	 * @return password cifrata dell'utente,altrimenti null se non e' stata trovata
 	 */
-	public static char[] getPassword(JSONObject JsonMessage)
+	public static String getPassword(JSONObject JsonMessage)
 	{
 		if(JsonMessage == null)
 			throw new NullPointerException();
 		
-		return (char[]) JsonMessage.get(RequestAccessMessage.FIELD_REQUEST_ACCESS_PASSWORD);
+		return (String) JsonMessage.get(RequestAccessMessage.FIELD_REQUEST_ACCESS_PASSWORD);
 	}
 	
 	/**

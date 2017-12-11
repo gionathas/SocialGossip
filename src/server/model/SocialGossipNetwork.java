@@ -1,8 +1,11 @@
-package server.model;
+	package server.model;
 
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+
+import javax.management.InvalidAttributeValueException;
+import javax.naming.directory.InvalidAttributesException;
 
 import server.model.exception.PasswordMismatchingException;
 import server.model.exception.UserAlreadyRegistered;
@@ -14,12 +17,11 @@ import utils.graph.Nodo;
 import utils.graph.exception.VertexAlreadyExist;
 
 /**
- * Rappresenta l'implementazione del grafo utenti della rete di Social Gossip.
- * Implementa le operazioni sul grafo del social network(nuovi utenti,nuova amicizia ecc..)
+ * Rappresenta la rete degli utenti di Social Gossip.
  * @author Gionatha Sturba
  *
  */
-public class SocialGossipNetwork 
+public class SocialGossipNetwork implements SocialGossipAccessService
 {
 	private Grafo<User> grafo; //grafo non orientato,rappresenta relazioni tra utenti
 	
@@ -30,23 +32,23 @@ public class SocialGossipNetwork
 	
 	/**
 	 * Inserisce un nuovo utente nel grafo della rete sociale,se questo non esiste gia'
-	 * @param u utente da inserire
 	 * @throws UserAlreadyRegistered se un utente risulta gia essere iscritto con quei parametri
 	 * @throws NullPointerException se l'utente risulta essere null
 	 */
-	public void nuovoUtente(User u) throws UserAlreadyRegistered
-	{
-		if(u == null)
-			throw new NullPointerException();
-		
+	public void register(String nickname,String password,String language) throws UserAlreadyRegistered
+	{	
 		try {
-			grafo.addVertice(u);
-		}catch(VertexAlreadyExist e) {
+			//creo istanza utente da registrare
+			User userToRegister = new User(nickname,password,true,language);
+			//se questo non esiste,lo aggiungo e lo setto come online
+			grafo.addVertice(userToRegister);
+		}
+		//utente gia registrato
+		catch(VertexAlreadyExist e) {
 			throw new UserAlreadyRegistered();
 		}
-		
+		//TODO implementare errore nella lingua
 	}
-	
 	/**
 	 * @param a utente da controllare
 	 * @return true se l'utente richiesto risulta essere iscritto al social network,false altrimenti
@@ -63,10 +65,14 @@ public class SocialGossipNetwork
 	 * @throws PasswordMismatchingException se le password non corrispondono
 	 * @throws UserStatusException se l'utente risulta gia' essere online
 	 */
-	public void logInUtente(User userToLog) throws UserNotFindException, PasswordMismatchingException, UserStatusException
+	public void logIn(String nickname,String password) throws UserNotFindException, PasswordMismatchingException, UserStatusException
 	{
-		if(userToLog == null)
+		
+		if(nickname == null || password == null)
 			throw new NullPointerException();
+		
+		//creo un istanza utente offline 
+		User userToLog = new User(nickname, password);
 		
 		User registeredUser = grafo.getVertice(userToLog);
 		
@@ -75,7 +81,7 @@ public class SocialGossipNetwork
 			throw new UserNotFindException();
 		
 		//utente trovato,controllo le password
-		boolean passwordMatch = registeredUser.checkPassword(userToLog.getPassword());
+		boolean passwordMatch = registeredUser.getPassword().contentEquals(new StringBuffer(password));
 		
 		if(!passwordMatch)
 			throw new PasswordMismatchingException();

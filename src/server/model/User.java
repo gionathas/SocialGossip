@@ -1,5 +1,7 @@
 package server.model;
 
+import java.util.Locale;
+
 /**
  * Rappresenta un generico utente della rete di Social Gossip
  * @author Gionatha Sturba
@@ -8,23 +10,62 @@ package server.model;
 public class User 
 {
 	private String nickname;
-	private char[] password;
-	private boolean online; // se l'utente e' attualmente loggato,quindi online
+	private String password;
+	private boolean online;
+	private String lingua; //ISO 639-2 Code 
+	
+	public static final int LANG_LENGHT = 2;
+	public static final String NO_LANG = null;
 	
 	/**
-	 * Crea un nuovo utente offline
+	 * Crea un nuovo utente completo
 	 * @param nickname
 	 * @param password
 	 */
-	public User(String nickname,char[] password)
+	public User(String nickname,String password,boolean online,String lingua)
 	{
-		if(nickname == null || password == null)
+		if(nickname == null || password == null || lingua == null || lingua.length() != 2)
 		{
 			throw new IllegalArgumentException();
 		}
+		
+		this.nickname = nickname;
+		this.password = password;
+		this.online = online;
+		this.lingua = lingua;
+	}
+	
+	/**
+	 * Crea un nuovo utente offline,senza settare la lingua 
+	 * @param nickname
+	 * @param password
+	 */
+	public User(String nickname,String password)
+	{
+		if(nickname == null || password == null)
+			throw new IllegalArgumentException();
+		
 		this.nickname = nickname;
 		this.password = password;
 		this.online = false;
+		this.lingua = null;
+	}
+	
+	/**
+	 * Crea un nuovo utente offline,settando anche la lingua
+	 * @param nickname
+	 * @param password
+	 * @param lingua
+	 */
+	public User(String nickname,String password,String lingua)
+	{
+		if(nickname == null || password == null || lingua == null || lingua.length() != 2)
+			throw new IllegalArgumentException();
+		
+		this.nickname = nickname;
+		this.password = password;
+		this.online = false;
+		this.lingua = lingua;
 	}
 	
 	/**
@@ -35,35 +76,30 @@ public class User
 		return nickname;
 	}
 	
-	public char[] getPassword() {
+	public String getPassword() {
 		return password;
+	}
+	
+	/**
+	 * @return Codice ISO 639-2 della lingua,oppure null se non e' settata
+	 */
+	public String getLingua() {
+		return lingua;
 	}
 	
 	public boolean isOnline() {
 		return online;
 	}
 	
-	public void setOnline(boolean status) {
-		online = status;
+	public void setOnline(boolean isOnline) {
+		online = isOnline;
 	}
 	
-	/**
-	 * Controlla se la password inserita corrisponde a quella dell'utente
-	 * @param enteredPassword password da controllare
-	 * @return true se la password inserita e quella dell'utente sono uguali,false altrimenti
-	 */
-	public boolean checkPassword(char[] enteredPassword)
-	{
-		if(enteredPassword.length != this.password.length || enteredPassword == null)
-			return false;
+	public void setLinguaCode(String lingua) {
+		if(lingua.length() != LANG_LENGHT)
+			throw new IllegalArgumentException();
 		
-		//controllo sequenza caratteri password
-		for (int i = 0; i < enteredPassword.length; i++) {
-			if(enteredPassword[i] != this.password[i])
-				return false;
-		}
-		
-		return true;
+		this.lingua = lingua;
 	}
 
 	@Override

@@ -1,7 +1,11 @@
 package communication.test;
 
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
+import communication.MessageAnalyzer;
 import communication.messages.LoginRequest;
 import communication.messages.Message;
 import communication.messages.RequestMessage;
@@ -15,16 +19,20 @@ public class testMessage
 {
 	public static void main(String[] args) throws ParseException 
 	{
-		char[] pass = {'c','i','a','o'};
-		LoginRequest msg = new LoginRequest("gio",pass);
-		System.out.println(msg.getJsonMessage());
-		Message msg2 = new Message(Message.Type.REQUEST);
-		//System.out.println(msg2.getJsonMessage());
+		LoginRequest msg = new LoginRequest("ale","cioa");
 		
-		RequestMessage msg3 = new RequestMessage(RequestMessage.Type.ACCESS,"gio");
-		String data = msg3.getJsonMessage();
+		//RequestMessage test = new RequestMessage(RequestMessage.Type.ACCESS,"gio");
 		
-		//System.out.println(data);
+		JSONObject test2 = new JSONObject();
+		
+		
+		System.out.println(test2.toJSONString());
+		
+		JSONParser parser = new JSONParser();
+		
+		parser.parse(test2.toJSONString());
+		
+		//MessageAnalyzer.parse(test.getJsonMessage());
 		
 	}
 }

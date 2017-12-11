@@ -5,6 +5,8 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 
+import javax.management.InvalidAttributeValueException;
+
 import org.json.simple.JSONObject;
 import org.json.simple.parser.ParseException;
 
@@ -12,6 +14,7 @@ import communication.MessageAnalyzer;
 import communication.messages.Message;
 import communication.messages.RequestAccessMessage;
 import communication.messages.RequestMessage;
+import server.model.SocialGossipAccessService;
 import server.model.SocialGossipNetwork;
 import server.model.exception.PasswordMismatchingException;
 import server.model.exception.UserNotFindException;
@@ -118,8 +121,10 @@ public class UserRequestHandler implements Runnable
 			{
 				//richiesta di accesso al sistema
 				case ACCESS:
+					SocialGossipAccessService accessSystem = reteSG;
+					
 					//essendo una richiesta di accesso,prendo la password
-					char password[] = MessageAnalyzer.getPassword(message);
+					String password = MessageAnalyzer.getPassword(message);
 					
 					//caso password non trovata
 					if(password == null)
@@ -136,26 +141,26 @@ public class UserRequestHandler implements Runnable
 					{
 						case LOGIN:
 							User userToLog = new User(nickname,password);
-							
-						//avvio procedura di login
-						try 
-						{
-							reteSG.logInUtente(userToLog);
-							
-						} 
-						catch (PasswordMismatchingException e) 
-						{
-							//TODO inviare messaggio di errore password non corrispondenti
-							e.printStackTrace();
-							return;
-						} 
-						catch (UserStatusException e) 
-						{
-							// TODO inviare messaggio di errore utente gia online
-							e.printStackTrace();
-							return;
-						}
-							
+								
+							//avvio procedura di login
+							try 
+							{
+								accessSystem.logIn(nickname,password);
+								
+							} 
+							catch (PasswordMismatchingException e) 
+							{
+								//TODO inviare messaggio di errore password errata
+								e.printStackTrace();
+								return;
+							} 
+							catch (UserStatusException e) 
+							{
+								// TODO inviare messaggio di errore utente gia online
+								e.printStackTrace();
+								return;
+							}
+								
 							break;
 						
 						case REGISTER:

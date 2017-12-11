@@ -172,7 +172,7 @@ public class Login {
 						DataOutputStream out = new DataOutputStream(connection.getOutputStream());
 												
 						//creo il messaggio di richiesta di login
-						LoginRequest request = new LoginRequest(usernameField.getText(),passwordField.getPassword());
+						LoginRequest request = new LoginRequest(usernameField.getText(),new String(passwordField.getPassword()));
 
 						//invio la richiesta di login al server
 						out.writeUTF(request.getJsonMessage());

@@ -10,9 +10,9 @@ public class RequestAccessMessage extends RequestMessage
 	
 	//stato interno
 	protected RequestAccessMessage.Type requestAccessType;
-	private char[] password;
+	private String password;
 	
-	public RequestAccessMessage(String nickname,char[] password,RequestAccessMessage.Type requestAccessType) 
+	public RequestAccessMessage(String nickname,String password,RequestAccessMessage.Type requestAccessType) 
 	{
 		//creo stato interno
 		super(RequestMessage.Type.ACCESS,nickname);
