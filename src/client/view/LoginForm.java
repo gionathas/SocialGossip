@@ -24,27 +24,29 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.awt.event.ActionEvent;
 import javax.swing.UIManager;
 
+import client.controller.LoginController;
 import communication.messages.LoginRequest;
 import communication.messages.RequestAccessMessage;
 
 import javax.swing.JSeparator;
 import java.awt.SystemColor;
 
-public class Login {
+public class LoginForm {
 
 	private JFrame frmSocialgossip;
+	private LoginController controller;
 	private JPasswordField passwordField;
 	private JTextField usernameField;
 	private AtomicBoolean canSendLogin = new AtomicBoolean(true);
 	private JLabel attesa;
-	private JLabel hint1;
-	private JLabel hint2;
-	private JLabel hint0;
+
 
 	/**
 	 * Create the application.
 	 */
-	public Login() {
+	public LoginForm(LoginController controller) 
+	{
+		this.controller = controller;
 		initializeWindowContent();
 	}
 	
@@ -54,6 +56,7 @@ public class Login {
 	private void initializeWindowContent() {
 		frmSocialgossip = new JFrame();
 		frmSocialgossip.setTitle("SocialGossip");
+		frmSocialgossip.setResizable(false);
 		frmSocialgossip.getContentPane().setBackground(new Color(51, 204, 255));
 		frmSocialgossip.setBounds(100, 100, 800, 600);
 		frmSocialgossip.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -105,24 +108,6 @@ public class Login {
 		
 		frmSocialgossip.getContentPane().add(attesa);
 		
-		hint1 = new JLabel("Caratteri Minimi: 3");
-		hint1.setForeground(new Color(255, 51, 0));
-		hint1.setBounds(577, 210, 179, 15);
-		hint1.setVisible(false);
-		frmSocialgossip.getContentPane().add(hint1);
-		
-		hint2 = new JLabel("Caratteri Minimi: 5");
-		hint2.setForeground(new Color(255, 51, 0));
-		hint2.setBounds(577, 300, 179, 15);
-		hint2.setVisible(false);
-		frmSocialgossip.getContentPane().add(hint2);
-		
-		hint0 = new JLabel("Spazi non ammessi");
-		hint0.setForeground(new Color(255, 51, 0));
-		hint0.setBounds(577, 186, 179, 15);
-		hint0.setVisible(false);
-		frmSocialgossip.getContentPane().add(hint0);
-		
 		JButton RegisterButton = new JButton("Registrati");
 		RegisterButton.setToolTipText("Registrati a SocialGossip");
 		RegisterButton.setFont(new Font("Dialog", Font.BOLD, 14));
@@ -150,7 +135,7 @@ public class Login {
 				if(canSendLogin.get() == true)
 				{
 					canSendLogin.set(false);
-					sendLoginRequest();
+					controller.sendLoginRequest();
 				}
 			}
 		});
@@ -159,131 +144,37 @@ public class Login {
 		RegisterButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) 
 			{
-				//mostro schermata di registrazione
-				Register registerForm = new Register();
-				closeWindow();
-				registerForm.setVisible(true);
+				controller.startRegisterForm();
 			}
 		});
 	}
 	
-	/**
-	 * Effettua la richiesta di Login al server
-	 */
-	private void sendLoginRequest()
-	{
-				
-		//TODO inserire numero caratteri minimo nell'interfaccia
-		
-		/* Un thread si occupera' di gestire la comunicazione con il server */
-		Thread thread = new Thread(new Runnable() {
-			public void run() 
-			{
-				//prima di inviare la richiesta controllo i dati inseriti
-				if(checkInput(usernameField.getText(),passwordField.getPassword()))
-				{
-					Socket connection = null;
-					
-					try 
-					{
-						attesa.setVisible(true);
-						
-						//apro connessione con server e creo stream per lettura scrittura
-						connection = new Socket("localhost",5000);
-						DataInputStream in = new DataInputStream(connection.getInputStream());
-						DataOutputStream out = new DataOutputStream(connection.getOutputStream());
-												
-						//creo il messaggio di richiesta di login
-						LoginRequest request = new LoginRequest(usernameField.getText(),new String(passwordField.getPassword()));
-
-						//invio la richiesta di login al server
-						out.writeUTF(request.getJsonMessage());
-						
-						//attendo risposta server
-						String response = in.readUTF();
-						
-						//mostro risposta server
-						JOptionPane.showMessageDialog(null,response);
-						
-						in.close();
-						out.close();
-												
-					}
-					catch(ConnectException e)
-					{
-						JOptionPane.showMessageDialog(null,"Servizio offline");
-						e.printStackTrace();
-
-					}
-					catch(UnknownHostException e)
-					{
-						JOptionPane.showMessageDialog(null,"Server non trovato");
-						e.printStackTrace();
-
-					}
-					catch (IOException e) 
-					{
-						JOptionPane.showMessageDialog(null,"Errore nella richiesta di login");
-						e.printStackTrace();
-					}
-					
-					finally 
-					{
-						if(connection != null)
-						{
-							try {
-								connection.close();
-							} catch (IOException e) {
-								// TODO Auto-generated catch block
-								e.printStackTrace();
-							}
-						}
-						
-						canSendLogin.set(true);
-						attesa.setVisible(false);
-					}
-
-				}
-				//input form non corretta
-				else {
-					canSendLogin.set(true);
-					hint0.setVisible(true);
-					hint1.setVisible(true);
-					hint2.setVisible(true);
-				}
-			}
-				
-		});
-		
-		//avvio thread comunicazione
-		thread.start();
+	public void setVisible(boolean visible) {
+		frmSocialgossip.setVisible(visible);
 	}
 	
-	private boolean checkInput(String nick,char[] password)
-	{
-		final int MIN_PASS_CHAR = 5;
-		final int MIN_USER_CHAR = 3;
-		
-		if(nick == null || password == null || nick.isEmpty() || nick.length() < MIN_USER_CHAR || password.length < MIN_PASS_CHAR ||
-				nick.contains(" "))
-		{			
-			JOptionPane.showMessageDialog(null,"Username o password non validi");
-			return false;
-		}
-		else {
-			return true;
-		}
-	}
-	
-	
-	public void showWindow()
-	{
-		frmSocialgossip.setVisible(true);
-	}
-	
-	private void closeWindow()
-	{
-		frmSocialgossip.setVisible(false);
+	public void closeWindow() {
 		frmSocialgossip.dispose();
+	}
+	
+	public void showMessage(String message)
+	{
+		JOptionPane.showMessageDialog(null,message);
+	}
+
+	public JPasswordField getPasswordField() {
+		return passwordField;
+	}
+
+	public JTextField getUsernameField() {
+		return usernameField;
+	}
+
+	public JLabel getAttesa() {
+		return attesa;
+	}
+
+	public AtomicBoolean getCanSendLogin() {
+		return canSendLogin;
 	}
 }

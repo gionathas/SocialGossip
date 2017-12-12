@@ -1,6 +1,7 @@
 package client;
 
-import client.view.Login;
+import client.controller.LoginController;
+import client.controller.*;
 
 public class SocialGossipClient 
 {
@@ -14,8 +15,8 @@ public class SocialGossipClient
 			//TODO parse config file
 			
 			//avvio client con schermata di Login
-			Login login = new Login();
-			login.showWindow();
+			LoginController login = new LoginController();
+			login.setVisibleLoginForm(true);
 		} 
 		catch (Exception e) 
 		{
