@@ -37,16 +37,16 @@ public class LoginForm {
 	private LoginController controller;
 	private JPasswordField passwordField;
 	private JTextField usernameField;
-	private AtomicBoolean canSendLogin = new AtomicBoolean(true);
+	private JButton btnLogin;
+	private JButton RegisterButton;
 	private JLabel attesa;
 
 
 	/**
 	 * Create the application.
 	 */
-	public LoginForm(LoginController controller) 
+	public LoginForm() 
 	{
-		this.controller = controller;
 		initializeWindowContent();
 	}
 	
@@ -80,7 +80,7 @@ public class LoginForm {
 		passwordField.setBounds(250, 272, 310, 48);
 		frmSocialgossip.getContentPane().add(passwordField);
 		
-		JButton btnLogin = new JButton("Login");
+		btnLogin = new JButton("Login");
 		btnLogin.setToolTipText("Invia richiesta di Login");
 		btnLogin.setFont(new Font("Dialog", Font.BOLD, 14));
 		btnLogin.setBackground(UIManager.getColor("Button.disabledText"));
@@ -108,7 +108,7 @@ public class LoginForm {
 		
 		frmSocialgossip.getContentPane().add(attesa);
 		
-		JButton RegisterButton = new JButton("Registrati");
+		RegisterButton = new JButton("Registrati");
 		RegisterButton.setToolTipText("Registrati a SocialGossip");
 		RegisterButton.setFont(new Font("Dialog", Font.BOLD, 14));
 		RegisterButton.setBounds(250, 430, 310, 48);
@@ -124,29 +124,18 @@ public class LoginForm {
 		separator.setBackground(new Color(0, 0, 0));
 		separator.setBounds(0, 120, 800, 10);
 		frmSocialgossip.getContentPane().add(separator);
-		
-		/* EVENT LISTENER */
-		
-		//al click sul bottone login
-		btnLogin.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) 
-			{
-				//se non ho gia' mandato una richiesta di login
-				if(canSendLogin.get() == true)
-				{
-					canSendLogin.set(false);
-					controller.sendLoginRequest();
-				}
-			}
-		});
-		
-		//al click sul bottone registrati
-		RegisterButton.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) 
-			{
-				controller.startRegisterForm();
-			}
-		});
+	}
+	
+	public JButton getBtnLogin() {
+		return btnLogin;
+	}
+
+	public JButton getRegisterButton() {
+		return RegisterButton;
+	}
+
+	public JFrame getFrame() {
+		return frmSocialgossip;
 	}
 	
 	public void setVisible(boolean visible) {
@@ -172,9 +161,5 @@ public class LoginForm {
 
 	public JLabel getAttesa() {
 		return attesa;
-	}
-
-	public AtomicBoolean getCanSendLogin() {
-		return canSendLogin;
 	}
 }

@@ -36,13 +36,12 @@ public class RegisterForm extends JFrame
 {
 	private JPanel contentPane;
 	private JTextField usernameField;
-	private RegisterController controller;
 	private JPasswordField passwordField;
 	private JPasswordField passwordField_1;
+	private JButton btnTornaALogin;
 
-	public RegisterForm(RegisterController controller) 
+	public RegisterForm() 
 	{
-		this.controller = controller;
 		initWindowContent();
 	}
 	
@@ -119,13 +118,7 @@ public class RegisterForm extends JFrame
 		lblSeiGiaRegistrato.setBounds(495, 421, 257, 33);
 		contentPane.add(lblSeiGiaRegistrato);
 		
-		JButton btnTornaALogin = new JButton("Torna a Login");
-		btnTornaALogin.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) 
-			{
-				controller.startLoginForm();
-			}
-		});
+		btnTornaALogin = new JButton("Torna a Login");
 		btnTornaALogin.setBounds(503, 460, 180, 50);
 		contentPane.add(btnTornaALogin);
 		
@@ -136,13 +129,20 @@ public class RegisterForm extends JFrame
 		image.setBounds(450, 100, 300, 300);
 		contentPane.add(image);
 	}
-	
-	public JFrame getFrame() {
-		return this;
+
+	public JTextField getUsernameField() {
+		return usernameField;
 	}
-	
-	public void closeWindow()
-	{
-		this.dispose();
+
+	public JPasswordField getPasswordField() {
+		return passwordField;
+	}
+
+	public JPasswordField getPasswordField_1() {
+		return passwordField_1;
+	}
+
+	public JButton getBtnTornaALogin() {
+		return btnTornaALogin;
 	}
 }

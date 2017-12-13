@@ -1,26 +1,42 @@
 package client.controller;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
 import client.view.RegisterForm;
 
-public class RegisterController 
+public class RegisterController extends Controller
 {
 	private RegisterForm registerView;
 	
 	public RegisterController()
 	{
-		registerView = new RegisterForm(this);
+		registerView = new RegisterForm();
+		setWindow(registerView);
+		initListeners();
 	}
 	
-	public void setVisibleRegisterForm(boolean visible) 
+	protected void initListeners() 
 	{
-		registerView.getFrame().setVisible(visible);
+		//al click su torna a login
+		registerView.getBtnTornaALogin().addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) 
+			{
+				startLoginForm();
+			}
+		});
 	}
 	
-	public void startLoginForm()
+	/**
+	 * Chiude schermata di registrazione e apre una di Login
+	 */
+	private void startLoginForm()
 	{
-		setVisibleRegisterForm(false);
-		registerView.closeWindow();
+		this.setVisible(false);
+		this.close();
+		
+		//avvio schermata di login
 		LoginController login = new LoginController();
-		login.setVisibleLoginForm(true);
+		login.setVisible(true);
 	}
 }

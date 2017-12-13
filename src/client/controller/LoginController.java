@@ -1,11 +1,16 @@
 package client.controller;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.ConnectException;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import javax.swing.JFrame;
 
 import client.view.LoginForm;
 import client.view.RegisterForm;
@@ -16,24 +21,53 @@ import communication.messages.LoginRequest;
  * @author gio
  *
  */
-public class LoginController 
+public class LoginController extends Controller
 {
-	private LoginForm loginView; 
+	private LoginForm loginView;
+	private AtomicBoolean canSendLogin;
 	
 	public LoginController()
 	{
-		this.loginView = new LoginForm(this);
+		super();
+		//creo form di login
+		this.loginView = new LoginForm();
+		this.window = loginView.getFrame();
+		
+		//variabile di supporto
+		canSendLogin = new AtomicBoolean(true);
+
+		//registro gli action listener
+		initListeners();
 	}
 	
-	public void setVisibleLoginForm(boolean visible) 
+	protected void initListeners()
 	{
-		loginView.setVisible(visible);
+		//al click sul bottone login
+		loginView.getBtnLogin().addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) 
+			{
+				//se non ho gia' mandato una richiesta di login
+				if(canSendLogin.get() == true)
+				{
+					canSendLogin.set(false);
+					sendLoginRequest();
+				}
+			}
+		});
+		
+		//al click sul bottone registrati
+		loginView.getRegisterButton().addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) 
+			{
+				startRegisterForm();
+			}
+		});
 	}
 	
 	/**
 	 * Effettua la richiesta di Login al server
 	 */
-	public void sendLoginRequest()
+	private void sendLoginRequest()
 	{		
 		/* Un thread si occupera' di gestire la comunicazione con il server */
 		Thread thread = new Thread(new Runnable() {
@@ -104,7 +138,7 @@ public class LoginController
 							}
 						}
 						
-						loginView.getCanSendLogin().set(true);
+						canSendLogin.set(true);
 						loginView.getAttesa().setVisible(false);
 					}
 
@@ -112,7 +146,7 @@ public class LoginController
 				//input form non corretta
 				else 
 				{
-					loginView.getCanSendLogin().set(true);
+					canSendLogin.set(true);
 					loginView.showMessage(FormInputChecker.LOGIN_ERROR_INFO_STRING);
 				}
 			}
@@ -126,14 +160,14 @@ public class LoginController
 	/**
 	 * Fa partire il form di registrazione
 	 */
-	public void startRegisterForm() {
+	private void startRegisterForm() {
 		RegisterController register = new RegisterController();
 		
 		//chiudo form di login
-		loginView.setVisible(false);
-		loginView.closeWindow();
+		this.setVisible(false);
+		this.close();
 		
 		//mostro form di registrazione
-		register.setVisibleRegisterForm(true);
+		register.setVisible(true);
 	}
 }
