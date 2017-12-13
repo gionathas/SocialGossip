@@ -47,8 +47,8 @@ public class SocialGossipNetwork implements SocialGossipAccessService
 		catch(VertexAlreadyExist e) {
 			throw new UserAlreadyRegistered();
 		}
-		//TODO implementare errore nella lingua
 	}
+	
 	/**
 	 * @param a utente da controllare
 	 * @return true se l'utente richiesto risulta essere iscritto al social network,false altrimenti
@@ -148,5 +148,13 @@ public class SocialGossipNetwork implements SocialGossipAccessService
 		
 		return Collections.unmodifiableList(listaAmici);
 		
+	}
+	
+	/**
+	 * Stampa la rete degli utenti di Social Gossip
+	 */
+	public void stampaRete() {
+		//TODO migliorare funzione di stampa rete
+		grafo.stampaGrafo();
 	}
 }

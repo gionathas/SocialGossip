@@ -68,14 +68,24 @@ public class User
 		this.lingua = lingua;
 	}
 	
+	@Override
+	public String toString() {
+		String status = online ? "Online" : "Offline";
+		
+		return nickname+"["+status+"]";
+	}
+	
 	/**
-	 * 
 	 * @return nickname di questo utente
 	 */
 	public String getNickname() {
 		return nickname;
 	}
 	
+	/**
+	 * 
+	 * @return password dell'utente
+	 */
 	public String getPassword() {
 		return password;
 	}

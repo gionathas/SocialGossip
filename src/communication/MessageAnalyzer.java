@@ -92,7 +92,7 @@ public class MessageAnalyzer
 	/**
 	 * 
 	 * @param JsonMessage messaggio di richiesta di accesso
-	 * @return password cifrata dell'utente,altrimenti null se non e' stata trovata
+	 * @return password dell'utente,altrimenti null se non e' stata trovata
 	 */
 	public static String getPassword(JSONObject JsonMessage)
 	{
@@ -100,6 +100,19 @@ public class MessageAnalyzer
 			throw new NullPointerException();
 		
 		return (String) JsonMessage.get(RequestAccessMessage.FIELD_REQUEST_ACCESS_PASSWORD);
+	}
+	
+	/**
+	 * 
+	 * @param JsonMessage messaggio di richiesta di registrazione
+	 * @return stringa rappresentante il linguaggio dell'utente,false se non e' stata trovata
+	 */
+	public static String getLanguage(JSONObject JsonMessage)
+	{
+		if(JsonMessage == null)
+			throw new NullPointerException();
+		
+		return (String) JsonMessage.get(RegisterRequest.FIELD_REGISTER_REQUEST_LANGUAGE);
 	}
 	
 	/**
@@ -119,9 +132,14 @@ public class MessageAnalyzer
 		{
 			return RequestAccessMessage.Type.LOGIN;
 		}
+		//caso registrazione
+		else if(type.equals(RequestAccessMessage.Type.REGISTER.name())) 
+		{
+			return RequestAccessMessage.Type.REGISTER;
+		}
+		//caso non valido
 		else
 		{
-			//TODO inserire altri casi
 			return null;
 		}
 	}

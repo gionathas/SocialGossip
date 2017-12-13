@@ -66,10 +66,10 @@ public final class Grafo<E>
     {
         for(Nodo<E> i : adj.values())
         {
-            System.out.print(i.getKey()+" ->[");
+            System.out.print(i.getKey().toString()+" ->[");
             for(Arco<E> j : i.getArchi())
             {
-                System.out.print(j.getDst().getKey()+" ");
+                System.out.print(j.getDst().getKey().toString()+" ");
             }
             System.out.println("]"+'\n');
         }

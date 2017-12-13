@@ -17,6 +17,7 @@ import communication.messages.RequestMessage;
 import server.model.SocialGossipAccessService;
 import server.model.SocialGossipNetwork;
 import server.model.exception.PasswordMismatchingException;
+import server.model.exception.UserAlreadyRegistered;
 import server.model.exception.UserNotFindException;
 import server.model.exception.UserStatusException;
 import server.model.User;
@@ -116,6 +117,11 @@ public class UserRequestHandler implements Runnable
 			//controlliamo di che tipo di messaggio di richiesta si tratta
 			RequestMessage.Type requestType = MessageAnalyzer.getRequestMessageType(message);
 			
+			if(requestType == null) {
+				//TODO messaggio richiesta non valido
+				return;
+			}
+			
 			//controllo i possibili casi di richiesta
 			switch (requestType) 
 			{
@@ -138,12 +144,16 @@ public class UserRequestHandler implements Runnable
 					//leggo tipo richiesta di accesso
 					RequestAccessMessage.Type requestAccessType = MessageAnalyzer.getRequestAccessMessageType(message);
 					
+					if(requestAccessType == null)
+					{
+						//TODO messaggio richiesta non valido
+						return;
+					}
+					
 					//controllo i possibili casi di richiesta di accesso
 					switch (requestAccessType) 
 					{
-						case LOGIN:
-							User userToLog = new User(nickname,password);
-								
+						case LOGIN:								
 							//avvio procedura di login
 							try 
 							{
@@ -167,19 +177,43 @@ public class UserRequestHandler implements Runnable
 						
 						case REGISTER:
 							
+							//prendo il codice della lingua
+							String language = MessageAnalyzer.getLanguage(message);
+							
+							if(language == null)
+							{
+								//TODO invio messaggio di errore lingua non trovata
+								return;
+							}
+							
+							//avvio procedura di registrazione
+							try 
+							{
+								accessSystem.register(nickname,password,language);
+							} 
+							catch (UserAlreadyRegistered e) 
+							{	
+								// TODO invio messaggio di errore utente gia' registrato
+								e.printStackTrace();
+							}
+							
 							break;
 							
 						
 						default:
 							//TODO messaggio di errore
 							return;
+							
 					}
 					
+					
+					//DEBUG Stampo rete
+					reteSG.stampaRete();
 					//TODO se l'operazione e' andata a buon fine mando un messaggio di OK
 					break;
 	
 				default:
-					//TODO invio messaggio di errore
+					//TODO invio messaggio di errore,richiesta non valida
 					return;
 			}
 			

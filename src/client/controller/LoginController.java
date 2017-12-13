@@ -80,6 +80,8 @@ public class LoginController extends Controller
 				if(FormInputChecker.checkLoginInput(nickname,password))
 				{
 					Socket connection = null;
+					DataInputStream in = null;
+					DataOutputStream out = null;
 					
 					try 
 					{
@@ -87,8 +89,8 @@ public class LoginController extends Controller
 						
 						//apro connessione con server e creo stream per lettura scrittura
 						connection = new Socket("localhost",5000);
-						DataInputStream in = new DataInputStream(connection.getInputStream());
-						DataOutputStream out = new DataOutputStream(connection.getOutputStream());
+						in = new DataInputStream(connection.getInputStream());
+						out = new DataOutputStream(connection.getOutputStream());
 												
 						//creo il messaggio di richiesta di login
 						LoginRequest request = new LoginRequest(nickname,new String(password));
@@ -101,15 +103,12 @@ public class LoginController extends Controller
 						
 						//mostro risposta server
 						loginView.showMessage(response);
-						
-						in.close();
-						out.close();
 												
 					}
 					//se non riesco a connettermi al server
 					catch(ConnectException e)
 					{
-						loginView.showMessage("Servizio attualemente non disponibile");
+						loginView.showMessage("Servizio attualmente non disponibile");
 						e.printStackTrace();
 
 					}
@@ -128,15 +127,29 @@ public class LoginController extends Controller
 					
 					finally 
 					{
-						if(connection != null)
+						try
 						{
-							try {
+							//chiud connessione se aperta
+							if(connection != null){
 								connection.close();
-							} catch (IOException e) {
-								// TODO Auto-generated catch block
-								e.printStackTrace();
+							}
+							
+							//chiudo stream input se aperto
+							if(in != null) {
+								in.close();
+							}
+							
+							//chiudo stream output se aperto
+							if(out != null) {
+								out.close();
 							}
 						}
+						catch(IOException e)
+						{
+							//TODO
+							e.printStackTrace();
+						}
+						
 						
 						canSendLogin.set(true);
 						loginView.getAttesa().setVisible(false);

@@ -14,6 +14,7 @@ import javax.swing.JLabel;
 import javax.swing.JButton;
 import javax.swing.JPasswordField;
 import javax.swing.JList;
+import javax.swing.JOptionPane;
 import javax.swing.JComboBox;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.ImageIcon;
@@ -25,6 +26,7 @@ import javax.swing.SwingConstants;
 import java.awt.Color;
 import javax.swing.JSeparator;
 import java.awt.event.ActionListener;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.awt.event.ActionEvent;
 
 /**
@@ -37,8 +39,10 @@ public class RegisterForm extends JFrame
 	private JPanel contentPane;
 	private JTextField usernameField;
 	private JPasswordField passwordField;
-	private JPasswordField passwordField_1;
+	private JPasswordField ConfirmpasswordField;
 	private JButton btnTornaALogin;
+	private JButton btnInvia;
+	private JComboBox<String> comboBox;
 
 	public RegisterForm() 
 	{
@@ -70,13 +74,13 @@ public class RegisterForm extends JFrame
 		lblRepeatPassword.setBounds(50, 287, 268, 25);
 		contentPane.add(lblRepeatPassword);
 		
-		JButton btnInvia = new JButton("Invia");
+		btnInvia = new JButton("Invia");
 		btnInvia.setBounds(50, 460, 180, 50);
 		contentPane.add(btnInvia);
 		
-		JComboBox comboBox = new JComboBox();
-		comboBox.setModel(new DefaultComboBoxModel(new String[] {"it", "en", "fr", "de", "es", "ja", "la", "pt", "ro", "ru", "sk", "sl", "sq"}));
-		comboBox.setBounds(270, 390, 101, 35);
+		comboBox = new JComboBox<String>();
+		comboBox.setModel(new DefaultComboBoxModel<String>(new String[] {"it", "en", "fr", "de", "es", "ja", "la", "pt", "ro", "ru", "sk", "sl", "sq"}));
+		comboBox.setBounds(260, 390, 101, 35);
 		contentPane.add(comboBox);
 		
 		JLabel linguaLabel = new JLabel("Seleziona Lingua");
@@ -106,12 +110,14 @@ public class RegisterForm extends JFrame
 		contentPane.add(separator);
 		
 		passwordField = new JPasswordField();
+		passwordField.setFont(new Font("Dialog", Font.PLAIN, 17));
 		passwordField.setBounds(50, 223, 310, 48);
 		contentPane.add(passwordField);
 		
-		passwordField_1 = new JPasswordField();
-		passwordField_1.setBounds(50, 313, 310, 48);
-		contentPane.add(passwordField_1);
+		ConfirmpasswordField = new JPasswordField();
+		ConfirmpasswordField.setFont(new Font("Dialog", Font.PLAIN, 17));
+		ConfirmpasswordField.setBounds(50, 313, 310, 48);
+		contentPane.add(ConfirmpasswordField);
 		
 		JLabel lblSeiGiaRegistrato = new JLabel("Sei gia' registrato?");
 		lblSeiGiaRegistrato.setFont(new Font("Dialog", Font.BOLD, 19));
@@ -129,6 +135,22 @@ public class RegisterForm extends JFrame
 		image.setBounds(450, 100, 300, 300);
 		contentPane.add(image);
 	}
+	
+	public JComboBox<String> getComboBox() {
+		return comboBox;
+	}
+
+	public void showMessage(String message)
+	{
+		if(message == null)
+			throw new NullPointerException();
+		
+		JOptionPane.showMessageDialog(null, message);
+	}
+	
+	public JButton getBtnInvia() {
+		return btnInvia;
+	}
 
 	public JTextField getUsernameField() {
 		return usernameField;
@@ -138,8 +160,8 @@ public class RegisterForm extends JFrame
 		return passwordField;
 	}
 
-	public JPasswordField getPasswordField_1() {
-		return passwordField_1;
+	public JPasswordField getConfirmPasswordField() {
+		return ConfirmpasswordField;
 	}
 
 	public JButton getBtnTornaALogin() {
