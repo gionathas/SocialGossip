@@ -11,8 +11,15 @@ import java.net.UnknownHostException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.zip.CheckedInputStream;
 
+import org.json.simple.JSONObject;
+import org.json.simple.parser.ParseException;
+
 import client.view.RegisterForm;
+import communication.MessageAnalyzer;
+import communication.messages.Message;
 import communication.messages.RegisterRequest;
+import communication.messages.ResponseFailedMessage;
+import communication.messages.ResponseMessage;
 
 public class RegisterController extends Controller
 {
@@ -61,6 +68,7 @@ public class RegisterController extends Controller
 			
 			public void run() 
 			{
+				//prendo dati inseriti nella form
 				String nickname = registerView.getUsernameField().getText();
 				char password[] = registerView.getPasswordField().getPassword();
 				char confirm_pass[] = registerView.getConfirmPasswordField().getPassword();
@@ -87,26 +95,28 @@ public class RegisterController extends Controller
 						//invio richiesta
 						out.writeUTF(request.getJsonMessage());
 						
+						//leggo risposta del server
 						String response = in.readUTF();
 						
-						registerView.showMessage(response);
+						//analizzo risposta del server
+						analyzeResponse(response);
 						
 					}
 					//se non riesco a connettermi al server
 					catch(ConnectException e)
 					{
-						registerView.showMessage("Servizio attualmente non disponibile");
+						registerView.showErrorMessage("Servizio attualmente non disponibile","Errore");
 						e.printStackTrace();
 
 					}
 					catch (UnknownHostException e) 
 					{
-						registerView.showMessage("Server non trovato");
+						registerView.showErrorMessage("Server non trovato","Errore");
 						e.printStackTrace();
 					} 
 					catch (IOException e) 
 					{
-						registerView.showMessage("Errore nella richiesta di registrazione");
+						registerView.showErrorMessage("Errore nella richiesta di registrazione","Errore");
 						e.printStackTrace();
 					}
 					finally 
@@ -141,12 +151,87 @@ public class RegisterController extends Controller
 				//input form non corretta
 				else {
 					canSendRegister.set(true);
-					registerView.showMessage(FormInputChecker.REGISTER_ERROR_INFO_STRING);;
+					registerView.showErrorMessage(FormInputChecker.REGISTER_ERROR_INFO_STRING,"Errore Form");
 				}
 			}
 		});
 		
 		thread.start();
+	}
+	
+	private void analyzeResponse(String JsonResponse)
+	{
+		try 
+		{
+			//parso json rappresentate risposta del server
+			JSONObject response = MessageAnalyzer.parse(JsonResponse);
+			
+			//se non e' un messaggio di risposta
+			if(MessageAnalyzer.getMessageType(response) != Message.Type.RESPONSE) 
+			{
+				registerView.showErrorMessage("Errore nel messaggio di risposta del server","Errore");
+				return;
+			}
+			
+			ResponseMessage.Type outcome = MessageAnalyzer.getResponseType(response);
+			
+			//tipo risposta non trovato
+			if(outcome == null)
+			{
+				registerView.showErrorMessage("Errore nel messaggio di risposta del server","Errore");
+				return;
+			}
+			
+			//controllo esito della risposta ricevuta
+			switch(outcome) 
+			{
+				//registrazione avvenuta
+				case SUCCESS:
+					registerView.showInfoMessage("Registrazione Avvenuta");
+					
+					//TODO far partire l'hub
+					break;
+				
+				case FAIL:
+					//analizzo l'errore riscontrato
+					ResponseFailedMessage.Errors error = MessageAnalyzer.getResponseFailedErrorType(response);
+					
+					//errore non trovato
+					if(error == null) {
+						registerView.showErrorMessage("Errore nel messaggio di risposta del server","Errore");
+						return;
+					}
+					
+					//controllo tipi di errore che si possono riscontrare
+					switch (error) 
+					{
+						//richiesta non valida
+						case INVALID_REQUEST:
+							registerView.showErrorMessage("Rcihiesta non valida","Errore");
+							break;
+							
+						case USER_ALREADY_REGISTERED:
+							registerView.showErrorMessage("Utente gia' registrato","Warning");
+							break;
+									
+						//errore non trovato
+						default:
+							registerView.showErrorMessage("Errore nel messaggio di risposta del server","Errore");
+							break;
+					}
+					
+					break;
+					
+				default:
+					registerView.showErrorMessage("Errore nel messaggio di risposta del server","Errore");
+					break;
+			}
+		} 
+		catch (ParseException e) 
+		{
+			registerView.showErrorMessage("Errore lettura risposta del server","Errore");
+			e.printStackTrace();
+		}
 	}
 	
 	/**

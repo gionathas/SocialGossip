@@ -146,10 +146,22 @@ public class LoginForm {
 		frmSocialgossip.dispose();
 	}
 	
-	public void showMessage(String message)
+	public void showInfoMessage(String message)
 	{
-		JOptionPane.showMessageDialog(null,message);
+		if(message == null)
+			throw new NullPointerException();
+		
+		JOptionPane.showMessageDialog(frmSocialgossip,message);
 	}
+	
+	public void showErrorMessage(String message,String title)
+	{
+		if(message == null)
+			throw new NullPointerException();
+		
+		JOptionPane.showMessageDialog(frmSocialgossip,message,title,JOptionPane.ERROR_MESSAGE);
+	}
+	
 
 	public JPasswordField getPasswordField() {
 		return passwordField;

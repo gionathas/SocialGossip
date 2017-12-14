@@ -14,6 +14,9 @@ import communication.MessageAnalyzer;
 import communication.messages.Message;
 import communication.messages.RequestAccessMessage;
 import communication.messages.RequestMessage;
+import communication.messages.ResponseFailedMessage;
+import communication.messages.ResponseMessage;
+import communication.messages.ResponseSuccessMessage;
 import server.model.SocialGossipAccessService;
 import server.model.SocialGossipNetwork;
 import server.model.exception.PasswordMismatchingException;
@@ -49,8 +52,7 @@ public class UserRequestHandler implements Runnable
 	{
 		DataInputStream in = null;
 		DataOutputStream out = null;
-		
-		
+			
 		try 
 		{
 			in = new DataInputStream(client.getInputStream());
@@ -64,7 +66,7 @@ public class UserRequestHandler implements Runnable
 			analyzeRequestMessage(request,out);
 			
 			//rispondo al client
-			out.writeUTF("request received");
+			//out.writeUTF("request received");
 			
 		} 
 		catch (IOException e) 
@@ -77,9 +79,15 @@ public class UserRequestHandler implements Runnable
 		{
 			try 
 			{
-				in.close();
-				out.close();
+				//chiudo connessione con il client
 				client.close();
+				
+				//chiudo stream
+				if(in != null)
+					in.close();
+				
+				if(out != null)
+					out.close();
 			} 
 			catch (IOException e) 
 			{
@@ -100,25 +108,20 @@ public class UserRequestHandler implements Runnable
 			//controllo che sia un messaggio di richiesta altrimenti invio messaggio di errore
 			if(MessageAnalyzer.getMessageType(message) != Message.Type.REQUEST)
 			{
-				//TODO inviare messaggio di errore messaggio invalido
+				sendResponseMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.INVALID_REQUEST),out);
 				return;
 			}
 			
 			//essendo un messaggio di richiesta,posso prendere il nickname dell'utente
 			String nickname = MessageAnalyzer.getNickname(message);
 			
-			//nickname non trovato
-			if(nickname == null)
-			{
-				//TODO messaggio di errore
-				return;
-			}
-			
-			//controlliamo di che tipo di messaggio di richiesta si tratta
+			//prendo il tipo del messaggio di richiesta
 			RequestMessage.Type requestType = MessageAnalyzer.getRequestMessageType(message);
 			
-			if(requestType == null) {
-				//TODO messaggio richiesta non valido
+			//nickname non trovato, oppure tipo richiesta non trovato,invio messaggio di errore
+			if(nickname == null || requestType == null)
+			{
+				sendResponseMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.INVALID_REQUEST),out);
 				return;
 			}
 			
@@ -134,55 +137,55 @@ public class UserRequestHandler implements Runnable
 					//essendo una richiesta di accesso,prendo la password
 					String password = MessageAnalyzer.getPassword(message);
 					
-					//caso password non trovata
-					if(password == null)
-					{
-						//TODO messaggio di errore
-						return;
-					}
-					
 					//leggo tipo richiesta di accesso
 					RequestAccessMessage.Type requestAccessType = MessageAnalyzer.getRequestAccessMessageType(message);
 					
-					if(requestAccessType == null)
+					//caso password non trovata o tipo richiesta di accesso non trovato
+					if(password == null || requestAccessType == null)
 					{
-						//TODO messaggio richiesta non valido
+						sendResponseMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.INVALID_REQUEST),out);
 						return;
 					}
 					
 					//controllo i possibili casi di richiesta di accesso
 					switch (requestAccessType) 
 					{
+						//caso richiesta di login
 						case LOGIN:								
-							//avvio procedura di login
 							try 
 							{
 								accessSystem.logIn(nickname,password);
 								
 							} 
+							//caso password errata
 							catch (PasswordMismatchingException e) 
 							{
-								//TODO inviare messaggio di errore password errata
+								//invio messaggio di errore password errata
+								sendResponseMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.PASSWORD_MISMATCH),out);
 								e.printStackTrace();
 								return;
 							} 
+							//caso utente gia' online
 							catch (UserStatusException e) 
 							{
-								// TODO inviare messaggio di errore utente gia online
+								//invio messaggio di errore stato utente non valido
+								sendResponseMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.USER_INVALID_STATUS),out);
 								e.printStackTrace();
 								return;
 							}
 								
 							break;
 						
+						//caso richiesta di registrazione
 						case REGISTER:
 							
 							//prendo il codice della lingua
 							String language = MessageAnalyzer.getLanguage(message);
 							
+							//caso lingua non trovata
 							if(language == null)
 							{
-								//TODO invio messaggio di errore lingua non trovata
+								sendResponseMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.INVALID_REQUEST),out);
 								return;
 							}
 							
@@ -191,17 +194,19 @@ public class UserRequestHandler implements Runnable
 							{
 								accessSystem.register(nickname,password,language);
 							} 
+							//caso utente gia' registrato con quel nick
 							catch (UserAlreadyRegistered e) 
 							{	
-								// TODO invio messaggio di errore utente gia' registrato
+								sendResponseMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.USER_ALREADY_REGISTERED),out);
 								e.printStackTrace();
+								return;
 							}
 							
 							break;
 							
-						
+						//caso messaggio non valido
 						default:
-							//TODO messaggio di errore
+							sendResponseMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.INVALID_REQUEST),out);
 							return;
 							
 					}
@@ -209,27 +214,57 @@ public class UserRequestHandler implements Runnable
 					
 					//DEBUG Stampo rete
 					reteSG.stampaRete();
-					//TODO se l'operazione e' andata a buon fine mando un messaggio di OK
+					
+					//operazione e' andata a buon fine mando un messaggio di OK
+					sendResponseMessage(new ResponseSuccessMessage(),out);
+					
 					break;
-	
+				
+					
+				//richiesta non valida
 				default:
-					//TODO invio messaggio di errore,richiesta non valida
+					sendResponseMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.INVALID_REQUEST),out);
 					return;
 			}
 			
 			
 		} 
+		//errore lettura messaggio
 		catch (ParseException  | NullPointerException e) 
 		{
-			//TODO inviare una risposta di errore di messaggio non valido
+			try {
+				//invio messaggio di errore richiesta non valida
+				sendResponseMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.INVALID_REQUEST),out);
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+			
 			e.printStackTrace();
 			return;
 		}
+		//caso utente non trovato
 		catch (UserNotFindException e) 
 		{
-			// TODO inviare messaggio di errore utente richiesto non trovato
+			try {
+				//invio messaggio di errore, utente non trovato
+				sendResponseMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.USER_NOT_FOUND),out);
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
 			e.printStackTrace();
 			return;
 		} 
+		catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return;
+		} 
+	}
+	
+	private void sendResponseMessage(ResponseMessage response,DataOutputStream out) throws IOException
+	{
+		out.writeUTF(response.getJsonMessage());
 	}
 }

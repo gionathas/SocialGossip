@@ -12,9 +12,16 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.swing.JFrame;
 
+import org.json.simple.JSONObject;
+import org.json.simple.parser.ParseException;
+
 import client.view.LoginForm;
 import client.view.RegisterForm;
+import communication.MessageAnalyzer;
 import communication.messages.LoginRequest;
+import communication.messages.Message;
+import communication.messages.ResponseFailedMessage;
+import communication.messages.ResponseMessage;
 
 /**
  * Controller del form di login
@@ -102,26 +109,26 @@ public class LoginController extends Controller
 						String response = in.readUTF();
 						
 						//mostro risposta server
-						loginView.showMessage(response);
+						analyzeResponse(response);
 												
 					}
 					//se non riesco a connettermi al server
 					catch(ConnectException e)
 					{
-						loginView.showMessage("Servizio attualmente non disponibile");
+						loginView.showErrorMessage("Servizio attualmente non disponibile","Errore");
 						e.printStackTrace();
 
 					}
 					//problema connessione al server
 					catch(UnknownHostException e)
 					{
-						loginView.showMessage("Server non trovato");
+						loginView.showErrorMessage("Server non trovato","Errore");
 						e.printStackTrace();
 
 					}
 					catch (IOException e) 
 					{
-						loginView.showMessage("Errore nella richiesta di login");
+						loginView.showErrorMessage("Errore nella richiesta di login","Errore");
 						e.printStackTrace();
 					}
 					
@@ -160,7 +167,7 @@ public class LoginController extends Controller
 				else 
 				{
 					canSendLogin.set(true);
-					loginView.showMessage(FormInputChecker.LOGIN_ERROR_INFO_STRING);
+					loginView.showErrorMessage(FormInputChecker.LOGIN_ERROR_INFO_STRING,"Form Errata");
 				}
 			}
 				
@@ -169,6 +176,92 @@ public class LoginController extends Controller
 		//avvio thread comunicazione
 		thread.start();
 	}
+	
+	private void analyzeResponse(String JsonResponse)
+	{
+		try
+		{
+			//parso json rappresentate risposta del server
+			JSONObject response = MessageAnalyzer.parse(JsonResponse);
+			
+			//se non e' un messaggio di risposta
+			if(MessageAnalyzer.getMessageType(response) != Message.Type.RESPONSE) 
+			{
+				loginView.showErrorMessage("Errore nel messaggio di risposta del server","Errore");
+				return;
+			}
+			
+			//prendo tipo esito della risposta
+			ResponseMessage.Type outcome = MessageAnalyzer.getResponseType(response);
+			
+			//tipo risposta non trovato
+			if(outcome == null)
+			{
+				loginView.showErrorMessage("Errore nel messaggio di risposta del server","Errore");
+				return;
+			}
+			
+			//controllo esito della risposta ricevuta
+			switch(outcome) 
+			{
+				//registrazione avvenuta
+				case SUCCESS:
+					
+					//TODO far partire l'hub
+					loginView.showInfoMessage("Logged");
+					break;
+				
+				case FAIL:
+					//analizzo l'errore riscontrato
+					ResponseFailedMessage.Errors error = MessageAnalyzer.getResponseFailedErrorType(response);
+					
+					//errore non trovato
+					if(error == null) {
+						loginView.showErrorMessage("Errore nel messaggio di risposta del server","Errore");
+						return;
+					}
+					
+					//controllo tipi di errore che si possono riscontrare
+					switch (error) 
+					{
+						//richiesta non valida
+						case INVALID_REQUEST:
+							loginView.showErrorMessage("Rcihiesta non valida","Errore");
+							break;
+							
+						case PASSWORD_MISMATCH:
+							loginView.showErrorMessage("Password errata","Warning");
+							break;
+						
+						case USER_NOT_FOUND:
+							loginView.showErrorMessage("Utente non trovato","Warning");
+							break;
+						
+						case USER_INVALID_STATUS:
+							loginView.showErrorMessage("Sei gia' online con un altro client","Warning");
+							break;
+									
+						//errore non trovato
+						default:
+							loginView.showErrorMessage("Errore nel messaggio di risposta del server","Errore");
+							break;
+					}
+					
+					break;
+					
+				default:
+					loginView.showErrorMessage("Errore nel messaggio di risposta del server","Errore");
+					break;
+			}
+		}
+		catch (ParseException e) 
+		{
+			loginView.showErrorMessage("Errore lettura risposta del server","Errore");
+			e.printStackTrace();
+		}
+	}
+
+
 	
 	/**
 	 * Fa partire il form di registrazione
