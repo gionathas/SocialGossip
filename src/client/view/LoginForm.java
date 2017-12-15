@@ -34,7 +34,6 @@ import java.awt.SystemColor;
 public class LoginForm {
 
 	private JFrame frmSocialgossip;
-	private LoginController controller;
 	private JPasswordField passwordField;
 	private JTextField usernameField;
 	private JButton btnLogin;
@@ -145,23 +144,6 @@ public class LoginForm {
 	public void closeWindow() {
 		frmSocialgossip.dispose();
 	}
-	
-	public void showInfoMessage(String message)
-	{
-		if(message == null)
-			throw new NullPointerException();
-		
-		JOptionPane.showMessageDialog(frmSocialgossip,message);
-	}
-	
-	public void showErrorMessage(String message,String title)
-	{
-		if(message == null)
-			throw new NullPointerException();
-		
-		JOptionPane.showMessageDialog(frmSocialgossip,message,title,JOptionPane.ERROR_MESSAGE);
-	}
-	
 
 	public JPasswordField getPasswordField() {
 		return passwordField;

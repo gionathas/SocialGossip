@@ -5,7 +5,6 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 
-import javax.management.InvalidAttributeValueException;
 
 import org.json.simple.JSONObject;
 import org.json.simple.parser.ParseException;
@@ -17,13 +16,12 @@ import communication.messages.RequestMessage;
 import communication.messages.ResponseFailedMessage;
 import communication.messages.ResponseMessage;
 import communication.messages.ResponseSuccessMessage;
-import server.model.SocialGossipAccessService;
+import server.model.SocialGossipAccessSystem;
 import server.model.SocialGossipNetwork;
 import server.model.exception.PasswordMismatchingException;
 import server.model.exception.UserAlreadyRegistered;
 import server.model.exception.UserNotFindException;
 import server.model.exception.UserStatusException;
-import server.model.User;
 
 /**
  * Thread del server che si occupa di gestire una nuova richiesta da parte di un client
@@ -64,9 +62,6 @@ public class UserRequestHandler implements Runnable
 			
 			//analizzo richiesta del client
 			analyzeRequestMessage(request,out);
-			
-			//rispondo al client
-			//out.writeUTF("request received");
 			
 		} 
 		catch (IOException e) 
@@ -125,107 +120,34 @@ public class UserRequestHandler implements Runnable
 				return;
 			}
 			
+			
+			//sistema per gestire gli accessi a social Gossip
+			SocialGossipAccessSystem accessSystem = new SocialGossipAccessSystem(reteSG);
+			
 			//controllo i possibili casi di richiesta
 			switch (requestType) 
-			{
+			{	
 				//richiesta di accesso al sistema
 				case ACCESS:
-					
-					//sistema per gestire gli accessi a social Gossip
-					SocialGossipAccessService accessSystem = reteSG;
-					
-					//essendo una richiesta di accesso,prendo la password
-					String password = MessageAnalyzer.getPassword(message);
-					
-					//leggo tipo richiesta di accesso
-					RequestAccessMessage.Type requestAccessType = MessageAnalyzer.getRequestAccessMessageType(message);
-					
-					//caso password non trovata o tipo richiesta di accesso non trovato
-					if(password == null || requestAccessType == null)
-					{
-						sendResponseMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.INVALID_REQUEST),out);
-						return;
-					}
-					
-					//controllo i possibili casi di richiesta di accesso
-					switch (requestAccessType) 
-					{
-						//caso richiesta di login
-						case LOGIN:								
-							try 
-							{
-								accessSystem.logIn(nickname,password);
-								
-							} 
-							//caso password errata
-							catch (PasswordMismatchingException e) 
-							{
-								//invio messaggio di errore password errata
-								sendResponseMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.PASSWORD_MISMATCH),out);
-								e.printStackTrace();
-								return;
-							} 
-							//caso utente gia' online
-							catch (UserStatusException e) 
-							{
-								//invio messaggio di errore stato utente non valido
-								sendResponseMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.USER_INVALID_STATUS),out);
-								e.printStackTrace();
-								return;
-							}
-								
-							break;
-						
-						//caso richiesta di registrazione
-						case REGISTER:
-							
-							//prendo il codice della lingua
-							String language = MessageAnalyzer.getLanguage(message);
-							
-							//caso lingua non trovata
-							if(language == null)
-							{
-								sendResponseMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.INVALID_REQUEST),out);
-								return;
-							}
-							
-							//avvio procedura di registrazione
-							try 
-							{
-								accessSystem.register(nickname,password,language);
-							} 
-							//caso utente gia' registrato con quel nick
-							catch (UserAlreadyRegistered e) 
-							{	
-								sendResponseMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.USER_ALREADY_REGISTERED),out);
-								e.printStackTrace();
-								return;
-							}
-							
-							break;
-							
-						//caso messaggio non valido
-						default:
-							sendResponseMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.INVALID_REQUEST),out);
-							return;
-							
-					}
-					
-					
-					//DEBUG Stampo rete
-					reteSG.stampaRete();
-					
-					//operazione e' andata a buon fine mando un messaggio di OK
-					sendResponseMessage(new ResponseSuccessMessage(),out);
-					
+					accessRequestHandler(accessSystem,message,nickname,out);			
 					break;
 				
-					
+				//richiesta logout dal sistema
+				case LOGOUT:
+					logoutRequestHandler(accessSystem,nickname,out);
+					break;
+
 				//richiesta non valida
 				default:
 					sendResponseMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.INVALID_REQUEST),out);
 					return;
 			}
+			
+			//DEBUG Stampo rete
+			reteSG.stampaRete();
+			
+			//operazione e' andata a buon fine mando un messaggio di OK
+			sendResponseMessage(new ResponseSuccessMessage(),out);
 			
 			
 		} 
@@ -243,19 +165,6 @@ public class UserRequestHandler implements Runnable
 			e.printStackTrace();
 			return;
 		}
-		//caso utente non trovato
-		catch (UserNotFindException e) 
-		{
-			try {
-				//invio messaggio di errore, utente non trovato
-				sendResponseMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.USER_NOT_FOUND),out);
-			} catch (IOException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			}
-			e.printStackTrace();
-			return;
-		} 
 		catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -266,5 +175,161 @@ public class UserRequestHandler implements Runnable
 	private void sendResponseMessage(ResponseMessage response,DataOutputStream out) throws IOException
 	{
 		out.writeUTF(response.getJsonMessage());
+	}
+	
+	/**
+	 * Gestione messaggio di richiesta
+	 * @param message
+	 * @param nickname
+	 * @param out
+	 * @throws IOException
+	 */
+	private void accessRequestHandler(SocialGossipAccessSystem accessSystem,JSONObject message,String nickname,DataOutputStream out) throws IOException
+	{	
+		//essendo una richiesta di accesso,prendo la password
+		String password = MessageAnalyzer.getPassword(message);
+		
+		//leggo tipo richiesta di accesso
+		RequestAccessMessage.Type requestAccessType = MessageAnalyzer.getRequestAccessMessageType(message);
+		
+		//caso password non trovata o tipo richiesta di accesso non trovato
+		if(password == null || requestAccessType == null)
+		{
+			sendResponseMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.INVALID_REQUEST),out);
+			return;
+		}
+		
+		//controllo i possibili casi di richiesta di accesso
+		switch (requestAccessType) 
+		{
+			//caso richiesta di login
+			case LOGIN:								
+				
+				loginRequestHandler(accessSystem,nickname,password,out);
+				break;
+			
+			//caso richiesta di registrazione
+			case REGISTER:
+				
+				//prendo il codice della lingua
+				String language = MessageAnalyzer.getLanguage(message);
+				
+				//caso lingua non trovata
+				if(language == null)
+				{
+					sendResponseMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.INVALID_REQUEST),out);
+					return;
+				}
+				
+				//procedura registrazione
+				registerRequestHandler(accessSystem,nickname,password,out,language);
+				
+				break;
+				
+			//caso messaggio non valido
+			default:
+				sendResponseMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.INVALID_REQUEST),out);
+				return;
+				
+		}
+	}
+	
+	
+	/**
+	 * Gestione richiesta login
+	 * @param accessSystem
+	 * @param nickname
+	 * @param password
+	 * @param out
+	 * @throws IOException
+	 */
+	private void loginRequestHandler(SocialGossipAccessSystem accessSystem,String nickname,String password,DataOutputStream out) throws IOException
+	{
+		try 
+		{
+			//login sul sistema
+			accessSystem.logIn(nickname,password);
+			
+		} 
+		//caso password errata
+		catch (PasswordMismatchingException e) 
+		{
+			//invio messaggio di errore password errata
+			sendResponseMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.PASSWORD_MISMATCH),out);
+			e.printStackTrace();
+			return;
+		} 
+		//caso utente gia' online
+		catch (UserStatusException e) 
+		{
+			//invio messaggio di errore stato utente non valido
+			sendResponseMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.USER_INVALID_STATUS),out);
+			e.printStackTrace();
+			return;
+		} 
+		catch (UserNotFindException e) 
+		{
+			//invio messaggio di errore, utente non trovato
+			sendResponseMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.USER_NOT_FOUND),out);
+			e.printStackTrace();
+			return;
+		}
+	}
+	
+	/**
+	 * Gestione richiesta di logout
+	 * @param accessSystem
+	 * @param nickname
+	 * @param out
+	 * @throws IOException
+	 */
+	private void logoutRequestHandler(SocialGossipAccessSystem accessSystem,String nickname,DataOutputStream out) throws IOException
+	{
+		try
+		{
+			accessSystem.logOut(nickname);
+		}
+		//utente non trovato
+		catch(UserNotFindException e) 
+		{
+			//invio messaggio di errore, utente non trovato
+			sendResponseMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.USER_NOT_FOUND),out);
+			e.printStackTrace();
+			return;
+		} 
+		//utente offline
+		catch (UserStatusException e) 
+		{
+			//invio messaggio di errore stato utente non valido
+			sendResponseMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.USER_INVALID_STATUS),out);
+			e.printStackTrace();
+			return;
+		}
+		
+	}
+	
+	/**
+	 * Gestione richiesta registrazione
+	 * @param accessSystem
+	 * @param nickname
+	 * @param password
+	 * @param out
+	 * @param language
+	 * @throws IOException
+	 */
+	private void registerRequestHandler(SocialGossipAccessSystem accessSystem,String nickname,String password,DataOutputStream out,String language) throws IOException
+	{
+		//avvio procedura di registrazione
+		try 
+		{
+			accessSystem.register(nickname,password,language);
+		} 
+		//caso utente gia' registrato con quel nick
+		catch (UserAlreadyRegistered e) 
+		{	
+			sendResponseMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.USER_ALREADY_REGISTERED),out);
+			e.printStackTrace();
+			return;
+}
 	}
 }

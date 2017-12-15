@@ -9,7 +9,7 @@ package communication.messages;
 public class RequestMessage extends Message 
 {
 	
-	public enum Type {ACCESS} //tipi possibili di un messaggio di richiesta
+	public enum Type {ACCESS,LOGOUT} //tipi possibili di un messaggio di richiesta
 	public static String FIELD_REQUEST_TYPE = "request-type";
 	public static String FIELD_REQUEST_NICKNAME = "nickname";
 	
@@ -31,6 +31,12 @@ public class RequestMessage extends Message
 		if(requestType.equals(RequestMessage.Type.ACCESS))
 		{
 			jsonMessage.put(this.FIELD_REQUEST_TYPE,RequestMessage.Type.ACCESS.name());
+
+		}
+		//se e' una richiesta di logout
+		else if(requestType.equals(RequestMessage.Type.LOGOUT))
+		{
+			jsonMessage.put(this.FIELD_REQUEST_TYPE,RequestMessage.Type.LOGOUT.name());
 
 		}
 		

@@ -36,6 +36,21 @@ public class User
 	}
 	
 	/**
+	 * Crea un nuovo utente offline,senza settare password e lingua
+	 * @param nickname
+	 */
+	public User(String nickname)
+	{
+		if(nickname == null)
+			throw new NullPointerException();
+		
+		this.nickname = nickname;
+		this.password = null;
+		this.online = false;
+		this.lingua = null;
+	}
+	
+	/**
 	 * Crea un nuovo utente offline,senza settare la lingua 
 	 * @param nickname
 	 * @param password

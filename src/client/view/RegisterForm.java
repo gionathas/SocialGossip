@@ -139,22 +139,6 @@ public class RegisterForm extends JFrame
 	public JComboBox<String> getComboBox() {
 		return comboBox;
 	}
-
-	public void showInfoMessage(String message)
-	{
-		if(message == null)
-			throw new NullPointerException();
-		
-		JOptionPane.showMessageDialog(this,message);
-	}
-	
-	public void showErrorMessage(String message,String title)
-	{
-		if(message == null)
-			throw new NullPointerException();
-		
-		JOptionPane.showMessageDialog(this,message,title,JOptionPane.ERROR_MESSAGE);
-	}
 	
 	public JButton getBtnInvia() {
 		return btnInvia;

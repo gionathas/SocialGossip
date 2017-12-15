@@ -149,6 +149,10 @@ public class MessageAnalyzer
 		{
 			return RequestMessage.Type.ACCESS;
 		}
+		else if(type.equals(RequestMessage.Type.LOGOUT.name()))
+		{
+			return RequestMessage.Type.LOGOUT;
+		}
 		else {
 			//TODO implementare altri casi
 			return null;

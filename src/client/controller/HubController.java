@@ -1,89 +1,76 @@
 package client.controller;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.ConnectException;
 import java.net.Socket;
 import java.net.UnknownHostException;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.zip.CheckedInputStream;
 
 import javax.swing.JOptionPane;
 
 import org.json.simple.JSONObject;
 import org.json.simple.parser.ParseException;
 
-import client.view.RegisterForm;
+import client.view.Hub;
 import communication.MessageAnalyzer;
+import communication.messages.LogoutRequest;
 import communication.messages.Message;
 import communication.messages.RegisterRequest;
 import communication.messages.ResponseFailedMessage;
 import communication.messages.ResponseMessage;
+import server.model.User;
 
-public class RegisterController extends Controller
+public class HubController extends Controller
 {
-	private RegisterForm registerView;
-	private AtomicBoolean canSendRegister;
-
+	private Hub hubView;
+	private User user;
 	
-	public RegisterController()
+	public HubController(String nickname) 
 	{
-		registerView = new RegisterForm();
-		setWindow(registerView);
+		hubView = new Hub();
+		setWindow(hubView);
 		
-		canSendRegister = new AtomicBoolean(true);
+		user = new User(nickname);
+		hubView.setWelcomeText("Loggato come "+nickname.toUpperCase());
 		initListeners();
-		
 	}
 	
+	@Override
 	protected void initListeners() 
 	{
-		//al click su torna a login
-		registerView.getBtnTornaALogin().addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) 
-			{
-				startLoginForm();
-			}
-		});
-		
-		//al click su invia registrazione
-		registerView.getBtnInvia().addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) 
-			{
-				//se non ho gia' mandato una richiesta di login
-				if(canSendRegister.get() == true)
-				{
-					canSendRegister.set(false);
-					sendRegisterRequest();
-				}
-				
-			}
-		});
+		//richiesta logout alla chiusura della finestra
+		hubView.addWindowListener(new WindowAdapter()
+	        {
+	            @Override
+	            public void windowClosing(WindowEvent e)
+	            {
+	                logOut();
+	            }
+	        });
 	}
 	
-	private void sendRegisterRequest()
+	private void logOut() 
 	{
-		Thread thread = new Thread(new Runnable() {
-			
-			public void run() 
-			{
-				//prendo dati inseriti nella form
-				String nickname = registerView.getUsernameField().getText();
-				char password[] = registerView.getPasswordField().getPassword();
-				char confirm_pass[] = registerView.getConfirmPasswordField().getPassword();
-				String language = (String) registerView.getComboBox().getSelectedItem();
+		//mostro finestra che chiede se si vuole uscire veramente
+		int choice = JOptionPane.showConfirmDialog(hubView,"Sei sicuro di voler uscire?");
+		
+		//se la scelta e' SI
+		if(choice == 0) 
+		{
+			//thread che si occupa di inviare la richiesta di logout al server
+			Thread thread = new Thread(new Runnable() {
 				
-				//controllo dati inseriti
-				if(FormInputChecker.checkRegisterInput(nickname,password,confirm_pass))
+				public void run() 
 				{
-					//se i dati inseriti vanno bene,allora apro una connessione con il server per inviare la richiesta
+					
+					//apro una connessione con il server per inviare la richiesta
 					Socket connection = null;
 					DataOutputStream out = null;
 					DataInputStream in = null;
-					
+						
 					try
 					{
 						//apro connessione con server e creo stream per lettura scrittura
@@ -92,7 +79,7 @@ public class RegisterController extends Controller
 						out = new DataOutputStream(connection.getOutputStream());
 						
 						//creo messaggio di richiesta registrazione
-						RegisterRequest request = new RegisterRequest(nickname,new String(password),language);
+						LogoutRequest request = new LogoutRequest(user.getNickname());
 						
 						//invio richiesta
 						out.writeUTF(request.getJsonMessage());
@@ -101,7 +88,7 @@ public class RegisterController extends Controller
 						String response = in.readUTF();
 						
 						//analizzo risposta del server
-						analyzeResponse(response,nickname);
+						analyzeResponseLogout(response);
 						
 					}
 					//se non riesco a connettermi al server
@@ -118,7 +105,7 @@ public class RegisterController extends Controller
 					} 
 					catch (IOException e) 
 					{
-						showErrorMessage("Errore nella richiesta di registrazione","Errore");
+						showErrorMessage("Errore nella richiesta di logout","Errore");
 						e.printStackTrace();
 					}
 					finally 
@@ -147,21 +134,16 @@ public class RegisterController extends Controller
 						}
 						
 						
-						canSendRegister.set(true);
 					}
 				}
-				//input form non corretta
-				else {
-					canSendRegister.set(true);
-					showErrorMessage(FormInputChecker.REGISTER_ERROR_INFO_STRING,"Errore Form");
-				}
-			}
-		});
+			});
+			
+			thread.start();
+		}
 		
-		thread.start();
 	}
 	
-	private void analyzeResponse(String JsonResponse,String nickname)
+	private void analyzeResponseLogout(String JsonResponse)
 	{
 		try 
 		{
@@ -187,10 +169,14 @@ public class RegisterController extends Controller
 			//controllo esito della risposta ricevuta
 			switch(outcome) 
 			{
-				//registrazione avvenuta
+				//logout avvenuto
 				case SUCCESS:
-					showInfoMessage("Registrazione Avvenuta");
-					startHubView(nickname);
+					showInfoMessage("Alla prossima");
+					//chiudo hub
+					hubView.setVisible(false);
+					hubView.dispose();
+					
+					//TODO aggiungere chiusura dei thread attivi
 					break;
 				
 				case FAIL:
@@ -211,8 +197,8 @@ public class RegisterController extends Controller
 							showErrorMessage("Rcihiesta non valida","Errore");
 							break;
 							
-						case USER_ALREADY_REGISTERED:
-							showErrorMessage("Utente gia' registrato","Warning");
+						case USER_INVALID_STATUS:
+							showErrorMessage("Sei gia' offline","Warning");
 							break;
 									
 						//errore non trovato
@@ -233,29 +219,5 @@ public class RegisterController extends Controller
 			showErrorMessage("Errore lettura risposta del server","Errore");
 			e.printStackTrace();
 		}
-	}
-	
-	/**
-	 * Chiude schermata di registrazione e apre una di Login
-	 */
-	private void startLoginForm()
-	{
-		this.setVisible(false);
-		this.close();
-		
-		//avvio schermata di login
-		LoginController login = new LoginController();
-		login.setVisible(true);
-	}
-	
-	private void startHubView(String nickname) 
-	{
-		HubController hub = new HubController(nickname);
-		
-		//chiudo form di login
-		this.setVisible(false);
-		this.close();
-		
-		hub.setVisible(true);
 	}
 }

@@ -4,49 +4,24 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
-import javax.management.InvalidAttributeValueException;
-import javax.naming.directory.InvalidAttributesException;
-
-import server.model.exception.PasswordMismatchingException;
-import server.model.exception.UserAlreadyRegistered;
 import server.model.exception.UserNotFindException;
-import server.model.exception.UserStatusException;
 import utils.graph.Arco;
 import utils.graph.Grafo;
 import utils.graph.Nodo;
 import utils.graph.exception.VertexAlreadyExist;
 
 /**
- * Rappresenta la rete degli utenti di Social Gossip.
+ * Gestisce il grafo degli utenti di social gossip
  * @author Gionatha Sturba
  *
  */
-public class SocialGossipNetwork implements SocialGossipAccessService
+public class SocialGossipNetwork
 {
 	private Grafo<User> grafo; //grafo non orientato,rappresenta relazioni tra utenti
 	
 	public SocialGossipNetwork()
 	{
 		grafo = new Grafo<User>(false);
-	}
-	
-	/**
-	 * Inserisce un nuovo utente nel grafo della rete sociale,se questo non esiste gia'
-	 * @throws UserAlreadyRegistered se un utente risulta gia essere iscritto con quei parametri
-	 * @throws NullPointerException se l'utente risulta essere null
-	 */
-	public void register(String nickname,String password,String language) throws UserAlreadyRegistered
-	{	
-		try {
-			//creo istanza utente da registrare
-			User userToRegister = new User(nickname,password,true,language);
-			//se questo non esiste,lo aggiungo e lo setto come online
-			grafo.addVertice(userToRegister);
-		}
-		//utente gia registrato
-		catch(VertexAlreadyExist e) {
-			throw new UserAlreadyRegistered();
-		}
 	}
 	
 	/**
@@ -59,39 +34,25 @@ public class SocialGossipNetwork implements SocialGossipAccessService
 	}
 	
 	/**
-	 * Logga un utente registrato alla rete di social Gossip
-	 * @param userToLog utente da loggare
-	 * @throws UserNotFindException se l'utente non risulta essere registrato
-	 * @throws PasswordMismatchingException se le password non corrispondono
-	 * @throws UserStatusException se l'utente risulta gia' essere online
+	 * 
+	 * @param nickname
+	 * @return utente cercato,altrimenti null se non e' registrato
 	 */
-	public void logIn(String nickname,String password) throws UserNotFindException, PasswordMismatchingException, UserStatusException
+	public User cercaUtente(String nickname)
 	{
-		
-		if(nickname == null || password == null)
+		if(nickname == null)
 			throw new NullPointerException();
 		
-		//creo un istanza utente offline 
-		User userToLog = new User(nickname, password);
+		return grafo.getVertice(new User(nickname));
+	}
+	
+	public void aggiungiUtente(String nickname,String password,String language)throws VertexAlreadyExist
+	{
+		if(nickname == null || password == null || language == null)
+			throw new NullPointerException();
 		
-		User registeredUser = grafo.getVertice(userToLog);
-		
-		//se non ho trovato l'utente
-		if(registeredUser == null)
-			throw new UserNotFindException();
-		
-		//utente trovato,controllo le password
-		boolean passwordMatch = registeredUser.getPassword().contentEquals(new StringBuffer(password));
-		
-		if(!passwordMatch)
-			throw new PasswordMismatchingException();
-		
-		//infine controllo che l'utente non sia gia' online
-		if(registeredUser.isOnline())
-			throw new UserStatusException();
-		
-		//se tutti i controlli sono superati,metto online l'utente
-		registeredUser.setOnline(true);
+		//aggiungo un utente con il suo nick password e lingua relativi ad esso,piu' lo metto online
+		grafo.addVertice(new User(nickname,password,true,language));
 	}
 	
 	/**
