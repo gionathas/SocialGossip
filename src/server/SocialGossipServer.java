@@ -7,14 +7,13 @@ import java.net.Socket;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 
-import server.model.SocialGossipNetwork;
+import server.model.Network;
 import server.thread.UserRequestHandler;
-import utils.graph.Grafo;
 
 
 public class SocialGossipServer implements Runnable
 {
-	private SocialGossipNetwork reteSG; //rappresenta la struttura della rete degli utenti di social gossip
+	private Network reteSG; //rappresenta la struttura della rete degli utenti di social gossip
 	private ServerSocket listenerSocket; //socket in cui e' in ascolto il server
 	private ThreadPoolExecutor executor; //pool di thread per gestire i vari client che arrivano
 	
@@ -22,7 +21,7 @@ public class SocialGossipServer implements Runnable
 	{
 		//TODO controllo porta server
 		
-		reteSG = new SocialGossipNetwork();
+		reteSG = new Network();
 		listenerSocket = new ServerSocket(port);
 		executor = (ThreadPoolExecutor) Executors.newCachedThreadPool();
 	}

@@ -1,5 +1,8 @@
 package server.model;
 
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Locale;
 
 /**
@@ -12,13 +15,14 @@ public class User
 	private String nickname;
 	private String password;
 	private boolean online;
-	private String lingua; //ISO 639-2 Code 
+	private String lingua; //ISO 639-2 Code
+	private List<User> amici;
 	
 	public static final int LANG_LENGHT = 2;
 	public static final String NO_LANG = null;
 	
 	/**
-	 * Crea un nuovo utente completo
+	 * Crea un nuovo utente
 	 * @param nickname
 	 * @param password
 	 */
@@ -33,6 +37,7 @@ public class User
 		this.password = password;
 		this.online = online;
 		this.lingua = lingua;
+		this.amici = new LinkedList<User>();
 	}
 	
 	/**
@@ -48,6 +53,7 @@ public class User
 		this.password = null;
 		this.online = false;
 		this.lingua = null;
+		this.amici = null;
 	}
 	
 	/**
@@ -64,6 +70,7 @@ public class User
 		this.password = password;
 		this.online = false;
 		this.lingua = null;
+		this.amici = null;
 	}
 	
 	/**
@@ -81,13 +88,14 @@ public class User
 		this.password = password;
 		this.online = false;
 		this.lingua = lingua;
+		this.amici = null;
 	}
 	
 	@Override
 	public String toString() {
-		String status = online ? "Online" : "Offline";
+		String status = online ? "online" : "offline";
 		
-		return nickname+"["+status+"]";
+		return nickname+"["+status.toUpperCase()+"]";
 	}
 	
 	/**
@@ -125,6 +133,46 @@ public class User
 			throw new IllegalArgumentException();
 		
 		this.lingua = lingua;
+	}
+	
+	/**
+	 * @return lista degli amici dell'utente
+	 */
+	public List<User> getAmici(){
+		return Collections.unmodifiableList(amici);
+	}
+	
+	/**
+	 * 
+	 * @param user
+	 * @return se questo utente e' amico di user
+	 */
+	public boolean amicoDi(User user) {
+		
+		if(user == null)
+			throw new NullPointerException();
+		
+		if(amici == null)
+			return false;
+		
+		return amici.contains(user);
+	}
+	
+	/**
+	 * Aggiunge l'utente user alla lista di amici di questo utente
+	 * @param user
+	 */
+	public void aggiungiAmico(User user) {
+		if(user == null)
+			throw new NullPointerException();
+		
+		if(amici == null)
+			return;
+		
+		//se non sono gia' amici
+		if(!amici.contains(user)) {
+			amici.add(user);
+		}
 	}
 
 	@Override

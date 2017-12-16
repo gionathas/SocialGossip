@@ -1,11 +1,16 @@
 package communication;
 
 import java.awt.TrayIcon.MessageType;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import communication.messages.*;
+import server.model.*;
 
 /**
  * Analizza un messaggio in formato in Json
@@ -81,6 +86,41 @@ public class MessageAnalyzer
 		else {
 			return null;
 		}
+	}
+	
+	/**
+	 * 
+	 * @param JsonMessage
+	 * @param amiciList
+	 * @param chatRoomList
+	 * @return lista degli amici dell'utente loggato,null se non e' stata trovata
+	 */
+	public static List<User> getListaAmici(JSONObject JsonMessage)
+	{
+		if(JsonMessage == null)
+			throw new NullPointerException();
+		
+		JSONArray listOfFriend;
+		
+		//TODO controllo lista chatroom
+		listOfFriend = (JSONArray) JsonMessage.get(SuccessfulLogin.FIELD_FRIEND_LIST);
+		
+		//campo lista amici non trovato
+		if(listOfFriend == null)
+			return null;
+		
+		//lista che contiene gli amici dell'utente loggato
+		List<User> amiciList = new LinkedList<User>();
+		
+		//creo la lista degli amici dell'utente
+		Iterator<User> iteratorUser = listOfFriend.iterator();
+		
+		//aggiungo utenti alla lista
+		while(iteratorUser.hasNext()) {
+				amiciList.add(iteratorUser.next());
+		}
+		
+		return amiciList;
 	}
 	
 	/**

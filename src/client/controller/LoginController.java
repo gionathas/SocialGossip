@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.net.ConnectException;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.swing.JFrame;
@@ -22,6 +23,7 @@ import communication.messages.LoginRequest;
 import communication.messages.Message;
 import communication.messages.ResponseFailedMessage;
 import communication.messages.ResponseMessage;
+import server.model.User;
 
 /**
  * Controller del form di login
@@ -206,7 +208,17 @@ public class LoginController extends Controller
 			{
 				//registrazione avvenuta
 				case SUCCESS:
-					startHubView(nickname);
+					
+					//TODO prendere lista delle chatroom
+					List<User> amiciList = MessageAnalyzer.getListaAmici(response);
+					
+					//lista degli amici dell'utente loggato, non trovata
+					if(amiciList == null) {
+						showErrorMessage("Errore nel messaggio di risposta del server","Errore");
+						return;
+					}
+					
+					startHubView(nickname,amiciList);
 					showInfoMessage("Logged");
 					break;
 				
@@ -276,8 +288,8 @@ public class LoginController extends Controller
 		register.setVisible(true);
 	}
 	
-	private void startHubView(String nickname) {
-		HubController hub = new HubController(nickname);
+	private void startHubView(String nickname,List<User>amiciList) {
+		HubController hub = new HubController(nickname,amiciList);
 		
 		//chiudo form di login
 		this.setVisible(false);

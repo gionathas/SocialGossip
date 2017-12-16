@@ -4,7 +4,8 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
-
+import java.util.LinkedList;
+import java.util.List;
 
 import org.json.simple.JSONObject;
 import org.json.simple.parser.ParseException;
@@ -16,8 +17,8 @@ import communication.messages.RequestMessage;
 import communication.messages.ResponseFailedMessage;
 import communication.messages.ResponseMessage;
 import communication.messages.ResponseSuccessMessage;
-import server.model.SocialGossipAccessSystem;
-import server.model.SocialGossipNetwork;
+import communication.messages.SuccessfulLogin;
+import server.model.*;
 import server.model.exception.PasswordMismatchingException;
 import server.model.exception.UserAlreadyRegistered;
 import server.model.exception.UserNotFindException;
@@ -31,10 +32,10 @@ import server.model.exception.UserStatusException;
 public class UserRequestHandler implements Runnable
 {
 	private Socket client;
-	private SocialGossipNetwork reteSG; //rete social Gossip
+	private Network reteSG; //rete social Gossip
 
 	
-	public UserRequestHandler(Socket client,SocialGossipNetwork reteSG)
+	public UserRequestHandler(Socket client,Network reteSG)
 	{
 		super();
 
@@ -122,7 +123,7 @@ public class UserRequestHandler implements Runnable
 			
 			
 			//sistema per gestire gli accessi a social Gossip
-			SocialGossipAccessSystem accessSystem = new SocialGossipAccessSystem(reteSG);
+			AccessSystem accessSystem = new AccessSystem(reteSG);
 			
 			//controllo i possibili casi di richiesta
 			switch (requestType) 
@@ -145,9 +146,6 @@ public class UserRequestHandler implements Runnable
 			
 			//DEBUG Stampo rete
 			reteSG.stampaRete();
-			
-			//operazione e' andata a buon fine mando un messaggio di OK
-			sendResponseMessage(new ResponseSuccessMessage(),out);
 			
 			
 		} 
@@ -184,7 +182,7 @@ public class UserRequestHandler implements Runnable
 	 * @param out
 	 * @throws IOException
 	 */
-	private void accessRequestHandler(SocialGossipAccessSystem accessSystem,JSONObject message,String nickname,DataOutputStream out) throws IOException
+	private void accessRequestHandler(AccessSystem accessSystem,JSONObject message,String nickname,DataOutputStream out) throws IOException
 	{	
 		//essendo una richiesta di accesso,prendo la password
 		String password = MessageAnalyzer.getPassword(message);
@@ -243,12 +241,15 @@ public class UserRequestHandler implements Runnable
 	 * @param out
 	 * @throws IOException
 	 */
-	private void loginRequestHandler(SocialGossipAccessSystem accessSystem,String nickname,String password,DataOutputStream out) throws IOException
+	private void loginRequestHandler(AccessSystem accessSystem,String nickname,String password,DataOutputStream out) throws IOException
 	{
+		List<User> amici = new LinkedList<User>();
+		List<ChatRoom> chatRoom = new LinkedList<ChatRoom>();
+		
 		try 
 		{
 			//login sul sistema
-			accessSystem.logIn(nickname,password);
+			accessSystem.logIn(nickname,password,amici,chatRoom);
 			
 		} 
 		//caso password errata
@@ -274,6 +275,9 @@ public class UserRequestHandler implements Runnable
 			e.printStackTrace();
 			return;
 		}
+		
+		//TODO operazione e' andata a buon fine mando un messaggio di OK,con la lista degli amici e delle chatroom
+		sendResponseMessage(new SuccessfulLogin(amici),out);
 	}
 	
 	/**
@@ -283,7 +287,7 @@ public class UserRequestHandler implements Runnable
 	 * @param out
 	 * @throws IOException
 	 */
-	private void logoutRequestHandler(SocialGossipAccessSystem accessSystem,String nickname,DataOutputStream out) throws IOException
+	private void logoutRequestHandler(AccessSystem accessSystem,String nickname,DataOutputStream out) throws IOException
 	{
 		try
 		{
@@ -306,6 +310,9 @@ public class UserRequestHandler implements Runnable
 			return;
 		}
 		
+		//operazione e' andata a buon fine mando un messaggio di OK
+		sendResponseMessage(new ResponseSuccessMessage(),out);
+		
 	}
 	
 	/**
@@ -317,7 +324,7 @@ public class UserRequestHandler implements Runnable
 	 * @param language
 	 * @throws IOException
 	 */
-	private void registerRequestHandler(SocialGossipAccessSystem accessSystem,String nickname,String password,DataOutputStream out,String language) throws IOException
+	private void registerRequestHandler(AccessSystem accessSystem,String nickname,String password,DataOutputStream out,String language) throws IOException
 	{
 		//avvio procedura di registrazione
 		try 
@@ -330,6 +337,9 @@ public class UserRequestHandler implements Runnable
 			sendResponseMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.USER_ALREADY_REGISTERED),out);
 			e.printStackTrace();
 			return;
-}
+		}
+		
+		//operazione e' andata a buon fine mando un messaggio di OK
+		sendResponseMessage(new ResponseSuccessMessage(),out);
 	}
 }

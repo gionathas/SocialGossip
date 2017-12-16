@@ -15,11 +15,11 @@ import utils.graph.exception.VertexAlreadyExist;
  * @author Gionatha Sturba
  *
  */
-public class SocialGossipNetwork
+public class Network
 {
 	private Grafo<User> grafo; //grafo non orientato,rappresenta relazioni tra utenti
 	
-	public SocialGossipNetwork()
+	public Network()
 	{
 		grafo = new Grafo<User>(false);
 	}

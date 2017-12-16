@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.net.ConnectException;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.List;
 
 import javax.swing.JOptionPane;
 
@@ -29,22 +30,31 @@ public class HubController extends Controller
 {
 	private Hub hubView;
 	private User user;
+	private List<User> amiciList;
 	
-	public HubController(String nickname) 
+	public HubController(String nickname,List<User> amiciList) 
 	{
 		hubView = new Hub();
 		setWindow(hubView);
 		
-		initComponents(nickname);
+		initComponents(nickname,amiciList);
 		initListeners();
 	}
 	
-	private void initComponents(String nickname)
+	private void initComponents(String nickname,List<User> amiciList)
 	{	
 		user = new User(nickname);
 		hubView.setWelcomeText("Loggato come "+nickname.toUpperCase());
-		//TODO inviare richiesta amici online
-		//TODO inviare richiesta chatroom attive
+		
+		//se mi e' stata passata una lista di amici e di chatRoom
+		if(amiciList != null) {
+			//aggiorno lista amici
+			for (User user : amiciList) {
+				hubView.getModelUserFriendList().addElement(user);
+			}
+			
+			//TODO aggiorno lista chatRoom
+		}
 	}
 	
 	@Override

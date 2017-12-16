@@ -1,5 +1,7 @@
 package server.model;
 
+import java.util.List;
+
 import javax.management.InvalidAttributeValueException;
 
 import server.model.exception.PasswordMismatchingException;
@@ -9,15 +11,15 @@ import server.model.exception.UserStatusException;
 import utils.graph.exception.VertexAlreadyExist;
 
 /**
- * Implementa sistema di gestione accessi degli utenti al sistema
+ * Sistema di gestione accessi degli utenti al sistema
  * @author gio
  *
  */
-public class SocialGossipAccessSystem
+public class AccessSystem
 {
-	private SocialGossipNetwork rete;
+	private Network rete;
 	
-	public SocialGossipAccessSystem(SocialGossipNetwork rete)
+	public AccessSystem(Network rete)
 	{
 		if(rete == null)
 			throw new NullPointerException();
@@ -34,9 +36,9 @@ public class SocialGossipAccessSystem
 	 * @throws UserStatusException se l'utente risulta gia' essere online
 	 * @throws InvalidAttributeValueException se i parametri di log in non sono validi
 	 */
-	public void logIn(String nickname,String password)throws UserNotFindException, PasswordMismatchingException, UserStatusException
+	public void logIn(String nickname,String password,List<User> amiciList,List<ChatRoom> chatRoomList)throws UserNotFindException, PasswordMismatchingException, UserStatusException
 	{
-		if(nickname == null || password == null)
+		if(nickname == null || password == null || amiciList == null || chatRoomList == null)
 			throw new NullPointerException();
 		
 		User registeredUser = rete.cercaUtente(nickname);
@@ -57,6 +59,11 @@ public class SocialGossipAccessSystem
 		
 		//se tutti i controlli sono superati,metto online l'utente
 		registeredUser.setOnline(true);
+		
+		//ritorno la lista dei suoi amici
+		amiciList = registeredUser.getAmici();
+		
+		//TODO creo la lista delle chatRoom attive
 	}
 	
 	/**

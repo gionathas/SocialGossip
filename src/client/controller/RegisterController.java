@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.net.ConnectException;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.zip.CheckedInputStream;
 
@@ -22,6 +23,7 @@ import communication.messages.Message;
 import communication.messages.RegisterRequest;
 import communication.messages.ResponseFailedMessage;
 import communication.messages.ResponseMessage;
+import server.model.User;
 
 public class RegisterController extends Controller
 {
@@ -190,7 +192,7 @@ public class RegisterController extends Controller
 				//registrazione avvenuta
 				case SUCCESS:
 					showInfoMessage("Registrazione Avvenuta");
-					startHubView(nickname);
+					startHubView(nickname,null);
 					break;
 				
 				case FAIL:
@@ -248,9 +250,9 @@ public class RegisterController extends Controller
 		login.setVisible(true);
 	}
 	
-	private void startHubView(String nickname) 
+	private void startHubView(String nickname,List<User> amiciList) 
 	{
-		HubController hub = new HubController(nickname);
+		HubController hub = new HubController(nickname,amiciList);
 		
 		//chiudo form di login
 		this.setVisible(false);

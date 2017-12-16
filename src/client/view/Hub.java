@@ -6,6 +6,7 @@ import javax.swing.JPanel;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JScrollPane;
+import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JTextField;
 import java.awt.event.ActionListener;
@@ -17,6 +18,7 @@ import server.model.ChatRoom;
 import server.model.User;
 
 import java.awt.Color;
+import java.awt.Font;
 
 public class Hub extends JFrame {
 
@@ -33,7 +35,9 @@ public class Hub extends JFrame {
 	private JButton btnUniscitiAChatroom;
 	private JButton btnCreaChatroom;
 	private JList<User> userFriendList;
+	private DefaultListModel<User> modelUserFriendList = new DefaultListModel<User>();
 	private JList<ChatRoom> chatRoomList;
+	private DefaultListModel<ChatRoom> modelChatRoomList = new DefaultListModel<ChatRoom>();
 
 	/**
 	 * Create the frame.
@@ -56,6 +60,7 @@ public class Hub extends JFrame {
 		contentPane.add(scrollPane);
 		
 		userFriendList = new JList<User>();
+		userFriendList.setModel(modelUserFriendList);
 		scrollPane.setViewportView(userFriendList);
 		
 		JScrollPane scrollPane_1 = new JScrollPane();
@@ -63,6 +68,7 @@ public class Hub extends JFrame {
 		contentPane.add(scrollPane_1);
 		
 		chatRoomList = new JList<ChatRoom>();
+		chatRoomList.setModel(modelChatRoomList);
 		scrollPane_1.setViewportView(chatRoomList);
 		
 		btnCreaChatroom = new JButton("Crea ChatRoom");
@@ -74,19 +80,21 @@ public class Hub extends JFrame {
 		contentPane.add(btnUniscitiAChatroom);
 		
 		JLabel lblCercaUtente = new JLabel("Cerca Utente:");
+		lblCercaUtente.setFont(new Font("Dialog", Font.BOLD, 14));
 		lblCercaUtente.setBounds(15, 27, 110, 15);
 		contentPane.add(lblCercaUtente);
 		
 		textField = new JTextField();
-		textField.setBounds(120, 20, 207, 30);
+		textField.setBounds(130, 20, 207, 30);
 		contentPane.add(textField);
 		textField.setColumns(10);
 		
 		btnCerca = new JButton("Cerca");
-		btnCerca.setBounds(335, 22, 74, 25);
+		btnCerca.setBounds(345, 22, 74, 25);
 		contentPane.add(btnCerca);
 		
 		JLabel lblChatroomAttive = new JLabel("ChatRoom Attive:");
+		lblChatroomAttive.setFont(new Font("Dialog", Font.BOLD, 14));
 		lblChatroomAttive.setBounds(15, 85, 140, 15);
 		contentPane.add(lblChatroomAttive);
 		
@@ -95,6 +103,7 @@ public class Hub extends JFrame {
 		contentPane.add(btnLogout);
 		
 		JLabel lblAmiciOnline = new JLabel("I Tuoi Amici:");
+		lblAmiciOnline.setFont(new Font("Dialog", Font.BOLD, 14));
 		lblAmiciOnline.setBounds(550, 55, 110, 15);
 		contentPane.add(lblAmiciOnline);
 		
@@ -109,8 +118,12 @@ public class Hub extends JFrame {
 		contentPane.add(separator);
 	}
 
-	public JButton getBtnAggiornaChatRoom() {
-		return btnAggiornaChatRoom;
+	public DefaultListModel<User> getModelUserFriendList() {
+		return modelUserFriendList;
+	}
+
+	public DefaultListModel<ChatRoom> getModelChatRoomList() {
+		return modelChatRoomList;
 	}
 
 	public JPanel getContentPane() {
@@ -127,10 +140,6 @@ public class Hub extends JFrame {
 
 	public JButton getBtnAvviaChat() {
 		return btnAvviaChat;
-	}
-
-	public JButton getBtnAggiorna() {
-		return btnAggiornaAmici;
 	}
 
 	public JButton getBtnCerca() {
