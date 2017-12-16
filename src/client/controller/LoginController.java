@@ -219,7 +219,6 @@ public class LoginController extends Controller
 					}
 					
 					startHubView(nickname,amiciList);
-					showInfoMessage("Logged");
 					break;
 				
 				case FAIL:

@@ -1,5 +1,6 @@
 package client.controller;
 
+import java.awt.Frame;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
@@ -53,8 +54,10 @@ public class HubController extends Controller
 				hubView.getModelUserFriendList().addElement(user);
 			}
 			
-			//TODO aggiorno lista chatRoom
+			//TODO aggiornare lista chatRoom
 		}
+		
+		System.out.println("Fine analisi lista amici");
 	}
 	
 	@Override
@@ -154,6 +157,7 @@ public class HubController extends Controller
 							if(out != null) {
 								out.close();
 							}
+							
 						}
 						catch(IOException e)
 						{
@@ -199,12 +203,10 @@ public class HubController extends Controller
 			{
 				//logout avvenuto
 				case SUCCESS:
-					showInfoMessage("Alla prossima");
 					//chiudo hub
 					hubView.setVisible(false);
 					hubView.dispose();
 					
-					//TODO aggiungere chiusura dei thread attivi
 					break;
 				
 				case FAIL:

@@ -17,6 +17,7 @@ public class SocialGossipClient
 			//avvio client con schermata di Login
 			LoginController login = new LoginController();
 			login.setVisible(true);
+			
 		} 
 		catch (Exception e) 
 		{
