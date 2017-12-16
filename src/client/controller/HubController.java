@@ -1,16 +1,9 @@
 package client.controller;
 
-import java.awt.Frame;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.net.ConnectException;
-import java.net.Socket;
-import java.net.UnknownHostException;
 import java.util.List;
 
 import javax.swing.JOptionPane;
@@ -18,11 +11,12 @@ import javax.swing.JOptionPane;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.ParseException;
 
+import client.thread.RequestSenderThread;
 import client.view.Hub;
 import communication.MessageAnalyzer;
+import communication.messages.FindUserRequest;
 import communication.messages.LogoutRequest;
 import communication.messages.Message;
-import communication.messages.RegisterRequest;
 import communication.messages.ResponseFailedMessage;
 import communication.messages.ResponseMessage;
 import server.model.User;
@@ -69,7 +63,7 @@ public class HubController extends Controller
 	            @Override
 	            public void windowClosing(WindowEvent e)
 	            {
-	                logOut();
+	                new LogoutRequestSender().start();;
 	            }
 	        });
 		
@@ -78,176 +72,187 @@ public class HubController extends Controller
 			public void actionPerformed(ActionEvent arg0) 
 			{
 				//avvio procedura di logout
-				logOut();
+                new LogoutRequestSender().start();
 			}
 		});
 	}
 	
-	private void logOut() 
+	/**
+	 * Thread che si occupa della gestione della richiesta di ricerca di un utente
+	 * @author gio
+	 *
+	 */
+	private class FindUserRequestSender extends RequestSenderThread
 	{
-		//mostro finestra che chiede se si vuole uscire veramente
-		int choice = JOptionPane.showConfirmDialog(hubView,"Sei sicuro di voler uscire?");
+		private String nicknameUserToFind;
 		
-		//se la scelta e' SI
-		if(choice == 0) 
+		public FindUserRequestSender() 
 		{
-			//thread che si occupa di inviare la richiesta di logout al server
-			Thread thread = new Thread(new Runnable() {
-				
-				public void run() 
-				{
-					
-					//apro una connessione con il server per inviare la richiesta
-					Socket connection = null;
-					DataOutputStream out = null;
-					DataInputStream in = null;
-						
-					try
-					{
-						//apro connessione con server e creo stream per lettura scrittura
-						connection = new Socket("localhost",5000);
-						in = new DataInputStream(connection.getInputStream());
-						out = new DataOutputStream(connection.getOutputStream());
-						
-						//creo messaggio di richiesta registrazione
-						LogoutRequest request = new LogoutRequest(user.getNickname());
-						
-						//invio richiesta
-						out.writeUTF(request.getJsonMessage());
-						
-						//leggo risposta del server
-						String response = in.readUTF();
-						
-						//analizzo risposta del server
-						analyzeResponseLogout(response);
-						
-					}
-					//se non riesco a connettermi al server
-					catch(ConnectException e)
-					{
-						showErrorMessage("Servizio attualmente non disponibile","Errore");
-						e.printStackTrace();
-
-					}
-					catch (UnknownHostException e) 
-					{
-						showErrorMessage("Server non trovato","Errore");
-						e.printStackTrace();
-					} 
-					catch (IOException e) 
-					{
-						showErrorMessage("Errore nella richiesta di logout","Errore");
-						e.printStackTrace();
-					}
-					finally 
-					{
-						try
-						{
-							//chiud connessione se aperta
-							if(connection != null){
-								connection.close();
-							}
-							
-							//chiudo stream input se aperto
-							if(in != null) {
-								in.close();
-							}
-							
-							//chiudo stream output se aperto
-							if(out != null) {
-								out.close();
-							}
-							
-						}
-						catch(IOException e)
-						{
-							//TODO
-							e.printStackTrace();
-						}
-						
-						
-					}
-				}
-			});
+			nicknameUserToFind = hubView.getTextField().getText();
+		}
+		
+		@Override
+		protected void init() 
+		{
+			//se il nickname inserito non e' valido
+			if(!FormInputChecker.checkNickname(nicknameUserToFind)) {
+				showErrorMessage("Nome inserito non valido","Errore Form");
+			}
+			//altrimenti procedo alla richiesta
+			else {
+				init = true;
+			}
 			
-			thread.start();
+		}
+
+		@Override
+		protected void createRequest() {
+			request = new FindUserRequest(user.getNickname(),nicknameUserToFind);
+		}
+
+		@Override
+		protected void ConnectErrorHandler() {
+			showErrorMessage("Servizio attualmente non disponibile","Errore");
+		}
+
+		@Override
+		protected void UnKwownHostErrorHandler() {
+			showErrorMessage("Server non trovato","Errore");
+		}
+
+		@Override
+		protected void IOErrorHandler() {
+			showErrorMessage("Errore nella richiesta di ricerca di un utente","Errore");			
+		}
+
+		@Override
+		protected void analyzeResponse(String response) {
+			// TODO Auto-generated method stub
+			
 		}
 		
 	}
 	
-	private void analyzeResponseLogout(String JsonResponse)
+	/**
+	 * Thread che si occupa di gestire la richiesta di logout
+	 * @author gio
+	 *
+	 */
+	private class LogoutRequestSender extends RequestSenderThread
 	{
-		try 
+
+		@Override
+		protected void init() 
 		{
-			//parso json rappresentate risposta del server
-			JSONObject response = MessageAnalyzer.parse(JsonResponse);
+			//mostro finestra che chiede se si vuole uscire veramente
+			int choice = JOptionPane.showConfirmDialog(hubView,"Sei sicuro di voler uscire?");
 			
-			//se non e' un messaggio di risposta
-			if(MessageAnalyzer.getMessageType(response) != Message.Type.RESPONSE) 
-			{
-				showErrorMessage("Errore nel messaggio di risposta del server","Errore");
-				return;
+			//se la scelta e' diversa da Si,mi fermo
+			if(choice != 0) {
+				init = false;
 			}
-			
-			ResponseMessage.Type outcome = MessageAnalyzer.getResponseType(response);
-			
-			//tipo risposta non trovato
-			if(outcome == null)
-			{
-				showErrorMessage("Errore nel messaggio di risposta del server","Errore");
-				return;
+			//se la scelta e' stata si
+			else {
+				init = true;
 			}
-			
-			//controllo esito della risposta ricevuta
-			switch(outcome) 
-			{
-				//logout avvenuto
-				case SUCCESS:
-					//chiudo hub
-					hubView.setVisible(false);
-					hubView.dispose();
-					
-					break;
-				
-				case FAIL:
-					//analizzo l'errore riscontrato
-					ResponseFailedMessage.Errors error = MessageAnalyzer.getResponseFailedErrorType(response);
-					
-					//errore non trovato
-					if(error == null) {
-						showErrorMessage("Errore nel messaggio di risposta del server","Errore");
-						return;
-					}
-					
-					//controllo tipi di errore che si possono riscontrare
-					switch (error) 
-					{
-						//richiesta non valida
-						case INVALID_REQUEST:
-							showErrorMessage("Rcihiesta non valida","Errore");
-							break;
-							
-						case USER_INVALID_STATUS:
-							showErrorMessage("Sei gia' offline","Warning");
-							break;
-									
-						//errore non trovato
-						default:
-							showErrorMessage("Errore nel messaggio di risposta del server","Errore");
-							break;
-					}
-					
-					break;
-					
-				default:
-					showErrorMessage("Errore nel messaggio di risposta del server","Errore");
-					break;
-			}
-		} 
-		catch (ParseException e) 
-		{
-			showErrorMessage("Errore lettura risposta del server","Errore");
-			e.printStackTrace();
 		}
-	}
+
+		@Override
+		protected void createRequest() 
+		{
+			request = new LogoutRequest(user.getNickname());
+		}
+
+		@Override
+		protected void ConnectErrorHandler() {
+			showErrorMessage("Servizio attualmente non disponibile","Errore");
+		}
+
+		@Override
+		protected void UnKwownHostErrorHandler() {
+			showErrorMessage("Server non trovato","Errore");
+		}
+
+		@Override
+		protected void IOErrorHandler() {
+			showErrorMessage("Errore nella richiesta di logout","Errore");
+		}
+		
+		protected void analyzeResponse(String JsonResponse)
+		{
+			try 
+			{
+				//parso json rappresentate risposta del server
+				JSONObject response = MessageAnalyzer.parse(JsonResponse);
+				
+				//se non e' un messaggio di risposta
+				if(MessageAnalyzer.getMessageType(response) != Message.Type.RESPONSE) 
+				{
+					showErrorMessage("Errore nel messaggio di risposta del server","Errore");
+					return;
+				}
+				
+				ResponseMessage.Type outcome = MessageAnalyzer.getResponseType(response);
+				
+				//tipo risposta non trovato
+				if(outcome == null)
+				{
+					showErrorMessage("Errore nel messaggio di risposta del server","Errore");
+					return;
+				}
+				
+				//controllo esito della risposta ricevuta
+				switch(outcome) 
+				{
+					//logout avvenuto
+					case SUCCESS:
+						//chiudo hub
+						hubView.setVisible(false);
+						hubView.dispose();
+						
+						break;
+					
+					case FAIL:
+						//analizzo l'errore riscontrato
+						ResponseFailedMessage.Errors error = MessageAnalyzer.getResponseFailedErrorType(response);
+						
+						//errore non trovato
+						if(error == null) {
+							showErrorMessage("Errore nel messaggio di risposta del server","Errore");
+							return;
+						}
+						
+						//controllo tipi di errore che si possono riscontrare
+						switch (error) 
+						{
+							//richiesta non valida
+							case INVALID_REQUEST:
+								showErrorMessage("Rcihiesta non valida","Errore");
+								break;
+								
+							case USER_INVALID_STATUS:
+								showErrorMessage("Sei gia' offline","Warning");
+								break;
+										
+							//errore non trovato
+							default:
+								showErrorMessage("Errore nel messaggio di risposta del server","Errore");
+								break;
+						}
+						
+						break;
+						
+					default:
+						showErrorMessage("Errore nel messaggio di risposta del server","Errore");
+						break;
+				}
+			} 
+			catch (ParseException e) 
+			{
+				showErrorMessage("Errore lettura risposta del server","Errore");
+				e.printStackTrace();
+			}
+		}
+		
+	}	
 }

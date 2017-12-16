@@ -16,6 +16,7 @@ import javax.swing.JFrame;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.ParseException;
 
+import client.thread.RequestSenderThread;
 import client.view.LoginForm;
 import client.view.RegisterForm;
 import communication.MessageAnalyzer;
@@ -33,7 +34,6 @@ import server.model.User;
 public class LoginController extends Controller
 {
 	private LoginForm loginView;
-	private AtomicBoolean canSendLogin;
 	
 	public LoginController()
 	{
@@ -41,9 +41,6 @@ public class LoginController extends Controller
 		//creo form di login
 		this.loginView = new LoginForm();
 		this.window = loginView.getFrame();
-		
-		//variabile di supporto
-		canSendLogin = new AtomicBoolean(true);
 
 		//registro gli action listener
 		initListeners();
@@ -55,12 +52,8 @@ public class LoginController extends Controller
 		loginView.getBtnLogin().addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) 
 			{
-				//se non ho gia' mandato una richiesta di login
-				if(canSendLogin.get() == true)
-				{
-					canSendLogin.set(false);
-					sendLoginRequest();
-				}
+				//avvio thread che gestira la richiesta di Login
+				new LoginRequestSender().start();
 			}
 		});
 		
@@ -74,204 +67,155 @@ public class LoginController extends Controller
 	}
 	
 	/**
-	 * Effettua la richiesta di Login al server
+	 * Thread che si occupa di inviare e gestire una richiesta di Login
+	 * @author gio
+	 *
 	 */
-	private void sendLoginRequest()
-	{		
-		/* Un thread si occupera' di gestire la comunicazione con il server */
-		Thread thread = new Thread(new Runnable() {
-			public void run() 
-			{
-				String nickname = loginView.getUsernameField().getText();
-				char[] password = loginView.getPasswordField().getPassword();
-				
-				//prima di inviare la richiesta controllo i dati inseriti
-				if(FormInputChecker.checkLoginInput(nickname,password))
-				{
-					Socket connection = null;
-					DataInputStream in = null;
-					DataOutputStream out = null;
-					
-					try 
-					{
-						loginView.getAttesa().setVisible(true);
-						
-						//apro connessione con server e creo stream per lettura scrittura
-						connection = new Socket("localhost",5000);
-						in = new DataInputStream(connection.getInputStream());
-						out = new DataOutputStream(connection.getOutputStream());
-												
-						//creo il messaggio di richiesta di login
-						LoginRequest request = new LoginRequest(nickname,new String(password));
-
-						//invio la richiesta di login al server
-						out.writeUTF(request.getJsonMessage());
-						
-						//attendo risposta server
-						String response = in.readUTF();
-						
-						//mostro risposta server
-						analyzeResponse(response,nickname);
-												
-					}
-					//se non riesco a connettermi al server
-					catch(ConnectException e)
-					{
-						showErrorMessage("Servizio attualmente non disponibile","Errore");
-						e.printStackTrace();
-
-					}
-					//problema connessione al server
-					catch(UnknownHostException e)
-					{
-						showErrorMessage("Server non trovato","Errore");
-						e.printStackTrace();
-
-					}
-					catch (IOException e) 
-					{
-						showErrorMessage("Errore nella richiesta di login","Errore");
-						e.printStackTrace();
-					}
-					
-					finally 
-					{
-						try
-						{
-							//chiud connessione se aperta
-							if(connection != null){
-								connection.close();
-							}
-							
-							//chiudo stream input se aperto
-							if(in != null) {
-								in.close();
-							}
-							
-							//chiudo stream output se aperto
-							if(out != null) {
-								out.close();
-							}
-						}
-						catch(IOException e)
-						{
-							//TODO
-							e.printStackTrace();
-						}
-						
-						
-						canSendLogin.set(true);
-						loginView.getAttesa().setVisible(false);
-					}
-
-				}
-				//input form non corretta
-				else 
-				{
-					canSendLogin.set(true);
-					showErrorMessage(FormInputChecker.LOGIN_ERROR_INFO_STRING,"Form Errata");
-				}
-			}
-				
-		});
-		
-		//avvio thread comunicazione
-		thread.start();
-	}
-	
-	private void analyzeResponse(String JsonResponse,String nickname)
+	private class LoginRequestSender extends RequestSenderThread
 	{
-		try
+		private String nickname;
+		private char[] password;
+		
+		public LoginRequestSender() 
 		{
-			//parso json rappresentate risposta del server
-			JSONObject response = MessageAnalyzer.parse(JsonResponse);
-			
-			//se non e' un messaggio di risposta
-			if(MessageAnalyzer.getMessageType(response) != Message.Type.RESPONSE) 
+			nickname = loginView.getUsernameField().getText();
+			password = loginView.getPasswordField().getPassword();
+		}
+		
+		@Override
+		protected void init() 
+		{
+			//dati nella form errati
+			if(!FormInputChecker.checkLoginInput(nickname,password))
 			{
-				showErrorMessage("Errore nel messaggio di risposta del server","Errore");
-				return;
-			}
-			
-			//prendo tipo esito della risposta
-			ResponseMessage.Type outcome = MessageAnalyzer.getResponseType(response);
-			
-			//tipo risposta non trovato
-			if(outcome == null)
-			{
-				showErrorMessage("Errore nel messaggio di risposta del server","Errore");
-				return;
-			}
-			
-			//controllo esito della risposta ricevuta
-			switch(outcome) 
-			{
-				//registrazione avvenuta
-				case SUCCESS:
-					
-					//TODO prendere lista delle chatroom
-					List<User> amiciList = MessageAnalyzer.getListaAmici(response);
-					
-					//lista degli amici dell'utente loggato, non trovata
-					if(amiciList == null) {
-						showErrorMessage("Errore nel messaggio di risposta del server","Errore");
-						return;
-					}
-					
-					startHubView(nickname,amiciList);
-					break;
+				init = false;
+				showErrorMessage(FormInputChecker.LOGIN_ERROR_INFO_STRING,"Form Errata");
 				
-				case FAIL:
-					//analizzo l'errore riscontrato
-					ResponseFailedMessage.Errors error = MessageAnalyzer.getResponseFailedErrorType(response);
-					
-					//errore non trovato
-					if(error == null) {
-						showErrorMessage("Errore nel messaggio di risposta del server","Errore");
-						return;
-					}
-					
-					//controllo tipi di errore che si possono riscontrare
-					switch (error) 
-					{
-						//richiesta non valida
-						case INVALID_REQUEST:
-							showErrorMessage("Rcihiesta non valida","Errore");
-							break;
-							
-						case PASSWORD_MISMATCH:
-							showErrorMessage("Password errata","Warning");
-							break;
-						
-						case USER_NOT_FOUND:
-							showErrorMessage("Utente non trovato","Warning");
-							break;
-						
-						case USER_INVALID_STATUS:
-							showErrorMessage("Sei gia' online con un altro client","Warning");
-							break;
-									
-						//errore non trovato
-						default:
-							showErrorMessage("Errore nel messaggio di risposta del server","Errore");
-							break;
-					}
-					
-					break;
-					
-				default:
-					showErrorMessage("Errore nel messaggio di risposta del server","Errore");
-					break;
+			}
+			else {
+				//posso procedere
+				init = true;
 			}
 		}
-		catch (ParseException e) 
+
+		@Override
+		/**
+		 * Creo messaggio di richiesta di Login
+		 */
+		protected void createRequest() 
 		{
-			showErrorMessage("Errore lettura risposta del server","Errore");
-			e.printStackTrace();
+			System.out.println(nickname);
+			request = new LoginRequest(nickname,new String(password));
+		}
+
+		@Override
+		protected void ConnectErrorHandler() 
+		{
+			showErrorMessage("Servizio attualmente non disponibile","Errore");
+		}
+
+		@Override
+		protected void UnKwownHostErrorHandler() {
+			showErrorMessage("Server non trovato","Errore");			
+		}
+
+		@Override
+		protected void IOErrorHandler() {
+			showErrorMessage("Errore nella richiesta di login","Errore");
+		}
+
+		protected void analyzeResponse(String JsonResponse)
+		{
+			try
+			{
+				//parso json rappresentate risposta del server
+				JSONObject response = MessageAnalyzer.parse(JsonResponse);
+				
+				//se non e' un messaggio di risposta
+				if(MessageAnalyzer.getMessageType(response) != Message.Type.RESPONSE) 
+				{
+					showErrorMessage("Errore nel messaggio di risposta del server","Errore");
+					return;
+				}
+				
+				//prendo tipo esito della risposta
+				ResponseMessage.Type outcome = MessageAnalyzer.getResponseType(response);
+				
+				//tipo risposta non trovato
+				if(outcome == null)
+				{
+					showErrorMessage("Errore nel messaggio di risposta del server","Errore");
+					return;
+				}
+				
+				//controllo esito della risposta ricevuta
+				switch(outcome) 
+				{
+					//registrazione avvenuta
+					case SUCCESS:
+						
+						//TODO prendere lista delle chatroom
+						List<User> amiciList = MessageAnalyzer.getListaAmici(response);
+						
+						//lista degli amici dell'utente loggato, non trovata
+						if(amiciList == null) {
+							showErrorMessage("Errore nel messaggio di risposta del server","Errore");
+							return;
+						}
+						
+						startHubView(nickname,amiciList);
+						break;
+					
+					case FAIL:
+						//analizzo l'errore riscontrato
+						ResponseFailedMessage.Errors error = MessageAnalyzer.getResponseFailedErrorType(response);
+						
+						//errore non trovato
+						if(error == null) {
+							showErrorMessage("Errore nel messaggio di risposta del server","Errore");
+							return;
+						}
+						
+						//controllo tipi di errore che si possono riscontrare
+						switch (error) 
+						{
+							//richiesta non valida
+							case INVALID_REQUEST:
+								showErrorMessage("Rcihiesta non valida","Errore");
+								break;
+								
+							case PASSWORD_MISMATCH:
+								showErrorMessage("Password errata","Warning");
+								break;
+							
+							case USER_NOT_FOUND:
+								showErrorMessage("Utente non trovato","Warning");
+								break;
+							
+							case USER_INVALID_STATUS:
+								showErrorMessage("Sei gia' online con un altro client","Warning");
+								break;
+										
+							//errore non trovato
+							default:
+								showErrorMessage("Errore nel messaggio di risposta del server","Errore");
+								break;
+						}
+						
+						break;
+						
+					default:
+						showErrorMessage("Errore nel messaggio di risposta del server","Errore");
+						break;
+				}
+			}
+			catch (ParseException e) 
+			{
+				showErrorMessage("Errore lettura risposta del server","Errore");
+				e.printStackTrace();
+			}
 		}
 	}
-
-
 	
 	/**
 	 * Fa partire il form di registrazione

@@ -189,9 +189,15 @@ public class MessageAnalyzer
 		{
 			return RequestMessage.Type.ACCESS;
 		}
+		//messaggio richiesta logout
 		else if(type.equals(RequestMessage.Type.LOGOUT.name()))
 		{
 			return RequestMessage.Type.LOGOUT;
+		}
+		//messaggio richiesta ricerca utente
+		else if(type.equals(RequestMessage.Type.INTERACTION.name())) 
+		{
+			return RequestMessage.Type.INTERACTION;
 		}
 		else {
 			//TODO implementare altri casi
@@ -201,15 +207,65 @@ public class MessageAnalyzer
 	
 	/**
 	 * 
-	 * @param JsonMessage messaggio di richiesta
-	 * @return nickname dell'utente all'interno del messaggio di richiesta,null se non e' stato trovato
+	 * @param JsonMessage
+	 * @return tipo della richiesta di interazione con un altro utente
 	 */
-	public static String getNickname(JSONObject JsonMessage)
+	public static InteractionRequest.Type getInteractionType(JSONObject JsonMessage)
 	{
 		if(JsonMessage == null)
 			throw new NullPointerException();
 		
-		return (String) JsonMessage.get(RequestMessage.FIELD_REQUEST_NICKNAME);
+		String type = (String) JsonMessage.get(InteractionRequest.FIELD_INTERACTION_REQUEST_TYPE);
+		
+		//campo non trovato
+		if(type == null)
+			return null;
+		
+		//se e' un messaggio di richiesto accesso
+		if(type.equals(InteractionRequest.Type.FIND_USER_REQUEST.name()))
+		{
+			return InteractionRequest.Type.FIND_USER_REQUEST;
+		}
+		//messaggio richiesta logout
+		else if(type.equals(InteractionRequest.Type.FRIENDSHIP_REQUEST.name()))
+		{
+			return InteractionRequest.Type.FRIENDSHIP_REQUEST;
+		}
+		//messaggio richiesta ricerca utente
+		else if(type.equals(InteractionRequest.Type.MESSAGE_SEND_REQUEST.name())) 
+		{
+			return InteractionRequest.Type.MESSAGE_SEND_REQUEST;
+		}
+		else {
+			//TODO implementare altri casi
+			return null;
+		}
+	}
+	
+	/**
+	 * 
+	 * @param JsonMessage messaggio di richiesta
+	 * @return nickname dell'utente mittente del messaggio,null se non e' stato trovato
+	 */
+	public static String getNicknameSender(JSONObject JsonMessage)
+	{
+		if(JsonMessage == null)
+			throw new NullPointerException();
+		
+		return (String) JsonMessage.get(RequestMessage.FIELD_REQUEST_NICKNAME_SENDER);
+	}
+	
+	/**
+	 * 
+	 * @param JsonMessage
+	 * @return nickname dell'utente destinatario del messaggio,null se non e' stato trovato
+	 */
+	public static String getNicknameReceiver(JSONObject JsonMessage)
+	{
+		if(JsonMessage == null)
+			throw new NullPointerException();
+		
+		return (String) JsonMessage.get(InteractionRequest.FIELD_NICKNAME_RECEIVER);
 	}
 	
 	/**

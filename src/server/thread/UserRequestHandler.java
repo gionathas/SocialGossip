@@ -109,7 +109,7 @@ public class UserRequestHandler implements Runnable
 			}
 			
 			//essendo un messaggio di richiesta,posso prendere il nickname dell'utente
-			String nickname = MessageAnalyzer.getNickname(message);
+			String nickname = MessageAnalyzer.getNicknameSender(message);
 			
 			//prendo il tipo del messaggio di richiesta
 			RequestMessage.Type requestType = MessageAnalyzer.getRequestMessageType(message);
@@ -136,6 +136,11 @@ public class UserRequestHandler implements Runnable
 				//richiesta logout dal sistema
 				case LOGOUT:
 					logoutRequestHandler(accessSystem,nickname,out);
+					break;
+				
+				case INTERACTION:
+					//TODO controllare che il sender sia registrato e online
+					interactionRequestHandler(message,nickname,out);
 					break;
 
 				//richiesta non valida
@@ -173,6 +178,11 @@ public class UserRequestHandler implements Runnable
 	private void sendResponseMessage(ResponseMessage response,DataOutputStream out) throws IOException
 	{
 		out.writeUTF(response.getJsonMessage());
+	}
+	
+	private void interactionRequestHandler(JSONObject message,String nickname,DataOutputStream out) throws UserNotFindException
+	{
+		//TODO implementare funzione
 	}
 	
 	/**

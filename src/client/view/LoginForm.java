@@ -38,8 +38,6 @@ public class LoginForm {
 	private JTextField usernameField;
 	private JButton btnLogin;
 	private JButton RegisterButton;
-	private JLabel attesa;
-
 
 	/**
 	 * Create the application.
@@ -100,13 +98,6 @@ public class LoginForm {
 		lblBenvenutoInSocialgossip.setBounds(205, 38, 460, 55);
 		frmSocialgossip.getContentPane().add(lblBenvenutoInSocialgossip);
 		
-		attesa = new JLabel("In Attesa di risposta dal server..");
-		attesa.setForeground(Color.BLACK);
-		attesa.setVisible(false);
-		attesa.setBounds(12, 536, 236, 15);
-		
-		frmSocialgossip.getContentPane().add(attesa);
-		
 		RegisterButton = new JButton("Registrati");
 		RegisterButton.setToolTipText("Registrati a SocialGossip");
 		RegisterButton.setFont(new Font("Dialog", Font.BOLD, 14));
@@ -151,9 +142,5 @@ public class LoginForm {
 
 	public JTextField getUsernameField() {
 		return usernameField;
-	}
-
-	public JLabel getAttesa() {
-		return attesa;
 	}
 }

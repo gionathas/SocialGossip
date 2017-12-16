@@ -9,47 +9,43 @@ package communication.messages;
 public class RequestMessage extends Message 
 {
 	
-	public enum Type {ACCESS,LOGOUT} //tipi possibili di un messaggio di richiesta
+	public enum Type {ACCESS,LOGOUT,INTERACTION} //tipi possibili di un messaggio di richiesta
 	public static String FIELD_REQUEST_TYPE = "request-type";
-	public static String FIELD_REQUEST_NICKNAME = "nickname";
+	public static String FIELD_REQUEST_NICKNAME_SENDER= "nickname";
 	
 	//stato interno
 	protected RequestMessage.Type requestType;
-	protected String nickname;
+	protected String nicknameSender;
 	
 	public RequestMessage(RequestMessage.Type requestType,String nickname)
 	{
 		super(Message.Type.REQUEST); //creo un messaggio di tipo richiesta
 		
 		//inizializzo stato interno
-		this.nickname = nickname;
+		this.nicknameSender = nickname;
 		this.requestType = requestType;
 		
-		//aggiorno formato json del messaggio
-		
-		//se e' una richiesta di accesso
-		if(requestType.equals(RequestMessage.Type.ACCESS))
+		switch (requestType) 
 		{
-			jsonMessage.put(this.FIELD_REQUEST_TYPE,RequestMessage.Type.ACCESS.name());
+			//se e' una richiesta di accesso
+			case ACCESS:
+				jsonMessage.put(this.FIELD_REQUEST_TYPE,RequestMessage.Type.ACCESS.name());
+				break;
+				
+			//se e' una richiesta di logout
+			case LOGOUT:
+				jsonMessage.put(this.FIELD_REQUEST_TYPE,RequestMessage.Type.LOGOUT.name());
+				break;
+			//se e' una richiesta di interazione con un altro utente
+			case INTERACTION:
+				jsonMessage.put(this.FIELD_REQUEST_TYPE,RequestMessage.Type.INTERACTION.name());
 
-		}
-		//se e' una richiesta di logout
-		else if(requestType.equals(RequestMessage.Type.LOGOUT))
-		{
-			jsonMessage.put(this.FIELD_REQUEST_TYPE,RequestMessage.Type.LOGOUT.name());
-
-		}
+			default:
+				throw new IllegalArgumentException();
+		}		
 		
-		//inserisco il nome
-		jsonMessage.put(this.FIELD_REQUEST_NICKNAME,nickname);
+		//inserisco il nome del mittente
+		jsonMessage.put(this.FIELD_REQUEST_NICKNAME_SENDER,nickname);
 
-	}
-	
-	public RequestMessage.Type getRequestType() {
-		return this.requestType;
-	}
-	
-	public String getNickname() {
-		return this.nickname;
 	}
 }
