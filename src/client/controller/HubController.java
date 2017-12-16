@@ -1,5 +1,7 @@
 package client.controller;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.DataInputStream;
@@ -33,9 +35,16 @@ public class HubController extends Controller
 		hubView = new Hub();
 		setWindow(hubView);
 		
+		initComponents(nickname);
+		initListeners();
+	}
+	
+	private void initComponents(String nickname)
+	{	
 		user = new User(nickname);
 		hubView.setWelcomeText("Loggato come "+nickname.toUpperCase());
-		initListeners();
+		//TODO inviare richiesta amici online
+		//TODO inviare richiesta chatroom attive
 	}
 	
 	@Override
@@ -50,6 +59,15 @@ public class HubController extends Controller
 	                logOut();
 	            }
 	        });
+		
+		//al click sul bottone ESCI
+		hubView.getBtnLogout().addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) 
+			{
+				//avvio procedura di logout
+				logOut();
+			}
+		});
 	}
 	
 	private void logOut() 

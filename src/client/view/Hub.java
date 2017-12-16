@@ -3,16 +3,20 @@ package client.view;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
-import javax.swing.border.EmptyBorder;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JScrollPane;
-import javax.swing.border.CompoundBorder;
-import javax.swing.UIManager;
 import javax.swing.JButton;
+import javax.swing.JTextField;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
-import javax.swing.JTextField;
+import javax.swing.JSeparator;
+import javax.swing.SwingConstants;
+
+import server.model.ChatRoom;
+import server.model.User;
+
+import java.awt.Color;
 
 public class Hub extends JFrame {
 
@@ -23,6 +27,13 @@ public class Hub extends JFrame {
 	private JPanel contentPane;
 	private JLabel WelcomeText;
 	private JTextField textField;
+	private JButton btnLogout;
+	private JButton btnAvviaChat;
+	private JButton btnCerca;
+	private JButton btnUniscitiAChatroom;
+	private JButton btnCreaChatroom;
+	private JList<User> userFriendList;
+	private JList<ChatRoom> chatRoomList;
 
 	/**
 	 * Create the frame.
@@ -44,65 +55,102 @@ public class Hub extends JFrame {
 		scrollPane.setBounds(550, 70, 200, 400);
 		contentPane.add(scrollPane);
 		
-		JList list = new JList();
-		list.setBorder(UIManager.getBorder("List.noFocusBorder"));
-		scrollPane.setViewportView(list);
+		userFriendList = new JList<User>();
+		scrollPane.setViewportView(userFriendList);
 		
 		JScrollPane scrollPane_1 = new JScrollPane();
 		scrollPane_1.setBounds(12, 101, 440, 367);
 		contentPane.add(scrollPane_1);
 		
-		JList list_1 = new JList();
-		scrollPane_1.setViewportView(list_1);
+		chatRoomList = new JList<ChatRoom>();
+		scrollPane_1.setViewportView(chatRoomList);
 		
-		JButton btnCreaChatroom = new JButton("Crea ChatRoom");
-		btnCreaChatroom.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-			}
-		});
+		btnCreaChatroom = new JButton("Crea ChatRoom");
 		btnCreaChatroom.setBounds(12, 478, 151, 35);
 		contentPane.add(btnCreaChatroom);
 		
-		JButton btnUniscitiAChatroom = new JButton("Unisciti a ChatRoom");
-		btnUniscitiAChatroom.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-			}
-		});
+		btnUniscitiAChatroom = new JButton("Unisciti a ChatRoom");
 		btnUniscitiAChatroom.setBounds(175, 478, 200, 35);
 		contentPane.add(btnUniscitiAChatroom);
 		
 		JLabel lblCercaUtente = new JLabel("Cerca Utente:");
-		lblCercaUtente.setBounds(23, 27, 110, 15);
+		lblCercaUtente.setBounds(15, 27, 110, 15);
 		contentPane.add(lblCercaUtente);
 		
 		textField = new JTextField();
-		textField.setBounds(141, 20, 207, 30);
+		textField.setBounds(120, 20, 207, 30);
 		contentPane.add(textField);
 		textField.setColumns(10);
 		
-		JButton btnCerca = new JButton("Cerca");
-		btnCerca.setBounds(358, 20, 74, 25);
+		btnCerca = new JButton("Cerca");
+		btnCerca.setBounds(335, 22, 74, 25);
 		contentPane.add(btnCerca);
 		
-		JLabel lblChatroomAttive = new JLabel("ChatRoom Attive");
+		JLabel lblChatroomAttive = new JLabel("ChatRoom Attive:");
 		lblChatroomAttive.setBounds(15, 85, 140, 15);
 		contentPane.add(lblChatroomAttive);
 		
-		JButton btnLogout = new JButton("Esci");
-		btnLogout.setBounds(671, 535, 117, 25);
+		btnLogout = new JButton("Esci");
+		btnLogout.setBounds(671, 538, 117, 25);
 		contentPane.add(btnLogout);
 		
-		JLabel lblAmiciOnline = new JLabel("Amici Online");
+		JLabel lblAmiciOnline = new JLabel("I Tuoi Amici:");
 		lblAmiciOnline.setBounds(550, 55, 110, 15);
 		contentPane.add(lblAmiciOnline);
 		
-		JButton btnAvviaChat = new JButton("Avvia Chat");
-		btnAvviaChat.setBounds(560, 482, 117, 25);
+		btnAvviaChat = new JButton("Avvia Chat");
+		btnAvviaChat.setBounds(550, 478, 200, 35);
 		contentPane.add(btnAvviaChat);
 		
-		JButton btnAggiorna = new JButton("Aggiorna");
-		btnAggiorna.setBounds(649, 38, 98, 25);
-		contentPane.add(btnAggiorna);
+		JSeparator separator = new JSeparator();
+		separator.setForeground(Color.BLACK);
+		separator.setOrientation(SwingConstants.VERTICAL);
+		separator.setBounds(505, 0, 2, 600);
+		contentPane.add(separator);
+	}
+
+	public JButton getBtnAggiornaChatRoom() {
+		return btnAggiornaChatRoom;
+	}
+
+	public JPanel getContentPane() {
+		return contentPane;
+	}
+
+	public JTextField getTextField() {
+		return textField;
+	}
+
+	public JButton getBtnLogout() {
+		return btnLogout;
+	}
+
+	public JButton getBtnAvviaChat() {
+		return btnAvviaChat;
+	}
+
+	public JButton getBtnAggiorna() {
+		return btnAggiornaAmici;
+	}
+
+	public JButton getBtnCerca() {
+		return btnCerca;
+	}
+
+	public JButton getBtnUniscitiAChatroom() {
+		return btnUniscitiAChatroom;
+	}
+
+	public JButton getBtnCreaChatroom() {
+		return btnCreaChatroom;
+	}
+
+	public JList<User> getUserFriendList() {
+		return userFriendList;
+	}
+
+	public JList<ChatRoom> getChatRoomList() {
+		return chatRoomList;
 	}
 
 	public JLabel getWelcomeText() {
