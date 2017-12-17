@@ -10,6 +10,14 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import communication.messages.*;
+import communication.messages.request.InteractionRequest;
+import communication.messages.request.RegisterRequest;
+import communication.messages.request.RequestAccessMessage;
+import communication.messages.request.RequestMessage;
+import communication.messages.response.ResponseFailedMessage;
+import communication.messages.response.ResponseMessage;
+import communication.messages.response.SuccessFriendship;
+import communication.messages.response.SuccessfulLogin;
 import server.model.*;
 
 /**
@@ -245,17 +253,12 @@ public class MessageAnalyzer
 		if(type == null)
 			return null;
 		
-		//se e' un messaggio di richiesto accesso
+		//se e' un messaggio di richiesta ricerca utente
 		if(type.equals(InteractionRequest.Type.FIND_USER_REQUEST.name()))
 		{
 			return InteractionRequest.Type.FIND_USER_REQUEST;
 		}
-		//messaggio richiesta logout
-		else if(type.equals(InteractionRequest.Type.FRIENDSHIP_REQUEST.name()))
-		{
-			return InteractionRequest.Type.FRIENDSHIP_REQUEST;
-		}
-		//messaggio richiesta ricerca utente
+		//messaggio richiesta invio messaggio
 		else if(type.equals(InteractionRequest.Type.MESSAGE_SEND_REQUEST.name())) 
 		{
 			return InteractionRequest.Type.MESSAGE_SEND_REQUEST;
@@ -295,6 +298,19 @@ public class MessageAnalyzer
 			throw new NullPointerException();
 		
 		return (String) JsonMessage.get(InteractionRequest.FIELD_NICKNAME_RECEIVER);
+	}
+	
+	/**
+	 * 
+	 * @param JsonMessage
+	 * @return stato dell'utente appena aggiunto come amico,null se non e' stato trovato
+	 */
+	public static boolean getStatusReceiverOfFriendShipRequest(JSONObject JsonMessage)
+	{
+		if(JsonMessage == null)
+			throw new NullPointerException();
+		
+		return (boolean) JsonMessage.get(SuccessFriendship.FIELD_STATUS_NEW_FRIEND);
 	}
 	
 	/**

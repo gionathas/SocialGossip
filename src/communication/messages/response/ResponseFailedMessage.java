@@ -1,4 +1,6 @@
-package communication.messages;
+package communication.messages.response;
+
+import communication.messages.response.ResponseMessage.Type;
 
 /**
  * Messaggio di risposta che segnala un operazione fallita

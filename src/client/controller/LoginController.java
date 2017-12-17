@@ -1,5 +1,6 @@
 package client.controller;
 
+import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.DataInputStream;
@@ -20,11 +21,11 @@ import client.thread.RequestSenderThread;
 import client.view.LoginForm;
 import client.view.RegisterForm;
 import communication.MessageAnalyzer;
-import communication.messages.LoginRequest;
 import communication.messages.Message;
-import communication.messages.ResponseFailedMessage;
-import communication.messages.ResponseFailedMessage.Errors;
-import communication.messages.ResponseMessage;
+import communication.messages.request.LoginRequest;
+import communication.messages.response.ResponseFailedMessage;
+import communication.messages.response.ResponseMessage;
+import communication.messages.response.ResponseFailedMessage.Errors;
 import server.model.User;
 
 /**
@@ -42,6 +43,17 @@ public class LoginController extends Controller
 		//creo form di login
 		this.loginView = new LoginForm();
 		this.window = loginView.getFrame();
+
+		//registro gli action listener
+		initListeners();
+	}
+	
+	public LoginController(Point location) {
+		super();
+		//creo form di login
+		this.loginView = new LoginForm();
+		this.window = loginView.getFrame();
+		window.setLocation(location);
 
 		//registro gli action listener
 		initListeners();
@@ -196,7 +208,7 @@ public class LoginController extends Controller
 	 * Fa partire il form di registrazione
 	 */
 	private void startRegisterForm() {
-		RegisterController register = new RegisterController();
+		RegisterController register = new RegisterController(window.getLocation());
 		
 		//chiudo form di login
 		this.setVisible(false);
@@ -207,7 +219,7 @@ public class LoginController extends Controller
 	}
 	
 	private void startHubView(String nickname,List<User>amiciList) {
-		HubController hub = new HubController(nickname,amiciList);
+		HubController hub = new HubController(nickname,amiciList,window.getLocation());
 		
 		//chiudo form di login
 		this.setVisible(false);

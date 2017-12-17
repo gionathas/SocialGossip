@@ -1,4 +1,7 @@
-package communication.messages;
+package communication.messages.request;
+
+import communication.messages.Message;
+import communication.messages.Message.Type;
 
 /**
  * Rappresenta un generico messaggio di richiesta tra client e server.

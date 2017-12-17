@@ -1,4 +1,4 @@
-package communication.messages;
+package communication.messages.response;
 
 /**
  * Messaggio di risposta che segnala un operazione andata a buon fine

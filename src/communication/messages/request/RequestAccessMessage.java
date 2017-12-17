@@ -1,6 +1,4 @@
-package communication.messages;
-
-import communication.messages.RequestMessage.Type;
+package communication.messages.request;
 
 public class RequestAccessMessage extends RequestMessage
 {

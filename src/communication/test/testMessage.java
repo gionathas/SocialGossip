@@ -6,9 +6,9 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
 import communication.MessageAnalyzer;
-import communication.messages.LoginRequest;
 import communication.messages.Message;
-import communication.messages.RequestMessage;
+import communication.messages.request.LoginRequest;
+import communication.messages.request.RequestMessage;
 
 /**
  * test funzionamento struttura messaggi

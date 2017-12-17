@@ -1,5 +1,6 @@
 package client.controller;
 
+import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
@@ -14,12 +15,13 @@ import org.json.simple.parser.ParseException;
 import client.thread.RequestSenderThread;
 import client.view.Hub;
 import communication.MessageAnalyzer;
-import communication.messages.FindUserRequest;
-import communication.messages.LogoutRequest;
 import communication.messages.Message;
-import communication.messages.ResponseFailedMessage;
-import communication.messages.ResponseFailedMessage.Errors;
-import communication.messages.ResponseMessage;
+import communication.messages.request.FindUserRequest;
+import communication.messages.request.FriendshipRequest;
+import communication.messages.request.LogoutRequest;
+import communication.messages.response.ResponseFailedMessage;
+import communication.messages.response.ResponseMessage;
+import communication.messages.response.ResponseFailedMessage.Errors;
 import server.model.User;
 
 public class HubController extends Controller
@@ -27,11 +29,14 @@ public class HubController extends Controller
 	private Hub hubView;
 	private User user;
 	private List<User> amiciList;
+	private final int YES = 0;
 	
-	public HubController(String nickname,List<User> amiciList) 
+	public HubController(String nickname,List<User> amiciList,Point location) 
 	{
 		hubView = new Hub();
 		setWindow(hubView);
+		window.setLocation(location);
+		
 		
 		initComponents(nickname,amiciList);
 		initListeners();
@@ -40,7 +45,7 @@ public class HubController extends Controller
 	private void initComponents(String nickname,List<User> amiciList)
 	{	
 		user = new User(nickname);
-		hubView.setWelcomeText("Loggato come "+nickname.toUpperCase());
+		hubView.setWelcomeText("Loggato come: "+nickname);
 		
 		//se mi e' stata passata una lista di amici e di chatRoom
 		if(amiciList != null) {
@@ -62,7 +67,7 @@ public class HubController extends Controller
 	            @Override
 	            public void windowClosing(WindowEvent e)
 	            {
-	                new LogoutRequestSender().start();;
+	                new LogoutRequestSender().start();
 	            }
 	        });
 		
@@ -81,7 +86,7 @@ public class HubController extends Controller
 			@Override
 			public void actionPerformed(ActionEvent e) 
 			{
-				//avvio thread che si avvia la richiesta di ricerca utente
+				//avvio thread che gestisce la richiesta di ricerca utente
 				new FindUserRequestSender().start();
 			}
 		});
@@ -190,8 +195,120 @@ public class HubController extends Controller
 		protected void successResponseHandler() 
 		{
 			//TODO richiedo se vuole diventare amico
-			showInfoMessage("Utente trovato");
+			//showInfoMessage("Utente trovato");
 			
+			//richiedo se vuole diventare amico
+			int choice = JOptionPane.showConfirmDialog(hubView,"Utente "+nicknameUserToFind+" Trovato! Vuoi diventare suo amico?");
+			
+			//se si e' scelto di diventare suo amico
+			if(choice == YES)
+			{
+				//faccio partire il thread che gestira' la richiesta di amicizia
+				new FriendshipRequestSender(nicknameUserToFind).start();
+			}
+
+			
+		}
+		
+	}
+	
+	private class FriendshipRequestSender extends RequestSenderThread
+	{
+		private String nicknameReceiverFriend;
+		
+		public FriendshipRequestSender(String nicknameReceiverFriend) {
+			this.nicknameReceiverFriend = nicknameReceiverFriend;
+		}
+
+		@Override
+		protected void init() {
+			init = true;
+		}
+
+		@Override
+		protected void createRequest() 
+		{
+			request = new FriendshipRequest(user.getNickname(),nicknameReceiverFriend);
+		}
+
+		protected void ConnectErrorHandler() {
+			showErrorMessage("Servizio attualmente non disponibile","Errore");
+		}
+
+		@Override
+		protected void UnKwownHostErrorHandler() {
+			showErrorMessage("Server non trovato","Errore");
+		}
+
+		@Override
+		protected void IOErrorHandler() {
+			showErrorMessage("Errore nella richiesta di amicizia","Errore");			
+		}
+
+		@Override
+		protected void invalidResponseHandler() {
+			showErrorMessage("Errore nel messaggio di risposta del server","Errore");
+		}
+
+		@Override
+		protected void invalidResponseErrorTypeHandler() {
+			showErrorMessage("Errore nel messaggio di risposta di errore del server","Errore");
+		}
+
+
+		@Override
+		protected void failedResponseHandler(Errors error) {
+			switch (error) 
+			{
+				case INVALID_REQUEST:
+					showErrorMessage("Richiesta non valida","Errore");
+					break;
+				
+				case SENDER_USER_INVALID_STATUS:
+					showErrorMessage("Non sei online","Errore");
+					break;
+				
+				case SENDER_USER_NOT_FOUND:
+					showErrorMessage("Non risulti piu' essere registrato","Errore");
+					break;
+				
+				case RECEIVER_USER_NOT_FOUND:
+					showErrorMessage("Utente non trovato","Ops");
+					break; 
+				
+				case SAME_USERS:
+					showInfoMessage("Non puoi diventare amico di te stesso!");
+					break;
+				
+				case ALREADY_FRIEND:
+					showInfoMessage("Sei gia' amico di "+nicknameReceiverFriend);
+					break;
+				
+				default:
+					showErrorMessage("Errore nel messaggio di risposta di errore del server","Errore");
+					break;
+			}
+		}
+
+		@Override
+		protected void parseErrorHandler() {
+			showErrorMessage("Errore lettura risposta del server","Errore");			
+		}
+
+		@Override
+		protected void unexpectedMessageHandler() {
+			showErrorMessage("Errore nel messaggio di risposta del server","Errore");
+		}
+		
+
+		@Override
+		protected void successResponseHandler() 
+		{
+			//prendo stato dell'utente diventato amico
+			boolean status = MessageAnalyzer.getStatusReceiverOfFriendShipRequest(response);
+			showInfoMessage("Ora sei amico di "+nicknameReceiverFriend);
+			
+			hubView.getModelUserFriendList().addElement(new User(nicknameReceiverFriend,status));
 		}
 		
 	}
@@ -211,7 +328,7 @@ public class HubController extends Controller
 			int choice = JOptionPane.showConfirmDialog(hubView,"Sei sicuro di voler uscire?");
 			
 			//se la scelta e' diversa da Si,mi fermo
-			if(choice != 0) {
+			if(choice != YES) {
 				init = false;
 			}
 			//se la scelta e' stata si

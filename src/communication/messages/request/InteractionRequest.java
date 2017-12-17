@@ -1,4 +1,6 @@
-package communication.messages;
+package communication.messages.request;
+
+import communication.messages.request.RequestMessage.Type;
 
 /**
  * Rappresenta un messaggio di richiesta di interazione con un altro utente
@@ -20,8 +22,9 @@ public class InteractionRequest extends RequestMessage
 		
 		switch (type) 
 		{
-			//caso richiesta ricerca utente
+			//in caso di richiesta: ricerca utente,richiesta amicizia
 			case FIND_USER_REQUEST:
+			case FRIENDSHIP_REQUEST:
 				jsonMessage.put(FIELD_INTERACTION_REQUEST_TYPE,type.name());
 				break;
 				

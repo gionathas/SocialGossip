@@ -1,5 +1,6 @@
 package client.controller;
 
+import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.List;
@@ -11,10 +12,10 @@ import client.thread.RequestSenderThread;
 import client.view.RegisterForm;
 import communication.MessageAnalyzer;
 import communication.messages.Message;
-import communication.messages.RegisterRequest;
-import communication.messages.ResponseFailedMessage;
-import communication.messages.ResponseFailedMessage.Errors;
-import communication.messages.ResponseMessage;
+import communication.messages.request.RegisterRequest;
+import communication.messages.response.ResponseFailedMessage;
+import communication.messages.response.ResponseMessage;
+import communication.messages.response.ResponseFailedMessage.Errors;
 import server.model.User;
 
 public class RegisterController extends Controller
@@ -25,6 +26,16 @@ public class RegisterController extends Controller
 	{
 		registerView = new RegisterForm();
 		setWindow(registerView);
+		
+		initListeners();
+		
+	}
+	
+	public RegisterController(Point location)
+	{
+		registerView = new RegisterForm();
+		setWindow(registerView);
+		window.setLocation(location);
 		
 		initListeners();
 		
@@ -237,13 +248,13 @@ public class RegisterController extends Controller
 		this.close();
 		
 		//avvio schermata di login
-		LoginController login = new LoginController();
+		LoginController login = new LoginController(window.getLocation());
 		login.setVisible(true);
 	}
 	
 	private void startHubView(String nickname,List<User> amiciList) 
 	{
-		HubController hub = new HubController(nickname,amiciList);
+		HubController hub = new HubController(nickname,amiciList,window.getLocation());
 		
 		//chiudo form di login
 		this.setVisible(false);

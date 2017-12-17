@@ -1,4 +1,6 @@
-package communication.messages;
+package communication.messages.request;
+
+import communication.messages.request.RequestMessage.Type;
 
 /**
  * Messaggio di richiesta di logout

@@ -11,14 +11,15 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.ParseException;
 
 import communication.MessageAnalyzer;
-import communication.messages.InteractionRequest;
 import communication.messages.Message;
-import communication.messages.RequestAccessMessage;
-import communication.messages.RequestMessage;
-import communication.messages.ResponseFailedMessage;
-import communication.messages.ResponseMessage;
-import communication.messages.ResponseSuccessMessage;
-import communication.messages.SuccessfulLogin;
+import communication.messages.request.InteractionRequest;
+import communication.messages.request.RequestAccessMessage;
+import communication.messages.request.RequestMessage;
+import communication.messages.response.ResponseFailedMessage;
+import communication.messages.response.ResponseMessage;
+import communication.messages.response.ResponseSuccessMessage;
+import communication.messages.response.SuccessFriendship;
+import communication.messages.response.SuccessfulLogin;
 import server.model.*;
 import server.model.exception.PasswordMismatchingException;
 import server.model.exception.SameUserException;
@@ -229,12 +230,13 @@ public class UserRequestHandler implements Runnable
 			
 			switch (interactionType) 
 			{
-				//richiesta di ricerca utente
+				//richiesta di ricerca utente destinatario
 				case FIND_USER_REQUEST:
 					//controllo gia' fatti rispondo con un messaggio di OK
 					sendResponseMessage(new ResponseSuccessMessage(),out);
 					break;
 				
+				//richiesta amicizia con utente destinatario
 				case FRIENDSHIP_REQUEST:
 					friendshipRequestHandler(sender,receiver,out);
 					break;
@@ -325,28 +327,26 @@ public class UserRequestHandler implements Runnable
 			boolean friendship = reteSG.nuovaAmicizia(a, b);
 			
 			//se non erano amici
-			if(!friendship) 
+			if(friendship) 
 			{
 				//aggiorno amicizia tra i 2 utenti
 				a.aggiungiAmico(b);
 				b.aggiungiAmico(a);
 				
 				//invio messaggio di successo al mittente
-				sendResponseMessage(new ResponseSuccessMessage(), out);
+				sendResponseMessage(new SuccessFriendship(b.isOnline()), out);
 				return;
 			}
-			//se erano gia amici
+			//se erano gia' amici
 			else {
 				sendResponseMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.ALREADY_FRIEND), out);
 				return;
 			}
 		} 
-		//caso non possibile in quanto gli utenti sono stati gia' controllati
-		catch (UserNotFindException e) 
-		{
+		//casi non possibile in quanto gli utenti sono stati gia' controllati
+		catch (UserNotFindException e){
 			e.printStackTrace();
 		} catch (SameUserException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}

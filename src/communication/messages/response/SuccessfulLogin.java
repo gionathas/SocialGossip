@@ -1,4 +1,4 @@
-package communication.messages;
+package communication.messages.response;
 
 import java.util.List;
 

@@ -1,4 +1,7 @@
-package communication.messages;
+package communication.messages.response;
+
+import communication.messages.Message;
+import communication.messages.Message.Type;
 
 /**
  * Rappresenta in generico messaggio di rispostas

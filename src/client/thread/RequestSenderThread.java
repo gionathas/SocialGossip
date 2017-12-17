@@ -12,10 +12,10 @@ import org.json.simple.parser.ParseException;
 
 import communication.MessageAnalyzer;
 import communication.messages.Message;
-import communication.messages.RequestMessage;
-import communication.messages.ResponseFailedMessage;
-import communication.messages.ResponseMessage;
-import communication.messages.ResponseSuccessMessage;
+import communication.messages.request.RequestMessage;
+import communication.messages.response.ResponseFailedMessage;
+import communication.messages.response.ResponseMessage;
+import communication.messages.response.ResponseSuccessMessage;
 
 /**
  * Modello astratto che rappresenta un Thread che invia una richiesta al server tramite connessione TCP

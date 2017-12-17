@@ -41,6 +41,23 @@ public class User
 	}
 	
 	/**
+	 * Crea un nuovo utente settando solo nickname e status online
+	 * @param nickname
+	 * @param isOnline
+	 */
+	public User(String nickname,boolean isOnline)
+	{
+		if(nickname == null)
+			throw new NullPointerException();
+		
+		this.nickname = nickname;
+		this.online = isOnline;
+		this.password = null;
+		this.lingua = null;
+		this.amici = null;
+	}
+	
+	/**
 	 * Crea un nuovo utente offline,senza settare password e lingua
 	 * @param nickname
 	 */
