@@ -18,6 +18,7 @@ import communication.messages.FindUserRequest;
 import communication.messages.LogoutRequest;
 import communication.messages.Message;
 import communication.messages.ResponseFailedMessage;
+import communication.messages.ResponseFailedMessage.Errors;
 import communication.messages.ResponseMessage;
 import server.model.User;
 
@@ -50,8 +51,6 @@ public class HubController extends Controller
 			
 			//TODO aggiornare lista chatRoom
 		}
-		
-		System.out.println("Fine analisi lista amici");
 	}
 	
 	@Override
@@ -73,6 +72,17 @@ public class HubController extends Controller
 			{
 				//avvio procedura di logout
                 new LogoutRequestSender().start();
+			}
+		});
+		
+		//al click sul bottone CERCA
+		hubView.getBtnCerca().addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) 
+			{
+				//avvio thread che si avvia la richiesta di ricerca utente
+				new FindUserRequestSender().start();
 			}
 		});
 	}
@@ -126,8 +136,61 @@ public class HubController extends Controller
 		}
 
 		@Override
-		protected void analyzeResponse(String response) {
-			// TODO Auto-generated method stub
+		protected void invalidResponseHandler() {
+			showErrorMessage("Errore nel messaggio di risposta del server","Errore");
+		}
+
+		@Override
+		protected void invalidResponseErrorTypeHandler() {
+			showErrorMessage("Errore nel messaggio di risposta di errore del server","Errore");
+		}
+
+		@Override
+		protected void failedResponseHandler(Errors error) 
+		{
+			switch (error) 
+			{
+				case INVALID_REQUEST:
+					showErrorMessage("Richiesta non valida","Errore");
+					break;
+				
+				case SENDER_USER_INVALID_STATUS:
+					showErrorMessage("Non sei online","Errore");
+					break;
+				
+				case SENDER_USER_NOT_FOUND:
+					showErrorMessage("Non risulti piu' essere registrato","Errore");
+					break;
+				
+				case RECEIVER_USER_NOT_FOUND:
+					showErrorMessage("Utente non trovato","Ops");
+					break; 
+				
+				case SAME_USERS:
+					showInfoMessage("Utente trovato");
+					break;
+				
+				default:
+					showErrorMessage("Errore nel messaggio di risposta di errore del server","Errore");
+					break;
+			}
+		}
+
+		@Override
+		protected void parseErrorHandler() {
+			showErrorMessage("Errore lettura risposta del server","Errore");			
+		}
+
+		@Override
+		protected void unexpectedMessageHandler() {
+			showErrorMessage("Errore nel messaggio di risposta del server","Errore");
+		}
+		
+		@Override
+		protected void successResponseHandler() 
+		{
+			//TODO richiedo se vuole diventare amico
+			showInfoMessage("Utente trovato");
 			
 		}
 		
@@ -177,81 +240,57 @@ public class HubController extends Controller
 		protected void IOErrorHandler() {
 			showErrorMessage("Errore nella richiesta di logout","Errore");
 		}
-		
-		protected void analyzeResponse(String JsonResponse)
+
+		@Override
+		protected void invalidResponseHandler() {
+			showErrorMessage("Errore nel messaggio di risposta del server","Errore");
+		}
+
+		@Override
+		protected void invalidResponseErrorTypeHandler() {
+			showErrorMessage("Errore nel messaggio di risposta di errore del server","Errore");
+		}
+
+		@Override
+		protected void failedResponseHandler(ResponseFailedMessage.Errors error) 
 		{
-			try 
+			
+			//controllo tipi di errore che si possono riscontrare
+			switch (error) 
 			{
-				//parso json rappresentate risposta del server
-				JSONObject response = MessageAnalyzer.parse(JsonResponse);
-				
-				//se non e' un messaggio di risposta
-				if(MessageAnalyzer.getMessageType(response) != Message.Type.RESPONSE) 
-				{
-					showErrorMessage("Errore nel messaggio di risposta del server","Errore");
-					return;
-				}
-				
-				ResponseMessage.Type outcome = MessageAnalyzer.getResponseType(response);
-				
-				//tipo risposta non trovato
-				if(outcome == null)
-				{
-					showErrorMessage("Errore nel messaggio di risposta del server","Errore");
-					return;
-				}
-				
-				//controllo esito della risposta ricevuta
-				switch(outcome) 
-				{
-					//logout avvenuto
-					case SUCCESS:
-						//chiudo hub
-						hubView.setVisible(false);
-						hubView.dispose();
-						
-						break;
+				//richiesta non valida
+				case INVALID_REQUEST:
+					showErrorMessage("Rcihiesta non valida","Errore");
+					break;
 					
-					case FAIL:
-						//analizzo l'errore riscontrato
-						ResponseFailedMessage.Errors error = MessageAnalyzer.getResponseFailedErrorType(response);
-						
-						//errore non trovato
-						if(error == null) {
-							showErrorMessage("Errore nel messaggio di risposta del server","Errore");
-							return;
-						}
-						
-						//controllo tipi di errore che si possono riscontrare
-						switch (error) 
-						{
-							//richiesta non valida
-							case INVALID_REQUEST:
-								showErrorMessage("Rcihiesta non valida","Errore");
-								break;
-								
-							case USER_INVALID_STATUS:
-								showErrorMessage("Sei gia' offline","Warning");
-								break;
-										
-							//errore non trovato
-							default:
-								showErrorMessage("Errore nel messaggio di risposta del server","Errore");
-								break;
-						}
-						
-						break;
-						
-					default:
-						showErrorMessage("Errore nel messaggio di risposta del server","Errore");
-						break;
-				}
-			} 
-			catch (ParseException e) 
-			{
-				showErrorMessage("Errore lettura risposta del server","Errore");
-				e.printStackTrace();
+				case SENDER_USER_INVALID_STATUS:
+					showErrorMessage("Sei gia' offline","Warning");
+					break;
+							
+				//errore non trovato
+				default:
+					showErrorMessage("Errore nel messaggio di risposta del server","Errore");
+					break;
 			}
+			
+		}
+
+		@Override
+		protected void parseErrorHandler() {
+			showErrorMessage("Errore lettura risposta del server","Errore");			
+		}
+
+		@Override
+		protected void unexpectedMessageHandler() {
+			showErrorMessage("Errore nel messaggio di risposta del server","Errore");			
+		}
+
+		@Override
+		protected void successResponseHandler() 
+		{
+			//chiudo hub
+			hubView.setVisible(false);
+			hubView.dispose();
 		}
 		
 	}	

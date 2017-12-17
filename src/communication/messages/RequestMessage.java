@@ -39,6 +39,7 @@ public class RequestMessage extends Message
 			//se e' una richiesta di interazione con un altro utente
 			case INTERACTION:
 				jsonMessage.put(this.FIELD_REQUEST_TYPE,RequestMessage.Type.INTERACTION.name());
+				break;
 
 			default:
 				throw new IllegalArgumentException();

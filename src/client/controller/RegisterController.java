@@ -13,6 +13,7 @@ import communication.MessageAnalyzer;
 import communication.messages.Message;
 import communication.messages.RegisterRequest;
 import communication.messages.ResponseFailedMessage;
+import communication.messages.ResponseFailedMessage.Errors;
 import communication.messages.ResponseMessage;
 import server.model.User;
 
@@ -175,6 +176,54 @@ public class RegisterController extends Controller
 				showErrorMessage("Errore lettura risposta del server","Errore");
 				e.printStackTrace();
 			}
+		}
+		
+		@Override
+		protected void invalidResponseHandler() {
+			showErrorMessage("Errore nel messaggio di risposta del server","Errore");
+		}
+
+		@Override
+		protected void invalidResponseErrorTypeHandler() {
+			showErrorMessage("Errore nel messaggio di risposta di errore del server","Errore");
+		}
+		
+		@Override
+		protected void parseErrorHandler() {
+			showErrorMessage("Errore lettura risposta del server","Errore");			
+		}
+
+		@Override
+		protected void unexpectedMessageHandler() {
+			showErrorMessage("Errore nel messaggio di risposta del server","Errore");			
+		}
+
+		@Override
+		protected void failedResponseHandler(Errors error) 
+		{
+			//controllo tipi di errore che si possono riscontrare
+			switch (error) 
+			{
+				//richiesta non valida
+				case INVALID_REQUEST:
+					showErrorMessage("Rcihiesta non valida","Errore");
+					break;
+					
+				case USER_ALREADY_REGISTERED:
+					showErrorMessage("Utente gia' registrato","Warning");
+					break;
+							
+				//errore non trovato
+				default:
+					showErrorMessage("Errore nel messaggio di risposta del server","Errore");
+					break;
+			}
+		}
+
+		@Override
+		protected void successResponseHandler() {
+			showInfoMessage("Registrazione Avvenuta");
+			startHubView(nickname,null);			
 		}
 		
 	}

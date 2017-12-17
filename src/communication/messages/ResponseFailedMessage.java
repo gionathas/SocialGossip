@@ -7,7 +7,18 @@ package communication.messages;
  */
 public class ResponseFailedMessage extends ResponseMessage
 {
-	public enum Errors{INVALID_REQUEST,USER_NOT_FOUND,USER_ALREADY_REGISTERED,PASSWORD_MISMATCH,USER_INVALID_STATUS} //tipi di errori riscontrabili
+	/**
+	 * Tipi dei messaggi di errore
+	 * @author gio
+	 *
+	 */
+	public enum Errors
+	{
+		INVALID_REQUEST,SENDER_USER_NOT_FOUND,RECEIVER_USER_NOT_FOUND,SENDER_USER_INVALID_STATUS,
+		RECEIVER_USER_INVALID_STATUS,USER_ALREADY_REGISTERED,PASSWORD_MISMATCH,ALREADY_FRIEND,
+		SAME_USERS
+	} 	
+	
 	public static final String FIELD_FAIL_MESSAGE = "Error"; //nome del campo che riporta l'errore
 	
 	public ResponseFailedMessage(ResponseFailedMessage.Errors errorType)

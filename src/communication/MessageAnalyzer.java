@@ -145,21 +145,45 @@ public class MessageAnalyzer
 		{
 			return ResponseFailedMessage.Errors.INVALID_REQUEST;
 		}
+		//errore password non corretta
 		else if(type.equals(ResponseFailedMessage.Errors.PASSWORD_MISMATCH.name()))
 		{
 			return ResponseFailedMessage.Errors.PASSWORD_MISMATCH;
 		}
+		//errore utente gia registrato
 		else if(type.equals(ResponseFailedMessage.Errors.USER_ALREADY_REGISTERED.name()))
 		{
 			return ResponseFailedMessage.Errors.USER_ALREADY_REGISTERED;
 		}
-		else if(type.equals(ResponseFailedMessage.Errors.USER_INVALID_STATUS.name()))
+		//errore stato utente mittente
+		else if(type.equals(ResponseFailedMessage.Errors.SENDER_USER_INVALID_STATUS.name()))
 		{
-			return ResponseFailedMessage.Errors.USER_INVALID_STATUS;
+			return ResponseFailedMessage.Errors.SENDER_USER_INVALID_STATUS;
 		}
-		else if(type.equals(ResponseFailedMessage.Errors.USER_NOT_FOUND.name()))
+		//errore stato utente destinatario
+		else if(type.equals(ResponseFailedMessage.Errors.RECEIVER_USER_INVALID_STATUS.name()))
 		{
-			return ResponseFailedMessage.Errors.USER_NOT_FOUND;
+			return ResponseFailedMessage.Errors.RECEIVER_USER_INVALID_STATUS;
+		}
+		//errore utente mittente non trovato
+		else if(type.equals(ResponseFailedMessage.Errors.SENDER_USER_NOT_FOUND.name()))
+		{
+			return ResponseFailedMessage.Errors.SENDER_USER_NOT_FOUND;
+		}
+		//errore utente destinatario non trovato
+		else if(type.equals(ResponseFailedMessage.Errors.RECEIVER_USER_NOT_FOUND.name()))
+		{
+			return ResponseFailedMessage.Errors.RECEIVER_USER_NOT_FOUND;
+		}
+		//errore utente gia' amici
+		else if(type.equals(ResponseFailedMessage.Errors.ALREADY_FRIEND.name()))
+		{
+			return ResponseFailedMessage.Errors.ALREADY_FRIEND;
+		}
+		//errore utente gia' amici
+		else if(type.equals(ResponseFailedMessage.Errors.SAME_USERS.name()))
+		{
+			return ResponseFailedMessage.Errors.SAME_USERS;
 		}
 		else {
 			//TODO inserire altri casi
@@ -235,6 +259,11 @@ public class MessageAnalyzer
 		else if(type.equals(InteractionRequest.Type.MESSAGE_SEND_REQUEST.name())) 
 		{
 			return InteractionRequest.Type.MESSAGE_SEND_REQUEST;
+		}
+		//messaggio di richiesta amicizia
+		else if(type.equals(InteractionRequest.Type.FRIENDSHIP_REQUEST.name())) 
+		{
+			return InteractionRequest.Type.FRIENDSHIP_REQUEST;
 		}
 		else {
 			//TODO implementare altri casi

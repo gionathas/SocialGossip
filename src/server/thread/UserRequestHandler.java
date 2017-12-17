@@ -11,6 +11,7 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.ParseException;
 
 import communication.MessageAnalyzer;
+import communication.messages.InteractionRequest;
 import communication.messages.Message;
 import communication.messages.RequestAccessMessage;
 import communication.messages.RequestMessage;
@@ -20,6 +21,7 @@ import communication.messages.ResponseSuccessMessage;
 import communication.messages.SuccessfulLogin;
 import server.model.*;
 import server.model.exception.PasswordMismatchingException;
+import server.model.exception.SameUserException;
 import server.model.exception.UserAlreadyRegistered;
 import server.model.exception.UserNotFindException;
 import server.model.exception.UserStatusException;
@@ -108,14 +110,14 @@ public class UserRequestHandler implements Runnable
 				return;
 			}
 			
-			//essendo un messaggio di richiesta,posso prendere il nickname dell'utente
-			String nickname = MessageAnalyzer.getNicknameSender(message);
+			//essendo un messaggio di richiesta,posso prendere il nickname dell'utente mittente
+			String nicknameSender = MessageAnalyzer.getNicknameSender(message);
 			
 			//prendo il tipo del messaggio di richiesta
 			RequestMessage.Type requestType = MessageAnalyzer.getRequestMessageType(message);
 			
 			//nickname non trovato, oppure tipo richiesta non trovato,invio messaggio di errore
-			if(nickname == null || requestType == null)
+			if(nicknameSender == null || requestType == null)
 			{
 				sendResponseMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.INVALID_REQUEST),out);
 				return;
@@ -130,17 +132,16 @@ public class UserRequestHandler implements Runnable
 			{	
 				//richiesta di accesso al sistema
 				case ACCESS:
-					accessRequestHandler(accessSystem,message,nickname,out);			
+					accessRequestHandler(accessSystem,message,nicknameSender,out);			
 					break;
 				
 				//richiesta logout dal sistema
 				case LOGOUT:
-					logoutRequestHandler(accessSystem,nickname,out);
+					logoutRequestHandler(accessSystem,nicknameSender,out);
 					break;
 				
 				case INTERACTION:
-					//TODO controllare che il sender sia registrato e online
-					interactionRequestHandler(message,nickname,out);
+					interactionRequestHandler(message,nicknameSender,out);
 					break;
 
 				//richiesta non valida
@@ -180,9 +181,75 @@ public class UserRequestHandler implements Runnable
 		out.writeUTF(response.getJsonMessage());
 	}
 	
-	private void interactionRequestHandler(JSONObject message,String nickname,DataOutputStream out) throws UserNotFindException
-	{
-		//TODO implementare funzione
+	private void interactionRequestHandler(JSONObject message,String nicknameSender,DataOutputStream out)
+	{	
+		try 
+		{
+			//cerco utente mittente del messaggio
+			User sender = reteSG.cercaUtente(nicknameSender);
+			
+			//se il mittente non e' registrato,invio messaggio di errore
+			if(sender == null)
+			{
+				sendResponseMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.SENDER_USER_NOT_FOUND),out);
+				return;
+			}
+			
+			//se il mittente non e' online,invio messaggio di errore
+			if(!sender.isOnline()) {
+				sendResponseMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.SENDER_USER_INVALID_STATUS),out);
+				return;
+			}
+			
+			String nicknameReceiver = MessageAnalyzer.getNicknameReceiver(message);
+			
+			//se non ho trovato il nick del receiver nel messaggio
+			if(nicknameReceiver == null) {
+				sendResponseMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.INVALID_REQUEST),out);
+				return;
+			}
+			
+			//cerco utente destinatario del messaggio
+			User receiver = reteSG.cercaUtente(nicknameReceiver);
+			
+			//se il receiver non e' registrato
+			if(receiver == null) {
+				sendResponseMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.RECEIVER_USER_NOT_FOUND),out);
+				return;
+			}
+			
+			//se gli utenti sono gli stessi
+			if(sender.equals(receiver)) {
+				sendResponseMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.SAME_USERS),out);
+				return;
+			}
+			
+			//controllo il tipo del messaggio di interazione
+			InteractionRequest.Type interactionType = MessageAnalyzer.getInteractionType(message);
+			
+			switch (interactionType) 
+			{
+				//richiesta di ricerca utente
+				case FIND_USER_REQUEST:
+					//controllo gia' fatti rispondo con un messaggio di OK
+					sendResponseMessage(new ResponseSuccessMessage(),out);
+					break;
+				
+				case FRIENDSHIP_REQUEST:
+					friendshipRequestHandler(sender,receiver,out);
+					break;
+				
+				//TODO inserire altri casi
+	
+				default:
+					break;
+			}
+			
+		} 
+		catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 	
 	/**
@@ -244,6 +311,47 @@ public class UserRequestHandler implements Runnable
 	
 	
 	/**
+	 * Gestione richiesta amicizia tra 2 utente
+	 * @param a
+	 * @param b
+	 * @param out
+	 * @return
+	 * @throws IOException 
+	 */
+	private void friendshipRequestHandler(User a, User b ,DataOutputStream out) throws IOException
+	{
+		try 
+		{
+			boolean friendship = reteSG.nuovaAmicizia(a, b);
+			
+			//se non erano amici
+			if(!friendship) 
+			{
+				//aggiorno amicizia tra i 2 utenti
+				a.aggiungiAmico(b);
+				b.aggiungiAmico(a);
+				
+				//invio messaggio di successo al mittente
+				sendResponseMessage(new ResponseSuccessMessage(), out);
+				return;
+			}
+			//se erano gia amici
+			else {
+				sendResponseMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.ALREADY_FRIEND), out);
+				return;
+			}
+		} 
+		//caso non possibile in quanto gli utenti sono stati gia' controllati
+		catch (UserNotFindException e) 
+		{
+			e.printStackTrace();
+		} catch (SameUserException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	/**
 	 * Gestione richiesta login
 	 * @param accessSystem
 	 * @param nickname
@@ -274,14 +382,14 @@ public class UserRequestHandler implements Runnable
 		catch (UserStatusException e) 
 		{
 			//invio messaggio di errore stato utente non valido
-			sendResponseMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.USER_INVALID_STATUS),out);
+			sendResponseMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.SENDER_USER_INVALID_STATUS),out);
 			e.printStackTrace();
 			return;
 		} 
 		catch (UserNotFindException e) 
 		{
 			//invio messaggio di errore, utente non trovato
-			sendResponseMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.USER_NOT_FOUND),out);
+			sendResponseMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.SENDER_USER_NOT_FOUND),out);
 			e.printStackTrace();
 			return;
 		}
@@ -307,7 +415,7 @@ public class UserRequestHandler implements Runnable
 		catch(UserNotFindException e) 
 		{
 			//invio messaggio di errore, utente non trovato
-			sendResponseMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.USER_NOT_FOUND),out);
+			sendResponseMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.SENDER_USER_NOT_FOUND),out);
 			e.printStackTrace();
 			return;
 		} 
@@ -315,7 +423,7 @@ public class UserRequestHandler implements Runnable
 		catch (UserStatusException e) 
 		{
 			//invio messaggio di errore stato utente non valido
-			sendResponseMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.USER_INVALID_STATUS),out);
+			sendResponseMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.SENDER_USER_INVALID_STATUS),out);
 			e.printStackTrace();
 			return;
 		}

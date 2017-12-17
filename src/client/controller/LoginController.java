@@ -23,6 +23,7 @@ import communication.MessageAnalyzer;
 import communication.messages.LoginRequest;
 import communication.messages.Message;
 import communication.messages.ResponseFailedMessage;
+import communication.messages.ResponseFailedMessage.Errors;
 import communication.messages.ResponseMessage;
 import server.model.User;
 
@@ -104,7 +105,6 @@ public class LoginController extends Controller
 		 */
 		protected void createRequest() 
 		{
-			System.out.println(nickname);
 			request = new LoginRequest(nickname,new String(password));
 		}
 
@@ -124,96 +124,71 @@ public class LoginController extends Controller
 			showErrorMessage("Errore nella richiesta di login","Errore");
 		}
 
-		protected void analyzeResponse(String JsonResponse)
+		@Override
+		protected void invalidResponseHandler() {
+			showErrorMessage("Errore nel messaggio di risposta del server","Errore");
+		}
+
+		@Override
+		protected void invalidResponseErrorTypeHandler() {
+			showErrorMessage("Errore nel messaggio di risposta di errore del server","Errore");
+		}
+
+		@Override
+		protected void failedResponseHandler(Errors error) 
 		{
-			try
+			//controllo tipi di errore che si possono riscontrare
+			switch (error) 
 			{
-				//parso json rappresentate risposta del server
-				JSONObject response = MessageAnalyzer.parse(JsonResponse);
-				
-				//se non e' un messaggio di risposta
-				if(MessageAnalyzer.getMessageType(response) != Message.Type.RESPONSE) 
-				{
-					showErrorMessage("Errore nel messaggio di risposta del server","Errore");
-					return;
-				}
-				
-				//prendo tipo esito della risposta
-				ResponseMessage.Type outcome = MessageAnalyzer.getResponseType(response);
-				
-				//tipo risposta non trovato
-				if(outcome == null)
-				{
-					showErrorMessage("Errore nel messaggio di risposta del server","Errore");
-					return;
-				}
-				
-				//controllo esito della risposta ricevuta
-				switch(outcome) 
-				{
-					//registrazione avvenuta
-					case SUCCESS:
-						
-						//TODO prendere lista delle chatroom
-						List<User> amiciList = MessageAnalyzer.getListaAmici(response);
-						
-						//lista degli amici dell'utente loggato, non trovata
-						if(amiciList == null) {
-							showErrorMessage("Errore nel messaggio di risposta del server","Errore");
-							return;
-						}
-						
-						startHubView(nickname,amiciList);
-						break;
+				//richiesta non valida
+				case INVALID_REQUEST:
+					showErrorMessage("Rcihiesta non valida","Errore");
+					break;
 					
-					case FAIL:
-						//analizzo l'errore riscontrato
-						ResponseFailedMessage.Errors error = MessageAnalyzer.getResponseFailedErrorType(response);
-						
-						//errore non trovato
-						if(error == null) {
-							showErrorMessage("Errore nel messaggio di risposta del server","Errore");
-							return;
-						}
-						
-						//controllo tipi di errore che si possono riscontrare
-						switch (error) 
-						{
-							//richiesta non valida
-							case INVALID_REQUEST:
-								showErrorMessage("Rcihiesta non valida","Errore");
-								break;
-								
-							case PASSWORD_MISMATCH:
-								showErrorMessage("Password errata","Warning");
-								break;
+				case PASSWORD_MISMATCH:
+					showErrorMessage("Password errata","Warning");
+					break;
+				
+				case SENDER_USER_NOT_FOUND:
+					showErrorMessage("Utente non trovato","Warning");
+					break;
+				
+				case SENDER_USER_INVALID_STATUS:
+					showErrorMessage("Sei gia' online con un altro client","Warning");
+					break;
 							
-							case USER_NOT_FOUND:
-								showErrorMessage("Utente non trovato","Warning");
-								break;
-							
-							case USER_INVALID_STATUS:
-								showErrorMessage("Sei gia' online con un altro client","Warning");
-								break;
-										
-							//errore non trovato
-							default:
-								showErrorMessage("Errore nel messaggio di risposta del server","Errore");
-								break;
-						}
-						
-						break;
-						
-					default:
-						showErrorMessage("Errore nel messaggio di risposta del server","Errore");
-						break;
-				}
+				//errore non trovato
+				default:
+					showErrorMessage("Errore nel messaggio di risposta del server","Errore");
+					break;
 			}
-			catch (ParseException e) 
-			{
-				showErrorMessage("Errore lettura risposta del server","Errore");
-				e.printStackTrace();
+		}
+
+		@Override
+		protected void parseErrorHandler() {
+			showErrorMessage("Errore lettura risposta del server","Errore");			
+		}
+
+		@Override
+		protected void unexpectedMessageHandler() {
+			showErrorMessage("Errore nel messaggio di risposta del server","Errore");			
+		}
+
+
+		@Override
+		protected void successResponseHandler() 
+		{
+			//TODO prendere lista delle chatroom
+			List<User> amiciList = MessageAnalyzer.getListaAmici(response);
+			
+			//lista degli amici dell'utente loggato, non trovata
+			if(amiciList == null) {
+				showErrorMessage("Errore nel messaggio di risposta del server","Errore");
+				return;
 			}
+			
+			//faccio partire l'hub 
+			startHubView(nickname,amiciList);
 		}
 	}
 	

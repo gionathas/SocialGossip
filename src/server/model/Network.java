@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
+import server.model.exception.SameUserException;
 import server.model.exception.UserNotFindException;
 import utils.graph.Arco;
 import utils.graph.Grafo;
@@ -61,8 +62,9 @@ public class Network
 	 * @param b secondo utente
 	 * @return true se l'arco tra i 2 utenti e' stato creato,false se esisteva gia'
 	 * @throws UserNotFindException se uno o entrambi gli utente non risultano essere iscritti
+	 * @throws SameUserException se gli utenti sono gli stessi
 	 */
-	public boolean nuovaAmicizia(User a,User b) throws UserNotFindException
+	public boolean nuovaAmicizia(User a,User b) throws UserNotFindException, SameUserException
 	{
 		if(a == null || b == null)
 			throw new NullPointerException();
@@ -70,6 +72,10 @@ public class Network
 		//se uno o entrambi gli utenti non sono iscritti
 		if(!iscrittoUtente(a) || !iscrittoUtente(b))
 			throw new UserNotFindException();
+		
+		//se gli utenti sono gli stessi
+		if(a.equals(b))
+			throw new SameUserException();
 		
 		return grafo.addArco(a,b);
 	}
