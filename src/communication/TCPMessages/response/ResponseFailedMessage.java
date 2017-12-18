@@ -1,6 +1,6 @@
-package communication.messages.response;
+package communication.TCPMessages.response;
 
-import communication.messages.response.ResponseMessage.Type;
+import communication.TCPMessages.response.ResponseMessage.Type;
 
 /**
  * Messaggio di risposta che segnala un operazione fallita

@@ -27,6 +27,10 @@ public abstract class Controller
 		window.dispose();
 	}
 	
+	public JFrame getWindow() {
+		return window;
+	}
+	
 	protected void setWindow(JFrame frame) {
 		this.window = frame;
 	}

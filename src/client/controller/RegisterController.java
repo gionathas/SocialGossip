@@ -10,12 +10,12 @@ import org.json.simple.parser.ParseException;
 
 import client.thread.RequestSenderThread;
 import client.view.RegisterForm;
-import communication.MessageAnalyzer;
-import communication.messages.Message;
-import communication.messages.request.RegisterRequest;
-import communication.messages.response.ResponseFailedMessage;
-import communication.messages.response.ResponseMessage;
-import communication.messages.response.ResponseFailedMessage.Errors;
+import communication.TCPMessages.Message;
+import communication.TCPMessages.MessageAnalyzer;
+import communication.TCPMessages.request.RegisterRequest;
+import communication.TCPMessages.response.ResponseFailedMessage;
+import communication.TCPMessages.response.ResponseMessage;
+import communication.TCPMessages.response.ResponseFailedMessage.Errors;
 import server.model.User;
 
 public class RegisterController extends Controller

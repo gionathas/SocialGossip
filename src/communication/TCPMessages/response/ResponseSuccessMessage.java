@@ -1,4 +1,4 @@
-package communication.messages.response;
+package communication.TCPMessages.response;
 
 /**
  * Messaggio di risposta che segnala un operazione andata a buon fine

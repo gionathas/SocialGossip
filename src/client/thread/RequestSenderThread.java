@@ -10,12 +10,13 @@ import java.net.UnknownHostException;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.ParseException;
 
-import communication.MessageAnalyzer;
-import communication.messages.Message;
-import communication.messages.request.RequestMessage;
-import communication.messages.response.ResponseFailedMessage;
-import communication.messages.response.ResponseMessage;
-import communication.messages.response.ResponseSuccessMessage;
+import client.controller.Controller;
+import communication.TCPMessages.Message;
+import communication.TCPMessages.MessageAnalyzer;
+import communication.TCPMessages.request.RequestMessage;
+import communication.TCPMessages.response.ResponseFailedMessage;
+import communication.TCPMessages.response.ResponseMessage;
+import communication.TCPMessages.response.ResponseSuccessMessage;
 
 /**
  * Modello astratto che rappresenta un Thread che invia una richiesta al server tramite connessione TCP
@@ -27,17 +28,25 @@ public abstract class RequestSenderThread extends Thread
 	private Socket connection;
 	private DataInputStream in;
 	private DataOutputStream out;
+	
 	protected final String serverName = "localhost";
 	protected final int port = 5000;
+	
+	protected Controller controller;
 	protected RequestMessage request;
 	protected String JsonResponse;
 	protected JSONObject response;
 	protected boolean init;
 	
 	
-	public RequestSenderThread()
+	public RequestSenderThread(Controller controller)
 	{
 		super();
+		
+		if(controller == null)
+			throw new NullPointerException();
+		
+		this.controller = controller;
 		connection = new Socket();
 		in = null;
 		out = null;

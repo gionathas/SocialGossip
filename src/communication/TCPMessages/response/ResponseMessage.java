@@ -1,7 +1,7 @@
-package communication.messages.response;
+package communication.TCPMessages.response;
 
-import communication.messages.Message;
-import communication.messages.Message.Type;
+import communication.TCPMessages.Message;
+import communication.TCPMessages.Message.Type;
 
 /**
  * Rappresenta in generico messaggio di rispostas

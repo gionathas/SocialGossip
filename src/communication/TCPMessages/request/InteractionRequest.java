@@ -1,6 +1,6 @@
-package communication.messages.request;
+package communication.TCPMessages.request;
 
-import communication.messages.request.RequestMessage.Type;
+import communication.TCPMessages.request.RequestMessage.Type;
 
 /**
  * Rappresenta un messaggio di richiesta di interazione con un altro utente

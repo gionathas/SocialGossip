@@ -5,6 +5,10 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.rmi.NotBoundException;
+import java.rmi.RemoteException;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
 import java.util.List;
 
 import javax.swing.JOptionPane;
@@ -12,24 +16,33 @@ import javax.swing.JOptionPane;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.ParseException;
 
+import client.thread.FindUserRequestSender;
+import client.thread.LogoutRequestSender;
 import client.thread.RequestSenderThread;
 import client.view.Hub;
-import communication.MessageAnalyzer;
-import communication.messages.Message;
-import communication.messages.request.FindUserRequest;
-import communication.messages.request.FriendshipRequest;
-import communication.messages.request.LogoutRequest;
-import communication.messages.response.ResponseFailedMessage;
-import communication.messages.response.ResponseMessage;
-import communication.messages.response.ResponseFailedMessage.Errors;
+import communication.RMI.ClientNotifyEvent;
+import communication.RMI.ServerInterface;
+import communication.TCPMessages.Message;
+import communication.TCPMessages.MessageAnalyzer;
+import communication.TCPMessages.request.FindUserRequest;
+import communication.TCPMessages.request.FriendshipRequest;
+import communication.TCPMessages.request.LogoutRequest;
+import communication.TCPMessages.response.ResponseFailedMessage;
+import communication.TCPMessages.response.ResponseMessage;
+import communication.TCPMessages.response.ResponseFailedMessage.Errors;
 import server.model.User;
 
-public class HubController extends Controller
+public class HubController extends Controller implements ClientNotifyEvent
 {
 	private Hub hubView;
 	private User user;
-	private List<User> amiciList;
+	private ServerInterface serverRMI = null;
 	private final int YES = 0;
+	private Thread RMIHandler;
+	private Controller controller = this;
+	
+	private static final String SERVER_RMI_SERVICE_NAME = "SocialGossipNotification";
+	private static final int SERVER_RMI_PORT = 6000;
 	
 	public HubController(String nickname,List<User> amiciList,Point location) 
 	{
@@ -37,15 +50,25 @@ public class HubController extends Controller
 		setWindow(hubView);
 		window.setLocation(location);
 		
-		
-		initComponents(nickname,amiciList);
-		initListeners();
+		try 
+		{
+			initComponents(nickname,amiciList);
+			initListeners();
+		} 
+		catch (RemoteException | NotBoundException e) 
+		{
+			showErrorMessage("Errore nell'inizializzazione della comunicazione RMI","ERRORE CONNESSIONE");
+			e.printStackTrace();
+		} 
 	}
 	
-	private void initComponents(String nickname,List<User> amiciList)
+	private void initComponents(String nickname,List<User> amiciList) throws RemoteException, NotBoundException
 	{	
 		user = new User(nickname);
 		hubView.setWelcomeText("Loggato come: "+nickname);
+		
+		//configuro RMI per ricevere notifiche sullo stato degli amici e sulle nuove amicizie
+		initRMI();
 		
 		//se mi e' stata passata una lista di amici e di chatRoom
 		if(amiciList != null) {
@@ -58,6 +81,13 @@ public class HubController extends Controller
 		}
 	}
 	
+	private void initRMI() throws RemoteException, NotBoundException
+	{
+		Registry registry = LocateRegistry.getRegistry(SERVER_RMI_PORT);
+		
+		serverRMI = (ServerInterface) registry.lookup(SERVER_RMI_SERVICE_NAME);
+	}
+	
 	@Override
 	protected void initListeners() 
 	{
@@ -67,7 +97,7 @@ public class HubController extends Controller
 	            @Override
 	            public void windowClosing(WindowEvent e)
 	            {
-	                new LogoutRequestSender().start();
+	                new LogoutRequestSender(controller,user.getNickname()).start();
 	            }
 	        });
 		
@@ -76,7 +106,7 @@ public class HubController extends Controller
 			public void actionPerformed(ActionEvent arg0) 
 			{
 				//avvio procedura di logout
-                new LogoutRequestSender().start();
+                new LogoutRequestSender(controller,user.getNickname()).start();
 			}
 		});
 		
@@ -87,230 +117,9 @@ public class HubController extends Controller
 			public void actionPerformed(ActionEvent e) 
 			{
 				//avvio thread che gestisce la richiesta di ricerca utente
-				new FindUserRequestSender().start();
+				new FindUserRequestSender(controller,user.getNickname(),hubView.getTextField().getText()).start();
 			}
 		});
-	}
-	
-	/**
-	 * Thread che si occupa della gestione della richiesta di ricerca di un utente
-	 * @author gio
-	 *
-	 */
-	private class FindUserRequestSender extends RequestSenderThread
-	{
-		private String nicknameUserToFind;
-		
-		public FindUserRequestSender() 
-		{
-			nicknameUserToFind = hubView.getTextField().getText();
-		}
-		
-		@Override
-		protected void init() 
-		{
-			//se il nickname inserito non e' valido
-			if(!FormInputChecker.checkNickname(nicknameUserToFind)) {
-				showErrorMessage("Nome inserito non valido","Errore Form");
-			}
-			//altrimenti procedo alla richiesta
-			else {
-				init = true;
-			}
-			
-		}
-
-		@Override
-		protected void createRequest() {
-			request = new FindUserRequest(user.getNickname(),nicknameUserToFind);
-		}
-
-		@Override
-		protected void ConnectErrorHandler() {
-			showErrorMessage("Servizio attualmente non disponibile","Errore");
-		}
-
-		@Override
-		protected void UnKwownHostErrorHandler() {
-			showErrorMessage("Server non trovato","Errore");
-		}
-
-		@Override
-		protected void IOErrorHandler() {
-			showErrorMessage("Errore nella richiesta di ricerca di un utente","Errore");			
-		}
-
-		@Override
-		protected void invalidResponseHandler() {
-			showErrorMessage("Errore nel messaggio di risposta del server","Errore");
-		}
-
-		@Override
-		protected void invalidResponseErrorTypeHandler() {
-			showErrorMessage("Errore nel messaggio di risposta di errore del server","Errore");
-		}
-
-		@Override
-		protected void failedResponseHandler(Errors error) 
-		{
-			switch (error) 
-			{
-				case INVALID_REQUEST:
-					showErrorMessage("Richiesta non valida","Errore");
-					break;
-				
-				case SENDER_USER_INVALID_STATUS:
-					showErrorMessage("Non sei online","Errore");
-					break;
-				
-				case SENDER_USER_NOT_FOUND:
-					showErrorMessage("Non risulti piu' essere registrato","Errore");
-					break;
-				
-				case RECEIVER_USER_NOT_FOUND:
-					showErrorMessage("Utente non trovato","Ops");
-					break; 
-				
-				case SAME_USERS:
-					showInfoMessage("Utente trovato");
-					break;
-				
-				default:
-					showErrorMessage("Errore nel messaggio di risposta di errore del server","Errore");
-					break;
-			}
-		}
-
-		@Override
-		protected void parseErrorHandler() {
-			showErrorMessage("Errore lettura risposta del server","Errore");			
-		}
-
-		@Override
-		protected void unexpectedMessageHandler() {
-			showErrorMessage("Errore nel messaggio di risposta del server","Errore");
-		}
-		
-		@Override
-		protected void successResponseHandler() 
-		{
-			//TODO richiedo se vuole diventare amico
-			//showInfoMessage("Utente trovato");
-			
-			//richiedo se vuole diventare amico
-			int choice = JOptionPane.showConfirmDialog(hubView,"Utente "+nicknameUserToFind+" Trovato! Vuoi diventare suo amico?");
-			
-			//se si e' scelto di diventare suo amico
-			if(choice == YES)
-			{
-				//faccio partire il thread che gestira' la richiesta di amicizia
-				new FriendshipRequestSender(nicknameUserToFind).start();
-			}
-
-			
-		}
-		
-	}
-	
-	private class FriendshipRequestSender extends RequestSenderThread
-	{
-		private String nicknameReceiverFriend;
-		
-		public FriendshipRequestSender(String nicknameReceiverFriend) {
-			this.nicknameReceiverFriend = nicknameReceiverFriend;
-		}
-
-		@Override
-		protected void init() {
-			init = true;
-		}
-
-		@Override
-		protected void createRequest() 
-		{
-			request = new FriendshipRequest(user.getNickname(),nicknameReceiverFriend);
-		}
-
-		protected void ConnectErrorHandler() {
-			showErrorMessage("Servizio attualmente non disponibile","Errore");
-		}
-
-		@Override
-		protected void UnKwownHostErrorHandler() {
-			showErrorMessage("Server non trovato","Errore");
-		}
-
-		@Override
-		protected void IOErrorHandler() {
-			showErrorMessage("Errore nella richiesta di amicizia","Errore");			
-		}
-
-		@Override
-		protected void invalidResponseHandler() {
-			showErrorMessage("Errore nel messaggio di risposta del server","Errore");
-		}
-
-		@Override
-		protected void invalidResponseErrorTypeHandler() {
-			showErrorMessage("Errore nel messaggio di risposta di errore del server","Errore");
-		}
-
-
-		@Override
-		protected void failedResponseHandler(Errors error) {
-			switch (error) 
-			{
-				case INVALID_REQUEST:
-					showErrorMessage("Richiesta non valida","Errore");
-					break;
-				
-				case SENDER_USER_INVALID_STATUS:
-					showErrorMessage("Non sei online","Errore");
-					break;
-				
-				case SENDER_USER_NOT_FOUND:
-					showErrorMessage("Non risulti piu' essere registrato","Errore");
-					break;
-				
-				case RECEIVER_USER_NOT_FOUND:
-					showErrorMessage("Utente non trovato","Ops");
-					break; 
-				
-				case SAME_USERS:
-					showInfoMessage("Non puoi diventare amico di te stesso!");
-					break;
-				
-				case ALREADY_FRIEND:
-					showInfoMessage("Sei gia' amico di "+nicknameReceiverFriend);
-					break;
-				
-				default:
-					showErrorMessage("Errore nel messaggio di risposta di errore del server","Errore");
-					break;
-			}
-		}
-
-		@Override
-		protected void parseErrorHandler() {
-			showErrorMessage("Errore lettura risposta del server","Errore");			
-		}
-
-		@Override
-		protected void unexpectedMessageHandler() {
-			showErrorMessage("Errore nel messaggio di risposta del server","Errore");
-		}
-		
-
-		@Override
-		protected void successResponseHandler() 
-		{
-			//prendo stato dell'utente diventato amico
-			boolean status = MessageAnalyzer.getStatusReceiverOfFriendShipRequest(response);
-			showInfoMessage("Ora sei amico di "+nicknameReceiverFriend);
-			
-			hubView.getModelUserFriendList().addElement(new User(nicknameReceiverFriend,status));
-		}
-		
 	}
 	
 	/**
@@ -318,97 +127,16 @@ public class HubController extends Controller
 	 * @author gio
 	 *
 	 */
-	private class LogoutRequestSender extends RequestSenderThread
-	{
+	
+	@Override
+	public void updateFriendStatus(User friend) throws RemoteException {
+		// TODO Auto-generated method stub
+		
+	}
 
-		@Override
-		protected void init() 
-		{
-			//mostro finestra che chiede se si vuole uscire veramente
-			int choice = JOptionPane.showConfirmDialog(hubView,"Sei sicuro di voler uscire?");
-			
-			//se la scelta e' diversa da Si,mi fermo
-			if(choice != YES) {
-				init = false;
-			}
-			//se la scelta e' stata si
-			else {
-				init = true;
-			}
-		}
-
-		@Override
-		protected void createRequest() 
-		{
-			request = new LogoutRequest(user.getNickname());
-		}
-
-		@Override
-		protected void ConnectErrorHandler() {
-			showErrorMessage("Servizio attualmente non disponibile","Errore");
-		}
-
-		@Override
-		protected void UnKwownHostErrorHandler() {
-			showErrorMessage("Server non trovato","Errore");
-		}
-
-		@Override
-		protected void IOErrorHandler() {
-			showErrorMessage("Errore nella richiesta di logout","Errore");
-		}
-
-		@Override
-		protected void invalidResponseHandler() {
-			showErrorMessage("Errore nel messaggio di risposta del server","Errore");
-		}
-
-		@Override
-		protected void invalidResponseErrorTypeHandler() {
-			showErrorMessage("Errore nel messaggio di risposta di errore del server","Errore");
-		}
-
-		@Override
-		protected void failedResponseHandler(ResponseFailedMessage.Errors error) 
-		{
-			
-			//controllo tipi di errore che si possono riscontrare
-			switch (error) 
-			{
-				//richiesta non valida
-				case INVALID_REQUEST:
-					showErrorMessage("Rcihiesta non valida","Errore");
-					break;
-					
-				case SENDER_USER_INVALID_STATUS:
-					showErrorMessage("Sei gia' offline","Warning");
-					break;
-							
-				//errore non trovato
-				default:
-					showErrorMessage("Errore nel messaggio di risposta del server","Errore");
-					break;
-			}
-			
-		}
-
-		@Override
-		protected void parseErrorHandler() {
-			showErrorMessage("Errore lettura risposta del server","Errore");			
-		}
-
-		@Override
-		protected void unexpectedMessageHandler() {
-			showErrorMessage("Errore nel messaggio di risposta del server","Errore");			
-		}
-
-		@Override
-		protected void successResponseHandler() 
-		{
-			//chiudo hub
-			hubView.setVisible(false);
-			hubView.dispose();
-		}
+	@Override
+	public void newFriend(User newFriend) throws RemoteException {
+		// TODO Auto-generated method stub
 		
 	}	
 }

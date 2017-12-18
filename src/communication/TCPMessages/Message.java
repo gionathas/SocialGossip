@@ -1,4 +1,4 @@
-package communication.messages;
+package communication.TCPMessages;
 
 import org.json.simple.JSONObject;
 

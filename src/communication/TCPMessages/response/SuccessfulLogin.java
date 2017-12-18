@@ -1,4 +1,4 @@
-package communication.messages.response;
+package communication.TCPMessages.response;
 
 import java.util.List;
 

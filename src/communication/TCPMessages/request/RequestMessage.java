@@ -1,7 +1,7 @@
-package communication.messages.request;
+package communication.TCPMessages.request;
 
-import communication.messages.Message;
-import communication.messages.Message.Type;
+import communication.TCPMessages.Message;
+import communication.TCPMessages.Message.Type;
 
 /**
  * Rappresenta un generico messaggio di richiesta tra client e server.

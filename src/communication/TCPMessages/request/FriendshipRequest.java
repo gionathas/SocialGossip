@@ -1,6 +1,6 @@
-package communication.messages.request;
+package communication.TCPMessages.request;
 
-import communication.messages.request.InteractionRequest.Type;
+import communication.TCPMessages.request.InteractionRequest.Type;
 
 /**
  * Messaggio di richiesta amicizia

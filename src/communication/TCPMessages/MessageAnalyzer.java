@@ -1,4 +1,4 @@
-package communication;
+package communication.TCPMessages;
 
 import java.awt.TrayIcon.MessageType;
 import java.util.Iterator;
@@ -9,15 +9,16 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
-import communication.messages.*;
-import communication.messages.request.InteractionRequest;
-import communication.messages.request.RegisterRequest;
-import communication.messages.request.RequestAccessMessage;
-import communication.messages.request.RequestMessage;
-import communication.messages.response.ResponseFailedMessage;
-import communication.messages.response.ResponseMessage;
-import communication.messages.response.SuccessFriendship;
-import communication.messages.response.SuccessfulLogin;
+
+import communication.TCPMessages.*;
+import communication.TCPMessages.request.InteractionRequest;
+import communication.TCPMessages.request.RegisterRequest;
+import communication.TCPMessages.request.RequestAccessMessage;
+import communication.TCPMessages.request.RequestMessage;
+import communication.TCPMessages.response.ResponseFailedMessage;
+import communication.TCPMessages.response.ResponseMessage;
+import communication.TCPMessages.response.SuccessFriendship;
+import communication.TCPMessages.response.SuccessfulLogin;
 import server.model.*;
 
 /**

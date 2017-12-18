@@ -5,10 +5,10 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
-import communication.MessageAnalyzer;
-import communication.messages.Message;
-import communication.messages.request.LoginRequest;
-import communication.messages.request.RequestMessage;
+import communication.TCPMessages.Message;
+import communication.TCPMessages.MessageAnalyzer;
+import communication.TCPMessages.request.LoginRequest;
+import communication.TCPMessages.request.RequestMessage;
 
 /**
  * test funzionamento struttura messaggi

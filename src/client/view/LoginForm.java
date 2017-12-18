@@ -25,8 +25,8 @@ import java.awt.event.ActionEvent;
 import javax.swing.UIManager;
 
 import client.controller.LoginController;
-import communication.messages.request.LoginRequest;
-import communication.messages.request.RequestAccessMessage;
+import communication.TCPMessages.request.LoginRequest;
+import communication.TCPMessages.request.RequestAccessMessage;
 
 import javax.swing.JSeparator;
 import java.awt.SystemColor;

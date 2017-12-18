@@ -1,4 +1,4 @@
-package communication.messages.request;
+package communication.TCPMessages.request;
 
 public class RequestAccessMessage extends RequestMessage
 {
