@@ -1,6 +1,5 @@
 package server.model;
 
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
@@ -117,13 +116,13 @@ public class User
 	public String toString() {
 		String status = online ? "online" : "offline";
 		
-		return nickname+"["+status.toUpperCase()+"]";
+		return nickname+" ["+status.toUpperCase()+"]";
 	}
 	
 	/**
 	 * @return nickname di questo utente
 	 */
-	public String getNickname() {
+	public synchronized String getNickname() {
 		return nickname;
 	}
 	
@@ -131,26 +130,26 @@ public class User
 	 * 
 	 * @return password dell'utente
 	 */
-	public String getPassword() {
+	public synchronized String getPassword() {
 		return password;
 	}
 	
 	/**
 	 * @return Codice ISO 639-2 della lingua,oppure null se non e' settata
 	 */
-	public String getLingua() {
+	public synchronized String getLingua() {
 		return lingua;
 	}
 	
-	public boolean isOnline() {
+	public synchronized boolean isOnline() {
 		return online;
 	}
 	
-	public void setOnline(boolean isOnline) {
+	public synchronized void setOnline(boolean isOnline) {
 		online = isOnline;
 	}
 	
-	public void setLinguaCode(String lingua) {
+	public synchronized void setLinguaCode(String lingua) {
 		if(lingua.length() != LANG_LENGHT)
 			throw new IllegalArgumentException();
 		
@@ -160,7 +159,7 @@ public class User
 	/**
 	 * @return lista degli amici dell'utente
 	 */
-	public List<User> getAmici(){
+	public synchronized List<User> getAmici(){
 		return amici;
 	}
 	
@@ -169,7 +168,7 @@ public class User
 	 * @param user
 	 * @return se questo utente e' amico di user
 	 */
-	public boolean amicoDi(User user) {
+	public synchronized boolean amicoDi(User user) {
 		
 		if(user == null)
 			throw new NullPointerException();
@@ -184,7 +183,7 @@ public class User
 	 * Aggiunge l'utente user alla lista di amici di questo utente
 	 * @param user
 	 */
-	public void aggiungiAmico(User user) {
+	public synchronized void aggiungiAmico(User user) {
 		if(user == null)
 			throw new NullPointerException();
 		

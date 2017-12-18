@@ -12,7 +12,8 @@ import utils.graph.Nodo;
 import utils.graph.exception.VertexAlreadyExist;
 
 /**
- * Gestisce il grafo degli utenti di social gossip
+ * Gestisce il grafo degli utenti di social gossip.
+ * La classe e' thread-safe.
  * @author Gionatha Sturba
  *
  */
@@ -31,7 +32,10 @@ public class Network
 	 */
 	public boolean iscrittoUtente(User a)
 	{	
-		return grafo.containsVertice(a);
+		synchronized (grafo) 
+		{
+			return grafo.containsVertice(a);
+		}
 	}
 	
 	/**
@@ -44,7 +48,10 @@ public class Network
 		if(nickname == null)
 			throw new NullPointerException();
 		
-		return grafo.getVertice(new User(nickname));
+		synchronized (grafo) 
+		{
+			return grafo.getVertice(new User(nickname));
+		}
 	}
 	
 	public void aggiungiUtente(String nickname,String password,String language)throws VertexAlreadyExist
@@ -52,8 +59,11 @@ public class Network
 		if(nickname == null || password == null || language == null)
 			throw new NullPointerException();
 		
-		//aggiungo un utente con il suo nick password e lingua relativi ad esso,piu' lo metto online
-		grafo.addVertice(new User(nickname,password,true,language));
+		synchronized (grafo) 
+		{
+			//aggiungo un utente con il suo nick password e lingua relativi ad esso,piu' lo metto online
+			grafo.addVertice(new User(nickname,password,true,language));
+		}
 	}
 	
 	/**
@@ -69,23 +79,16 @@ public class Network
 		if(a == null || b == null)
 			throw new NullPointerException();
 		
-		//se uno o entrambi gli utenti non sono iscritti
-		if(!iscrittoUtente(a) || !iscrittoUtente(b))
-			throw new UserNotFindException();
-		
-		//se gli utenti sono gli stessi
-		if(a.equals(b))
-			throw new SameUserException();
-		
-		return grafo.addArco(a,b);
-	}
-	
-	/**
-	 * @return numero utenti attualmente iscritti
-	 */
-	public int numeroIscritti()
-	{
-		return grafo.getVerticiSize();
+		synchronized (grafo) 
+		{
+			//se uno o entrambi gli utenti non sono iscritti
+			if (!iscrittoUtente(a) || !iscrittoUtente(b))
+				throw new UserNotFindException();
+			//se gli utenti sono gli stessi
+			if (a.equals(b))
+				throw new SameUserException();
+			return grafo.addArco(a, b);
+		}
 	}
 	
 	/**
@@ -99,21 +102,19 @@ public class Network
 		if(a == null)
 			throw new NullPointerException();
 		
-		if(!iscrittoUtente(a))
-			throw new UserNotFindException();
-		
-		List<User> listaAmici = new LinkedList<User>();
-		
-		//prendiamo il vertice del grafo che rappresenta l'utente
-		Nodo<User> verticeUtente = grafo.getAdj().get(a);
-		
-		//per tutte le amicizie dell'utente
-		for (Arco<User> amicizia : verticeUtente.getArchi()) 
+		synchronized (grafo) 
 		{
-			listaAmici.add(amicizia.getDst().getKey());
+			if (!iscrittoUtente(a))
+				throw new UserNotFindException();
+			List<User> listaAmici = new LinkedList<User>();
+			//prendiamo il vertice del grafo che rappresenta l'utente
+			Nodo<User> verticeUtente = grafo.getAdj().get(a);
+			//per tutte le amicizie dell'utente
+			for (Arco<User> amicizia : verticeUtente.getArchi()) {
+				listaAmici.add(amicizia.getDst().getKey());
+			}
+			return Collections.unmodifiableList(listaAmici);
 		}
-		
-		return Collections.unmodifiableList(listaAmici);
 		
 	}
 	
@@ -121,7 +122,10 @@ public class Network
 	 * Stampa la rete degli utenti di Social Gossip
 	 */
 	public void stampaRete() {
-		//TODO migliorare funzione di stampa rete
-		grafo.stampaGrafo();
+		synchronized (grafo) 
+		{
+			//TODO migliorare funzione di stampa rete
+			grafo.stampaGrafo();
+		}
 	}
 }
