@@ -19,7 +19,7 @@ public class SuccessfulLogin extends ResponseSuccessMessage
 		
 		//aggiungo lista amici al messaggio di risposta
 		for (User user : amici) {
-			listaAmici.add(user);
+			listaAmici.add(User.toJsonObject(user));
 		}
 		
 		jsonMessage.put(FIELD_FRIEND_LIST,listaAmici);

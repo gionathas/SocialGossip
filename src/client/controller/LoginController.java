@@ -199,6 +199,8 @@ public class LoginController extends Controller
 				return;
 			}
 			
+			
+			
 			//faccio partire l'hub 
 			startHubView(nickname,amiciList);
 		}

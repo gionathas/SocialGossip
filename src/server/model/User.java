@@ -5,6 +5,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 
+import org.json.simple.JSONObject;
+
 /**
  * Rappresenta un generico utente della rete di Social Gossip
  * @author Gionatha Sturba
@@ -20,6 +22,9 @@ public class User
 	
 	public static final int LANG_LENGHT = 2;
 	public static final String NO_LANG = null;
+	
+	public static final String FIELD_NAME = "name";
+	public static final String FIELD_ONLINE = "online";
 	
 	/**
 	 * Crea un nuovo utente
@@ -156,7 +161,7 @@ public class User
 	 * @return lista degli amici dell'utente
 	 */
 	public List<User> getAmici(){
-		return Collections.unmodifiableList(amici);
+		return amici;
 	}
 	
 	/**
@@ -190,6 +195,27 @@ public class User
 		if(!amici.contains(user)) {
 			amici.add(user);
 		}
+	}
+	
+	/**
+	 * Crea un oggetto json con le informazioni base di un utente
+	 * @param user
+	 * @return
+	 */
+	public static JSONObject toJsonObject(User user) {
+		if(user == null)
+			throw new NullPointerException();
+		
+		if(user.nickname == null) {
+			return null;
+		}
+		
+		JSONObject jsonUser = new JSONObject();
+		
+		jsonUser.put("name",user.nickname);
+		jsonUser.put("online",user.isOnline());
+		
+		return jsonUser;
 	}
 
 	@Override

@@ -121,14 +121,23 @@ public class MessageAnalyzer
 		List<User> amiciList = new LinkedList<User>();
 		
 		//creo la lista degli amici dell'utente
-		Iterator<User> iteratorUser = listOfFriend.iterator();
+		Iterator<JSONObject> iteratorUser = listOfFriend.iterator();
 		
 		//aggiungo utenti alla lista
-		while(iteratorUser.hasNext()) {
-				amiciList.add(iteratorUser.next());
+		while(iteratorUser.hasNext()) 
+		{
+			amiciList.add(getUser(iteratorUser.next()));
 		}
 		
 		return amiciList;
+	}
+	
+	private static User getUser(JSONObject JsonMessage)
+	{
+		String name = (String) JsonMessage.get(User.FIELD_NAME);
+		boolean online = (boolean) JsonMessage.get(User.FIELD_ONLINE);
+		
+		return new User(name,online);
 	}
 	
 	/**

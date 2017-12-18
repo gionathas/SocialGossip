@@ -129,6 +129,7 @@ public abstract class RequestSenderThread extends Thread
 		try 
 		{
 			//parso json rappresentate risposta del server
+			System.out.println(JsonResponse);
 			response = MessageAnalyzer.parse(JsonResponse);
 			
 			//se non e' un messaggio di risposta

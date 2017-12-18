@@ -60,8 +60,10 @@ public class AccessSystem
 		//se tutti i controlli sono superati,metto online l'utente
 		registeredUser.setOnline(true);
 		
-		//ritorno la lista dei suoi amici
-		amiciList = registeredUser.getAmici();
+		//aggiorno gli amici
+		for (User user : registeredUser.getAmici()) {
+			amiciList.add(user);
+		};
 		
 		//TODO creo la lista delle chatRoom attive
 	}
