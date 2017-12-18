@@ -1,24 +1,32 @@
 package client.thread;
 
+import javax.swing.DefaultListModel;
 import javax.swing.JOptionPane;
 
 import client.controller.Controller;
 import client.controller.FormInputChecker;
-import client.controller.HubController.FriendshipRequestSender;
 import communication.TCPMessages.request.FindUserRequest;
 import communication.TCPMessages.response.ResponseFailedMessage.Errors;
+import server.model.User;
 
+/**
+ * Thread che si occupa della gestione della richiesta di ricerca utente
+ * @author gio
+ *
+ */
 public class FindUserRequestSender extends RequestSenderThread
 {	
 	private String nicknameUserToFind;
 	private String nicknameUser;
+	private DefaultListModel<User> friendList;
 	private static final int YES = 0;
 	
-	public FindUserRequestSender(Controller controller,String nicknameUser,String nicknameUserToFind) 
+	public FindUserRequestSender(Controller controller,String nicknameUser,String nicknameUserToFind,DefaultListModel<User> friendList)
 	{
 		super(controller);
 		this.nicknameUserToFind = nicknameUserToFind;
 		this.nicknameUser = nicknameUser;
+		this.friendList = friendList;
 	}
 	
 	@Override
@@ -119,7 +127,7 @@ public class FindUserRequestSender extends RequestSenderThread
 		if(choice == YES)
 		{
 			//faccio partire il thread che gestira' la richiesta di amicizia
-			new FriendshipRequestSender(nicknameUserToFind).start();
+			new FriendshipRequestSender(controller,nicknameUser,nicknameUserToFind,friendList).start();
 		}
 
 		

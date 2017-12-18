@@ -8,6 +8,7 @@ import java.util.List;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.ParseException;
 
+import client.thread.RegisterRequestSender;
 import client.thread.RequestSenderThread;
 import client.view.RegisterForm;
 import communication.TCPMessages.Message;
@@ -21,6 +22,7 @@ import server.model.User;
 public class RegisterController extends Controller
 {
 	private RegisterForm registerView;
+	private Controller controller = this;
 	
 	public RegisterController()
 	{
@@ -56,187 +58,10 @@ public class RegisterController extends Controller
 			public void actionPerformed(ActionEvent e) 
 			{
 				//faccio partire il thread che si occupera' delle richiesta di registrazione
-				new RegisterRequestSender().start();
+				new RegisterRequestSender(controller,registerView.getUsernameField().getText(),registerView.getPasswordField().getPassword(),
+						registerView.getConfirmPasswordField().getPassword(),(String)registerView.getComboBox().getSelectedItem()).start();
 			}
 		});
-	}
-	
-	/**
-	 * Thread che si occupa di gestira l'intera richiesta di registrazione
-	 * @author gio
-	 *
-	 */
-	private class RegisterRequestSender extends RequestSenderThread
-	{
-		private String nickname;
-		private char[] password;
-		private char[] confirm_pass;
-		private String language;
-		
-		public RegisterRequestSender() 
-		{
-			this.nickname = registerView.getUsernameField().getText();
-			this.password = registerView.getPasswordField().getPassword();
-			this. confirm_pass = registerView.getConfirmPasswordField().getPassword();
-			this.language = (String) registerView.getComboBox().getSelectedItem();
-		}
-
-		@Override
-		protected void init() {
-			//se i dati inseriti nella form non sono validi
-			if(!FormInputChecker.checkRegisterInput(nickname,password,confirm_pass))
-			{
-				showErrorMessage(FormInputChecker.REGISTER_ERROR_INFO_STRING,"Errore Form");
-			}
-			//altrimenti possiamo procedere alla richiesta
-			else {
-				init = true;
-			}
-		}
-
-		@Override
-		protected void createRequest() 
-		{
-			request = new RegisterRequest(nickname,new String(password),language);
-		}
-
-		@Override
-		protected void ConnectErrorHandler() {
-			showErrorMessage("Servizio attualmente non disponibile","Errore");			
-		}
-
-		@Override
-		protected void UnKwownHostErrorHandler() {
-			showErrorMessage("Server non trovato","Errore");
-		}
-
-		@Override
-		protected void IOErrorHandler() {
-			showErrorMessage("Errore nella richiesta di registrazione","Errore");
-		}
-
-		protected void analyzeResponse(String JsonResponse)
-		{
-			try 
-			{
-				//parso json rappresentate risposta del server
-				JSONObject response = MessageAnalyzer.parse(JsonResponse);
-				
-				//se non e' un messaggio di risposta
-				if(MessageAnalyzer.getMessageType(response) != Message.Type.RESPONSE) 
-				{
-					showErrorMessage("Errore nel messaggio di risposta del server","Errore");
-					return;
-				}
-				
-				ResponseMessage.Type outcome = MessageAnalyzer.getResponseType(response);
-				
-				//tipo risposta non trovato
-				if(outcome == null)
-				{
-					showErrorMessage("Errore nel messaggio di risposta del server","Errore");
-					return;
-				}
-				
-				//controllo esito della risposta ricevuta
-				switch(outcome) 
-				{
-					//registrazione avvenuta
-					case SUCCESS:
-						showInfoMessage("Registrazione Avvenuta");
-						startHubView(nickname,null);
-						break;
-					
-					case FAIL:
-						//analizzo l'errore riscontrato
-						ResponseFailedMessage.Errors error = MessageAnalyzer.getResponseFailedErrorType(response);
-						
-						//errore non trovato
-						if(error == null) {
-							showErrorMessage("Errore nel messaggio di risposta del server","Errore");
-							return;
-						}
-						
-						//controllo tipi di errore che si possono riscontrare
-						switch (error) 
-						{
-							//richiesta non valida
-							case INVALID_REQUEST:
-								showErrorMessage("Rcihiesta non valida","Errore");
-								break;
-								
-							case USER_ALREADY_REGISTERED:
-								showErrorMessage("Utente gia' registrato","Warning");
-								break;
-										
-							//errore non trovato
-							default:
-								showErrorMessage("Errore nel messaggio di risposta del server","Errore");
-								break;
-						}
-						
-						break;
-						
-					default:
-						showErrorMessage("Errore nel messaggio di risposta del server","Errore");
-						break;
-				}
-			} 
-			catch (ParseException e) 
-			{
-				showErrorMessage("Errore lettura risposta del server","Errore");
-				e.printStackTrace();
-			}
-		}
-		
-		@Override
-		protected void invalidResponseHandler() {
-			showErrorMessage("Errore nel messaggio di risposta del server","Errore");
-		}
-
-		@Override
-		protected void invalidResponseErrorTypeHandler() {
-			showErrorMessage("Errore nel messaggio di risposta di errore del server","Errore");
-		}
-		
-		@Override
-		protected void parseErrorHandler() {
-			showErrorMessage("Errore lettura risposta del server","Errore");			
-		}
-
-		@Override
-		protected void unexpectedMessageHandler() {
-			showErrorMessage("Errore nel messaggio di risposta del server","Errore");			
-		}
-
-		@Override
-		protected void failedResponseHandler(Errors error) 
-		{
-			//controllo tipi di errore che si possono riscontrare
-			switch (error) 
-			{
-				//richiesta non valida
-				case INVALID_REQUEST:
-					showErrorMessage("Rcihiesta non valida","Errore");
-					break;
-					
-				case USER_ALREADY_REGISTERED:
-					showErrorMessage("Utente gia' registrato","Warning");
-					break;
-							
-				//errore non trovato
-				default:
-					showErrorMessage("Errore nel messaggio di risposta del server","Errore");
-					break;
-			}
-		}
-
-		@Override
-		protected void successResponseHandler() {
-			showInfoMessage("Registrazione Avvenuta");
-			startHubView(nickname,null);			
-		}
-		
 	}
 	
 	/**
@@ -244,22 +69,11 @@ public class RegisterController extends Controller
 	 */
 	private void startLoginForm()
 	{
-		this.setVisible(false);
-		this.close();
+		window.setVisible(false);
+		window.dispose();
 		
 		//avvio schermata di login
 		LoginController login = new LoginController(window.getLocation());
 		login.setVisible(true);
-	}
-	
-	private void startHubView(String nickname,List<User> amiciList) 
-	{
-		HubController hub = new HubController(nickname,amiciList,window.getLocation());
-		
-		//chiudo form di login
-		this.setVisible(false);
-		this.close();
-		
-		hub.setVisible(true);
 	}
 }

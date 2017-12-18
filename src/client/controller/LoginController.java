@@ -17,6 +17,7 @@ import javax.swing.JFrame;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.ParseException;
 
+import client.thread.LoginRequestSender;
 import client.thread.RequestSenderThread;
 import client.view.LoginForm;
 import client.view.RegisterForm;
@@ -36,6 +37,7 @@ import server.model.User;
 public class LoginController extends Controller
 {
 	private LoginForm loginView;
+	private Controller controller = this;
 	
 	public LoginController()
 	{
@@ -66,7 +68,7 @@ public class LoginController extends Controller
 			public void actionPerformed(ActionEvent arg0) 
 			{
 				//avvio thread che gestira la richiesta di Login
-				new LoginRequestSender().start();
+				new LoginRequestSender(controller,loginView.getUsernameField().getText(),loginView.getPasswordField().getPassword()).start();
 			}
 		});
 		
@@ -78,134 +80,7 @@ public class LoginController extends Controller
 			}
 		});
 	}
-	
-	/**
-	 * Thread che si occupa di inviare e gestire una richiesta di Login
-	 * @author gio
-	 *
-	 */
-	private class LoginRequestSender extends RequestSenderThread
-	{
-		private String nickname;
-		private char[] password;
-		
-		public LoginRequestSender() 
-		{
-			nickname = loginView.getUsernameField().getText();
-			password = loginView.getPasswordField().getPassword();
-		}
-		
-		@Override
-		protected void init() 
-		{
-			//dati nella form errati
-			if(!FormInputChecker.checkLoginInput(nickname,password))
-			{
-				init = false;
-				showErrorMessage(FormInputChecker.LOGIN_ERROR_INFO_STRING,"Form Errata");
-				
-			}
-			else {
-				//posso procedere
-				init = true;
-			}
-		}
 
-		@Override
-		/**
-		 * Creo messaggio di richiesta di Login
-		 */
-		protected void createRequest() 
-		{
-			request = new LoginRequest(nickname,new String(password));
-		}
-
-		@Override
-		protected void ConnectErrorHandler() 
-		{
-			showErrorMessage("Servizio attualmente non disponibile","Errore");
-		}
-
-		@Override
-		protected void UnKwownHostErrorHandler() {
-			showErrorMessage("Server non trovato","Errore");			
-		}
-
-		@Override
-		protected void IOErrorHandler() {
-			showErrorMessage("Errore nella richiesta di login","Errore");
-		}
-
-		@Override
-		protected void invalidResponseHandler() {
-			showErrorMessage("Errore nel messaggio di risposta del server","Errore");
-		}
-
-		@Override
-		protected void invalidResponseErrorTypeHandler() {
-			showErrorMessage("Errore nel messaggio di risposta di errore del server","Errore");
-		}
-
-		@Override
-		protected void failedResponseHandler(Errors error) 
-		{
-			//controllo tipi di errore che si possono riscontrare
-			switch (error) 
-			{
-				//richiesta non valida
-				case INVALID_REQUEST:
-					showErrorMessage("Rcihiesta non valida","Errore");
-					break;
-					
-				case PASSWORD_MISMATCH:
-					showErrorMessage("Password errata","Warning");
-					break;
-				
-				case SENDER_USER_NOT_FOUND:
-					showErrorMessage("Utente non trovato","Warning");
-					break;
-				
-				case SENDER_USER_INVALID_STATUS:
-					showErrorMessage("Sei gia' online con un altro client","Warning");
-					break;
-							
-				//errore non trovato
-				default:
-					showErrorMessage("Errore nel messaggio di risposta del server","Errore");
-					break;
-			}
-		}
-
-		@Override
-		protected void parseErrorHandler() {
-			showErrorMessage("Errore lettura risposta del server","Errore");			
-		}
-
-		@Override
-		protected void unexpectedMessageHandler() {
-			showErrorMessage("Errore nel messaggio di risposta del server","Errore");			
-		}
-
-
-		@Override
-		protected void successResponseHandler() 
-		{
-			//TODO prendere lista delle chatroom
-			List<User> amiciList = MessageAnalyzer.getListaAmici(response);
-			
-			//lista degli amici dell'utente loggato, non trovata
-			if(amiciList == null) {
-				showErrorMessage("Errore nel messaggio di risposta del server","Errore");
-				return;
-			}
-			
-			
-			
-			//faccio partire l'hub 
-			startHubView(nickname,amiciList);
-		}
-	}
-	
 	/**
 	 * Fa partire il form di registrazione
 	 */
@@ -213,20 +88,10 @@ public class LoginController extends Controller
 		RegisterController register = new RegisterController(window.getLocation());
 		
 		//chiudo form di login
-		this.setVisible(false);
-		this.close();
+		window.setVisible(false);
+		window.dispose();
 		
 		//mostro form di registrazione
 		register.setVisible(true);
-	}
-	
-	private void startHubView(String nickname,List<User>amiciList) {
-		HubController hub = new HubController(nickname,amiciList,window.getLocation());
-		
-		//chiudo form di login
-		this.setVisible(false);
-		this.close();
-		
-		hub.setVisible(true);
 	}
 }

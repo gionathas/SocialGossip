@@ -7,6 +7,11 @@ import client.controller.Controller;
 import communication.TCPMessages.request.LogoutRequest;
 import communication.TCPMessages.response.ResponseFailedMessage;
 
+/**
+ * Thread che si occupa di gestire la richiesta di logout lato client
+ * @author gio
+ *
+ */
 public class LogoutRequestSender extends RequestSenderThread
 {
 	public static final int YES = 0;

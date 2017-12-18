@@ -68,7 +68,7 @@ public class HubController extends Controller implements ClientNotifyEvent
 		hubView.setWelcomeText("Loggato come: "+nickname);
 		
 		//configuro RMI per ricevere notifiche sullo stato degli amici e sulle nuove amicizie
-		initRMI();
+		//initRMI();
 		
 		//se mi e' stata passata una lista di amici e di chatRoom
 		if(amiciList != null) {
@@ -117,7 +117,7 @@ public class HubController extends Controller implements ClientNotifyEvent
 			public void actionPerformed(ActionEvent e) 
 			{
 				//avvio thread che gestisce la richiesta di ricerca utente
-				new FindUserRequestSender(controller,user.getNickname(),hubView.getTextField().getText()).start();
+				new FindUserRequestSender(controller,user.getNickname(),hubView.getTextField().getText(),hubView.getModelUserFriendList()).start();
 			}
 		});
 	}

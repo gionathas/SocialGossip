@@ -8,6 +8,11 @@ import communication.TCPMessages.request.FriendshipRequest;
 import communication.TCPMessages.response.ResponseFailedMessage.Errors;
 import server.model.User;
 
+/**
+ * Thread che si occupa di gestire la richiesta di amicizia con un altro utente
+ * @author gio
+ *
+ */
 public class FriendshipRequestSender extends RequestSenderThread
 {
 	private String nicknameReceiverFriend;
