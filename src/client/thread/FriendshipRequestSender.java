@@ -84,11 +84,11 @@ public class FriendshipRequestSender extends RequestSenderThread
 				break; 
 			
 			case SAME_USERS:
-				controller.showInfoMessage("Non puoi diventare amico di te stesso!");
+				controller.showInfoMessage("Non puoi diventare amico di te stesso!","Ops",true);
 				break;
 			
 			case ALREADY_FRIEND:
-				controller.showInfoMessage("Sei gia' amico di "+nicknameReceiverFriend);
+				controller.showInfoMessage("Sei gia' amico di "+nicknameReceiverFriend,"Ops",true);
 				break;
 			
 			default:
@@ -113,7 +113,7 @@ public class FriendshipRequestSender extends RequestSenderThread
 	{
 		//prendo stato dell'utente diventato amico
 		boolean status = MessageAnalyzer.getStatusReceiverOfFriendShipRequest(response);
-		controller.showInfoMessage("Ora sei amico di "+nicknameReceiverFriend);
+		controller.showInfoMessage("Ora sei amico di "+nicknameReceiverFriend,"Notifica Amicizia",false);
 		
 		friendList.addElement(new User(nicknameReceiverFriend,status));
 	}

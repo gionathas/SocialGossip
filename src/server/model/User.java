@@ -1,22 +1,30 @@
 package server.model;
 
+import java.io.Serializable;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 
 import org.json.simple.JSONObject;
 
+import communication.RMI.RMIClientNotifyEvent;
+
 /**
  * Rappresenta un generico utente della rete di Social Gossip
  * @author Gionatha Sturba
  *
  */
-public class User 
+public class User implements Serializable
 {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -3195843110518616444L;
 	private String nickname;
 	private String password;
 	private boolean online;
 	private String lingua; //ISO 639-2 Code
+	private RMIClientNotifyEvent RMIchannel; //canale per notifiche RMI
 	private List<User> amici;
 	
 	public static final int LANG_LENGHT = 2;
@@ -42,6 +50,7 @@ public class User
 		this.online = online;
 		this.lingua = lingua;
 		this.amici = new LinkedList<User>();
+		this.RMIchannel = null;
 	}
 	
 	/**
@@ -59,6 +68,8 @@ public class User
 		this.password = null;
 		this.lingua = null;
 		this.amici = null;
+		this.RMIchannel = null;
+
 	}
 	
 	/**
@@ -75,6 +86,8 @@ public class User
 		this.online = false;
 		this.lingua = null;
 		this.amici = null;
+		this.RMIchannel = null;
+
 	}
 	
 	/**
@@ -92,6 +105,8 @@ public class User
 		this.online = false;
 		this.lingua = null;
 		this.amici = null;
+		this.RMIchannel = null;
+
 	}
 	
 	/**
@@ -110,13 +125,31 @@ public class User
 		this.online = false;
 		this.lingua = lingua;
 		this.amici = null;
+		this.RMIchannel = null;
 	}
 	
+	
+
 	@Override
 	public String toString() {
 		String status = online ? "online" : "offline";
 		
 		return nickname+" ["+status.toUpperCase()+"]";
+	}
+	
+	/**
+	 * 
+	 * @return canale RMI per notificare l'utente di un evento,null se non ha un canale RMI
+	 */
+	public synchronized RMIClientNotifyEvent getRMIchannel() {
+		return RMIchannel;
+	}
+	
+	/**
+	 * @param RMIchannel canale RMI che si vuole associare all'utente.Se si inserisce null se disassocia il precedente canale RMI.
+	 */
+	public synchronized void setRMIchannel(RMIClientNotifyEvent RMIchannel) {
+		this.RMIchannel = RMIchannel;
 	}
 	
 	/**

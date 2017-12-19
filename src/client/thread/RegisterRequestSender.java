@@ -71,80 +71,6 @@ public class RegisterRequestSender extends RequestSenderThread
 	protected void IOErrorHandler() {
 		controller.showErrorMessage("Errore nella richiesta di registrazione","Errore");
 	}
-
-	protected void analyzeResponse(String JsonResponse)
-	{
-		try 
-		{
-			//parso json rappresentate risposta del server
-			JSONObject response = MessageAnalyzer.parse(JsonResponse);
-			
-			//se non e' un messaggio di risposta
-			if(MessageAnalyzer.getMessageType(response) != Message.Type.RESPONSE) 
-			{
-				controller.showErrorMessage("Errore nel messaggio di risposta del server","Errore");
-				return;
-			}
-			
-			ResponseMessage.Type outcome = MessageAnalyzer.getResponseType(response);
-			
-			//tipo risposta non trovato
-			if(outcome == null)
-			{
-				controller.showErrorMessage("Errore nel messaggio di risposta del server","Errore");
-				return;
-			}
-			
-			//controllo esito della risposta ricevuta
-			switch(outcome) 
-			{
-				//registrazione avvenuta
-				case SUCCESS:
-					controller.showInfoMessage("Registrazione Avvenuta");
-					startHubView(nickname,null);
-					break;
-				
-				case FAIL:
-					//analizzo l'errore riscontrato
-					ResponseFailedMessage.Errors error = MessageAnalyzer.getResponseFailedErrorType(response);
-					
-					//errore non trovato
-					if(error == null) {
-						controller.showErrorMessage("Errore nel messaggio di risposta del server","Errore");
-						return;
-					}
-					
-					//controllo tipi di errore che si possono riscontrare
-					switch (error) 
-					{
-						//richiesta non valida
-						case INVALID_REQUEST:
-							controller.showErrorMessage("Rcihiesta non valida","Errore");
-							break;
-							
-						case USER_ALREADY_REGISTERED:
-							controller.showErrorMessage("Utente gia' registrato","Warning");
-							break;
-									
-						//errore non trovato
-						default:
-							controller.showErrorMessage("Errore nel messaggio di risposta del server","Errore");
-							break;
-					}
-					
-					break;
-					
-				default:
-					controller.showErrorMessage("Errore nel messaggio di risposta del server","Errore");
-					break;
-			}
-		} 
-		catch (ParseException e) 
-		{
-			controller.showErrorMessage("Errore lettura risposta del server","Errore");
-			e.printStackTrace();
-		}
-	}
 	
 	@Override
 	protected void invalidResponseHandler() {
@@ -190,7 +116,7 @@ public class RegisterRequestSender extends RequestSenderThread
 
 	@Override
 	protected void successResponseHandler() {
-		controller.showInfoMessage("Registrazione Avvenuta");
+		controller.showInfoMessage("Registrazione Avvenuta","Benvenuto",true);
 		startHubView(nickname,null);			
 	}
 	

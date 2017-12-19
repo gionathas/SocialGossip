@@ -1,9 +1,11 @@
 package server.model;
 
+import java.rmi.RemoteException;
 import java.util.List;
 
 import javax.management.InvalidAttributeValueException;
 
+import communication.RMI.RMIClientNotifyEvent;
 import server.model.exception.PasswordMismatchingException;
 import server.model.exception.UserAlreadyRegistered;
 import server.model.exception.UserNotFindException;
@@ -34,9 +36,10 @@ public class AccessSystem
 	 * @throws UserNotFindException se l'utente non risulta essere registrato
 	 * @throws PasswordMismatchingException se le password non corrispondono
 	 * @throws UserStatusException se l'utente risulta gia' essere online
+	 * @throws RemoteException se c'e' stato un errore relativo alle notifiche agli amici
 	 * @throws InvalidAttributeValueException se i parametri di log in non sono validi
 	 */
-	public void logIn(String nickname,String password,List<User> amiciList,List<ChatRoom> chatRoomList)throws UserNotFindException, PasswordMismatchingException, UserStatusException
+	public void logIn(String nickname,String password,List<User> amiciList,List<ChatRoom> chatRoomList)throws UserNotFindException, PasswordMismatchingException, UserStatusException, RemoteException
 	{
 		if(nickname == null || password == null || amiciList == null || chatRoomList == null)
 			throw new NullPointerException();
@@ -61,8 +64,22 @@ public class AccessSystem
 		registeredUser.setOnline(true);
 		
 		//aggiorno gli amici
-		for (User user : registeredUser.getAmici()) {
-			amiciList.add(user);
+		for (User friend : registeredUser.getAmici()) 
+		{
+			//aggiungo l'amico alla lista amici
+			amiciList.add(friend);
+			
+			//invio una notifica agli utenti amici, per segnalare che l'utente ora e' online
+			RMIClientNotifyEvent RMIChannelFiend = friend.getRMIchannel();
+			
+			//se l'amico da notificare non e' offline,invio la notifica
+			if(RMIChannelFiend != null)
+			{
+				//invio notifica
+				RMIChannelFiend.updateFriendStatus(registeredUser);
+			}
+				
+			
 		};
 		
 		//TODO creo la lista delle chatRoom attive
@@ -92,8 +109,9 @@ public class AccessSystem
 	 * @param nickname 
 	 * @throws UserNotFindException se l'utente non e' stato trovato
 	 * @throws UserStatusException se l'utente non risulta essere online
+	 * @throws RemoteException se viene riscontrato un errore nel notificare gli amici tramite RMI
 	 */
-	public void logOut(String nickname) throws UserNotFindException, UserStatusException
+	public void logOut(String nickname) throws UserNotFindException, UserStatusException, RemoteException
 	{
 		if(nickname == null)
 			throw new NullPointerException();
@@ -108,9 +126,26 @@ public class AccessSystem
 		else if(registeredUser.isOnline() == false)
 			throw new UserStatusException();
 		//altrimenti procedo al logout
-		else {
+		else 
+		{
 			//metto l'utente offline
 			registeredUser.setOnline(false);
+			
+			//aggiorno gli amici dell'utente che e' andato offline
+			for (User friend : registeredUser.getAmici()) 
+			{	
+			
+				//canale RMI per notificare l'amico
+				RMIClientNotifyEvent RMIChannelFiend = friend.getRMIchannel();
+				
+				//se l'amico da notificare non e' offline,invio la notifica
+				if(RMIChannelFiend != null)
+				{
+					//invio notifica
+					RMIChannelFiend.updateFriendStatus(registeredUser);
+				}
+		
+			};
 		}
 	}
 }

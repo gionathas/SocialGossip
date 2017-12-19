@@ -95,7 +95,7 @@ public class FindUserRequestSender extends RequestSenderThread
 				break; 
 			
 			case SAME_USERS:
-				controller.showInfoMessage("Utente trovato");
+				controller.showInfoMessage("Utente trovato","",true);
 				break;
 			
 			default:

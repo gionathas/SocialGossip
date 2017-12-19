@@ -1,6 +1,8 @@
 package client.controller;
 
+import javax.swing.JDialog;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 
 /**
@@ -35,14 +37,30 @@ public abstract class Controller
 		this.window = frame;
 	}
 	
-	public void showInfoMessage(String message)
+	/**
+	 * Mostra un messaggio di notifica,specificando se operare in modalita bloccante o meno
+	 * @param message
+	 * @param title
+	 * @param block
+	 */
+	public void showInfoMessage(String message,String title,boolean block)
 	{
-		if(message == null)
+		if(message == null || title == null)
 			throw new NullPointerException();
 		
-		JOptionPane.showMessageDialog(window,message);
+		JLabel msg = new JLabel(message,JLabel.CENTER);
+		JOptionPane pane = new JOptionPane(msg,JOptionPane.DEFAULT_OPTION,JOptionPane.PLAIN_MESSAGE);
+		JDialog dialog = pane.createDialog(window,title);
+		
+		dialog.setModal(block);
+		dialog.setVisible(true);
 	}
 	
+	/**
+	 * Mostra un semplice messaggio di errore
+	 * @param message
+	 * @param title
+	 */
 	public void showErrorMessage(String message,String title)
 	{
 		if(message == null)

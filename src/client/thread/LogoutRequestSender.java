@@ -1,11 +1,18 @@
 package client.thread;
 
 
+import java.rmi.NoSuchObjectException;
+import java.rmi.RemoteException;
+import java.rmi.server.UnicastRemoteObject;
+
 import javax.swing.JOptionPane;
 
 import client.controller.Controller;
+import communication.RMI.RMIClientNotifyEvent;
+import communication.RMI.RMIServerInterface;
 import communication.TCPMessages.request.LogoutRequest;
 import communication.TCPMessages.response.ResponseFailedMessage;
+import server.model.exception.UserNotFindException;
 
 /**
  * Thread che si occupa di gestire la richiesta di logout lato client
@@ -16,11 +23,15 @@ public class LogoutRequestSender extends RequestSenderThread
 {
 	public static final int YES = 0;
 	private String nickname;
+	private RMIServerInterface serverRMI;
+	private RMIClientNotifyEvent callback;
 	
-	public LogoutRequestSender(Controller controller,String nickname) 
+	public LogoutRequestSender(Controller controller,String nickname,RMIServerInterface serverRMI,RMIClientNotifyEvent callback) 
 	{
 		super(controller);
 		this.nickname = nickname;
+		this.serverRMI = serverRMI;
+		this.callback = callback;
 	}
 
 	@Override
@@ -107,6 +118,25 @@ public class LogoutRequestSender extends RequestSenderThread
 	@Override
 	protected void successResponseHandler() 
 	{
+		//deregistro la callback dal registry
+		try 
+		{
+			serverRMI.unregisterUserRMIChannel(nickname);
+			UnicastRemoteObject.unexportObject(callback,true);
+		} 
+		catch (NoSuchObjectException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} 
+		catch (RemoteException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} 
+		catch (UserNotFindException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 		//chiudo hub
 		controller.getWindow().setVisible(false);
 		controller.getWindow().dispose();

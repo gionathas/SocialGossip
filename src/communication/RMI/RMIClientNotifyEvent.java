@@ -5,7 +5,7 @@ import java.rmi.RemoteException;
 
 import server.model.User;
 
-public interface ClientNotifyEvent extends Remote
+public interface RMIClientNotifyEvent extends Remote
 {
 	/**
 	 * Notifica per aggiornare lo stato di un amico

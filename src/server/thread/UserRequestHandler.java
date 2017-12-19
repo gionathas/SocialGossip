@@ -322,17 +322,15 @@ public class UserRequestHandler implements Runnable
 	 */
 	private void friendshipRequestHandler(User a, User b ,DataOutputStream out) throws IOException
 	{
+		RelationshipManager relationship = new RelationshipManager(reteSG);
+		
 		try 
 		{
-			boolean friendship = reteSG.nuovaAmicizia(a, b);
+			boolean friendship = relationship.nuovaAmicizia(a, b);
 			
-			//se non erano amici
+			//se non erano amici,ora lo sono
 			if(friendship) 
-			{
-				//aggiorno amicizia tra i 2 utenti
-				a.aggiungiAmico(b);
-				b.aggiungiAmico(a);
-				
+			{	
 				//invio messaggio di successo al mittente
 				sendResponseMessage(new SuccessFriendship(b.isOnline()), out);
 				return;
