@@ -3,34 +3,20 @@ package client.view;
 
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-
 import java.awt.Color;
 import java.awt.Font;
 
 import javax.swing.JPasswordField;
 import javax.swing.JButton;
 import javax.swing.JTextField;
-
-
-import java.awt.event.ActionListener;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.net.ConnectException;
-import java.net.Socket;
-import java.net.UnknownHostException;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.awt.event.ActionEvent;
 import javax.swing.UIManager;
-
-import client.controller.LoginController;
-import communication.TCPMessages.request.LoginRequest;
-import communication.TCPMessages.request.RequestAccessMessage;
-
 import javax.swing.JSeparator;
-import java.awt.SystemColor;
 
+/**
+ * GUI della form di registrazione
+ * @author Gionatha Sturba
+ *
+ */
 public class LoginForm {
 
 	private JFrame frmSocialgossip;

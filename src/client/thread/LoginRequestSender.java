@@ -5,15 +5,14 @@ import java.util.List;
 import client.controller.Controller;
 import client.controller.FormInputChecker;
 import client.controller.HubController;
-import client.controller.RegisterController;
 import communication.TCPMessages.MessageAnalyzer;
 import communication.TCPMessages.request.LoginRequest;
 import communication.TCPMessages.response.ResponseFailedMessage.Errors;
 import server.model.User;
 
 /**
- * Thread che si occupa di gestire la richiesta di login lato client
- * @author gio
+ * Thread che gestisce la richiesta di Login
+ * @author Gionatha Sturba
  *
  */
 public class LoginRequestSender extends RequestSenderThread
@@ -21,9 +20,19 @@ public class LoginRequestSender extends RequestSenderThread
 	private String nickname;
 	private char[] password;
 	
+	/**
+	 * Inizializza i parametri per inviare la richiesta
+	 * @param controller controller della finestra che richiede l'invio
+	 * @param nickname nickname scelto dall'utente
+	 * @param password password scelta dall'utente
+	 */
 	public LoginRequestSender(Controller controller,String nickname,char[] password) 
 	{
 		super(controller);
+		
+		if(controller == null || nickname == null || password == null)
+			throw new NullPointerException();
+		
 		this.nickname = nickname;
 		this.password = password;
 	}
@@ -31,7 +40,7 @@ public class LoginRequestSender extends RequestSenderThread
 	@Override
 	protected void init() 
 	{
-		//dati nella form errati
+		//se i dati nella form sono errati
 		if(!FormInputChecker.checkLoginInput(nickname,password))
 		{
 			init = false;
@@ -123,7 +132,6 @@ public class LoginRequestSender extends RequestSenderThread
 	@Override
 	protected void successResponseHandler() 
 	{
-		//TODO prendere lista delle chatroom
 		List<User> amiciList = MessageAnalyzer.getListaAmici(response);
 		
 		//lista degli amici dell'utente loggato, non trovata
@@ -132,7 +140,7 @@ public class LoginRequestSender extends RequestSenderThread
 			return;
 		}
 		
-		
+		//TODO prendere lista delle chatroom
 		
 		//faccio partire l'hub 
 		startHubView(nickname,amiciList);

@@ -1,20 +1,17 @@
 package client.view;
 
-import java.awt.BorderLayout;
-import java.awt.EventQueue;
+
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 
-import client.controller.RegisterController;
 
 import javax.swing.JTextField;
 import javax.swing.JLabel;
 import javax.swing.JButton;
 import javax.swing.JPasswordField;
-import javax.swing.JList;
-import javax.swing.JOptionPane;
+
 import javax.swing.JComboBox;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.ImageIcon;
@@ -25,17 +22,19 @@ import java.awt.Image;
 import javax.swing.SwingConstants;
 import java.awt.Color;
 import javax.swing.JSeparator;
-import java.awt.event.ActionListener;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.awt.event.ActionEvent;
+
 
 /**
- * Form di registrazione di un nuovo utente
- * @author gio
+ * GUI della form di registrazione
+ * @author Gionatha Sturba
  *
  */
 public class RegisterForm extends JFrame 
 {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -1214889789655181279L;
 	private JPanel contentPane;
 	private JTextField usernameField;
 	private JPasswordField passwordField;

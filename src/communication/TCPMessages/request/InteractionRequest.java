@@ -1,10 +1,9 @@
 package communication.TCPMessages.request;
 
-import communication.TCPMessages.request.RequestMessage.Type;
 
 /**
  * Rappresenta un messaggio di richiesta di interazione con un altro utente
- * @author gio
+ * @author Gionatha Sturba
  *
  */
 public class InteractionRequest extends RequestMessage

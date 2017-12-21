@@ -1,5 +1,10 @@
 package communication.TCPMessages.request;
 
+/**
+ * Rappresenta un messaggio di richiesta di accesso al sistema
+ * @author Gionatha Sturba
+ *
+ */
 public class RequestAccessMessage extends RequestMessage
 {
 	public enum Type {LOGIN,REGISTER}; // tipo di richiesta accesso al sistema
@@ -8,14 +13,12 @@ public class RequestAccessMessage extends RequestMessage
 	
 	//stato interno
 	protected RequestAccessMessage.Type requestAccessType;
-	private String password;
 	
 	public RequestAccessMessage(String nickname,String password,RequestAccessMessage.Type requestAccessType) 
 	{
 		//creo stato interno
 		super(RequestMessage.Type.ACCESS,nickname);
 		this.requestAccessType = requestAccessType;
-		this.password = password;
 		
 		jsonMessage.put(FIELD_REQUEST_ACCESS_TYPE,requestAccessType.name());
 		jsonMessage.put(this.FIELD_REQUEST_ACCESS_PASSWORD,password);

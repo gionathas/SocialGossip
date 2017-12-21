@@ -9,8 +9,8 @@ import server.model.exception.UserNotFindException;
 import server.model.exception.UserStatusException;
 
 /**
- * Gestisce le callback degli utenti registrati
- * @author gio
+ * Implementazione dell'interfaccia per il protocollo RMI,per registrare le callback dei client
+ * @author Gionatha Sturba
  *
  */
 public class RMIChannelManager extends RemoteObject implements RMIServerInterface
@@ -19,7 +19,8 @@ public class RMIChannelManager extends RemoteObject implements RMIServerInterfac
 	 * 
 	 */
 	private static final long serialVersionUID = 5015238682291518864L;
-	private Network reteSG;
+	
+	private Network reteSG;// rete degli utenti di Social Gossip
 
 	public RMIChannelManager(Network reteSocialGossip) 
 	{
@@ -32,6 +33,9 @@ public class RMIChannelManager extends RemoteObject implements RMIServerInterfac
 	}
 
 	@Override
+	/**
+	 * Registra un nuova callback per un utente registrato,per inviargli le notifiche.
+	 */
 	public synchronized void registerUserRMIChannel(String nickname,RMIClientNotifyEvent callback)throws RemoteException,RemoteException,UserNotFindException, UserStatusException
 	{
 		if(nickname == null || callback == null)
@@ -51,6 +55,9 @@ public class RMIChannelManager extends RemoteObject implements RMIServerInterfac
 		registeredUser.setRMIchannel(callback);
 	}
 	
+	/**
+	 * Deregistra la callback di un utente registrato,in modo tale da non ricevere piu notifiche.
+	 */
 	public synchronized void unregisterUserRMIChannel(String nickname)throws RemoteException, UserNotFindException
 	{
 		if(nickname == null)

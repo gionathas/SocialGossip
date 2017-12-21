@@ -20,21 +20,23 @@ public class User implements Serializable
 	 * 
 	 */
 	private static final long serialVersionUID = -3195843110518616444L;
-	private String nickname;
+	
+	private String nickname; 
 	private String password;
 	private boolean online;
 	private String lingua; //ISO 639-2 Code
 	private RMIClientNotifyEvent RMIchannel; //canale per notifiche RMI
 	private List<User> amici;
 	
-	public static final int LANG_LENGHT = 2;
+	public static final int LANG_LENGHT = 2; //lunghezza della stringa del codice della lingua
 	public static final String NO_LANG = null;
 	
+	//per serializzazione
 	public static final String FIELD_NAME = "name";
 	public static final String FIELD_ONLINE = "online";
 	
 	/**
-	 * Crea un nuovo utente
+	 * Crea un nuovo utente,settando nick,password,stato online,e lingua
 	 * @param nickname
 	 * @param password
 	 */
@@ -73,7 +75,7 @@ public class User implements Serializable
 	}
 	
 	/**
-	 * Crea un nuovo utente offline,senza settare password e lingua
+	 * Crea un nuovo utente offline,settando solo il nickname
 	 * @param nickname
 	 */
 	public User(String nickname)
@@ -91,7 +93,7 @@ public class User implements Serializable
 	}
 	
 	/**
-	 * Crea un nuovo utente offline,senza settare la lingua 
+	 * Crea un nuovo utente offline,settando solo nickname e password
 	 * @param nickname
 	 * @param password
 	 */
@@ -110,7 +112,7 @@ public class User implements Serializable
 	}
 	
 	/**
-	 * Crea un nuovo utente offline,settando anche la lingua
+	 * Crea un nuovo utente offline,settando solo nick,password e lingua
 	 * @param nickname
 	 * @param password
 	 * @param lingua
@@ -131,7 +133,7 @@ public class User implements Serializable
 	
 
 	@Override
-	public String toString() {
+	public synchronized String toString() {
 		String status = online ? "online" : "offline";
 		
 		return nickname+" ["+status.toUpperCase()+"]";
@@ -174,10 +176,18 @@ public class User implements Serializable
 		return lingua;
 	}
 	
+	/**
+	 * 
+	 * @return true se l'utente e' online,false se e' offline
+	 */
 	public synchronized boolean isOnline() {
 		return online;
 	}
 	
+	/**
+	 * Setta lo stato online di questo utente
+	 * @param isOnline
+	 */
 	public synchronized void setOnline(boolean isOnline) {
 		online = isOnline;
 	}
@@ -255,28 +265,22 @@ public class User implements Serializable
 		final int prime = 31;
 		int result = 1;
 		result = prime * result + ((nickname == null) ? 0 : nickname.hashCode());
-		result = prime * result + ((password == null) ? 0 : password.hashCode());
 		return result;
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
+	public boolean equals(Object obj) 
+	{
 		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
 			return false;
 		
 		User other = (User) obj;
 		
-		//2 utenti sono "uguali" se hanno lo stesso nickname
-		if (nickname == null) {
-			if (other.nickname != null)
-				return false;
-		} else if (!nickname.equals(other.nickname))
+		//utenti uguali se hanno lo stesso nickname
+		if(other.nickname == null)
 			return false;
-	
+		else if(!other.nickname.equals(this.nickname))
+			return false;
 		
 		return true;
 	}

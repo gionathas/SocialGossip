@@ -3,22 +3,16 @@ package client.controller;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.List;
-
-import org.json.simple.JSONObject;
-import org.json.simple.parser.ParseException;
 
 import client.thread.RegisterRequestSender;
-import client.thread.RequestSenderThread;
 import client.view.RegisterForm;
-import communication.TCPMessages.Message;
-import communication.TCPMessages.MessageAnalyzer;
-import communication.TCPMessages.request.RegisterRequest;
-import communication.TCPMessages.response.ResponseFailedMessage;
-import communication.TCPMessages.response.ResponseMessage;
-import communication.TCPMessages.response.ResponseFailedMessage.Errors;
-import server.model.User;
 
+
+/**
+ * Controller del form di registrazione
+ * @author Gionatha Sturba
+ *
+ */
 public class RegisterController extends Controller
 {
 	private RegisterForm registerView;

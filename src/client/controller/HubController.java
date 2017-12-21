@@ -25,10 +25,15 @@ import server.model.User;
 import server.model.exception.UserNotFindException;
 import server.model.exception.UserStatusException;
 
+/**
+ * Controller dell'hub principale gestito dall'utente .
+ * @author Gionatha Sturba
+ *
+ */
 public class HubController extends Controller
 {
 	private Hub hubView;
-	private User user;
+	private User user; //utente che controlla l'hub
 	private Controller controller = this;
 	
 	private RMIServerInterface serverRMI = null;
@@ -37,7 +42,12 @@ public class HubController extends Controller
 	private static final String SERVER_RMI_SERVICE_NAME = "SocialGossipNotification";
 	private static final int SERVER_RMI_PORT = 6000;
 	
-	
+	/**
+	 * Inizializza un nuuovo Controller per comandare l'hub principale
+	 * @param nickname nickname dell'utente che controlla l'hub
+	 * @param amiciList lista degli amici dell'utente
+	 * @param location posizione finestra
+	 */
 	public HubController(String nickname,List<User> amiciList,Point location) 
 	{
 		hubView = new Hub();
@@ -50,18 +60,23 @@ public class HubController extends Controller
 			initListeners();
 		} 
 		catch (Exception e) 
-		{
-			showErrorMessage("Errore nell'inizializzazione della comunicazione RMI","ERRORE CONNESSIONE");
-			
+		{			
 			//chiudo sessione
 			window.setVisible(false);
 			window.dispose();
+			
 			
 			e.printStackTrace();
 		} 
 	}
 	
-	private void initComponents(String nickname,List<User> amiciList) throws RemoteException, NotBoundException, UserNotFindException, UserStatusException
+	/**
+	 * Inizializza i vari componenti principali dell'hub (connessioni,testi,notifiche,ecc..)
+	 * @param nickname nome dell'utente che controlla l'hub
+	 * @param amiciList lista degli amici dell'utente
+	 * @throws Exception se c'e' un errore nell'inizializzazione dei componenti principali
+	 */
+	private void initComponents(String nickname,List<User> amiciList) throws Exception
 	{	
 		user = new User(nickname);
 		hubView.setWelcomeText("Loggato come: "+nickname);
@@ -79,23 +94,36 @@ public class HubController extends Controller
 		//configuro RMI per ricevere notifiche sullo stato degli amici e sulle nuove amicizie
 		initRMI(nickname);
 		
-		//TODO faccio partire thread listener RMI
+		//TODO far partire connessioni per le notifiche dei messaggi
 	}
 	
-	private void initRMI(String nickname) throws RemoteException, NotBoundException, UserNotFindException, UserStatusException
+	/**
+	 * Inizializza il protocollo RMI per ricevere le notifiche dal server
+	 * @param nickname nickname dell'utente
+	 * @throws Exception se viene riscontrare un errore nell'inizializzazione del protocollo RMI
+	 */
+	private void initRMI(String nickname) throws Exception
 	{
-		Registry registry = LocateRegistry.getRegistry(SERVER_RMI_PORT);
-		
-		serverRMI = (RMIServerInterface) registry.lookup(SERVER_RMI_SERVICE_NAME);
-		
-		//creo la classe che implementa le callback
-		callback = new NotificationEvents();
-		
-		//esporto la callback sul registro
-		RMIClientNotifyEvent stub = (RMIClientNotifyEvent)UnicastRemoteObject.exportObject(callback,0);
-		
-		//registro la callback
-		serverRMI.registerUserRMIChannel(nickname,stub);
+		try {
+			Registry registry = LocateRegistry.getRegistry(SERVER_RMI_PORT);
+			
+			//cerco registro
+			serverRMI = (RMIServerInterface) registry.lookup(SERVER_RMI_SERVICE_NAME);
+			
+			//creo la classe che implementa le callback
+			callback = new NotificationEvents();
+			
+			//esporto la callback sul registro
+			RMIClientNotifyEvent stub = (RMIClientNotifyEvent)UnicastRemoteObject.exportObject(callback,0);
+			
+			//registro la callback
+			serverRMI.registerUserRMIChannel(nickname,stub);
+		} 
+		catch (RemoteException | NotBoundException | UserNotFindException | UserStatusException e) 
+		{
+			showErrorMessage("Errore nell'inizializzazione della comunicazione RMI","ERRORE CONNESSIONE");
+			throw new Exception();
+		}
 	}
 	
 	@Override
@@ -133,14 +161,13 @@ public class HubController extends Controller
 	}
 	
 	/**
-	 * Classe che implementa le callback del client
-	 * @author gio
+	 * Classe che implementa le callback del client.
+	 * Viene usata nel protocollo RMI per ricevere notifiche dal server.
+	 * @author Gionatha Sturba
 	 *
 	 */
 	public class NotificationEvents extends RemoteObject implements RMIClientNotifyEvent
 	{
-		
-
 		/**
 		 * 
 		 */
@@ -156,18 +183,19 @@ public class HubController extends Controller
 		{
 			//cerco l'amico da aggiornare nella lista
 			DefaultListModel<User> list = hubView.getModelUserFriendList();
-	
-			for (int i = 0; i < list.size(); i++) {
-				User currentUser = list.getElementAt(i);
-				
-				//se ho trovato l'amico a cui aggiornare lo stato
-				if(currentUser.equals(friend)) {
-					list.removeElementAt(i);
-					list.insertElementAt(friend,i);
-					break;
+			
+			synchronized (list) {
+				for (int i = 0; i < list.size(); i++) {
+					User currentUser = list.getElementAt(i);
+					
+					//se ho trovato l'amico a cui aggiornare lo stato
+					if(currentUser.equals(friend)) {
+						list.removeElementAt(i);
+						list.insertElementAt(friend,i);
+						break;
+					}
 				}
 			}
-			
 		}
 
 		@Override
@@ -175,8 +203,12 @@ public class HubController extends Controller
 		{
 			showInfoMessage(newFriend.getNickname()+" ti ha aggiunto ai suoi amici","Notifica Amicizia",false);
 			
-			//aggiungo l'amico alla lista
-			hubView.getModelUserFriendList().addElement(newFriend);
+			DefaultListModel<User> list = hubView.getModelUserFriendList();
+			
+			synchronized (list) {
+				//aggiungo l'amico alla lista
+				list.addElement(newFriend);
+			}
 		}
 	}
 }

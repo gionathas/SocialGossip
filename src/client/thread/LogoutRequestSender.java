@@ -1,7 +1,6 @@
 package client.thread;
 
 
-import java.rmi.NoSuchObjectException;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 
@@ -15,20 +14,32 @@ import communication.TCPMessages.response.ResponseFailedMessage;
 import server.model.exception.UserNotFindException;
 
 /**
- * Thread che si occupa di gestire la richiesta di logout lato client
- * @author gio
+ * Thread che gestisce la richiesta di Logout
+ * @author Gionatha Sturba
  *
  */
 public class LogoutRequestSender extends RequestSenderThread
 {
-	public static final int YES = 0;
 	private String nickname;
 	private RMIServerInterface serverRMI;
 	private RMIClientNotifyEvent callback;
 	
+	private static final int YES = 0;
+
+	/**
+	 * Inizializza i parametri per l'invio della richiesta
+	 * @param controller controller della finestra che richiede l'invio
+	 * @param nickname nickname dell'utente
+	 * @param serverRMI Interfaccia RMI per informare il server del Logout
+	 * @param callback callback da deregistrare al momento del Logout
+	 */
 	public LogoutRequestSender(Controller controller,String nickname,RMIServerInterface serverRMI,RMIClientNotifyEvent callback) 
-	{
+	{	
 		super(controller);
+		
+		if(controller == null || nickname == null || serverRMI == null || callback == null)
+			throw new NullPointerException();
+		
 		this.nickname = nickname;
 		this.serverRMI = serverRMI;
 		this.callback = callback;
@@ -90,7 +101,7 @@ public class LogoutRequestSender extends RequestSenderThread
 		{
 			//richiesta non valida
 			case INVALID_REQUEST:
-				controller.showErrorMessage("Rcihiesta non valida","Errore");
+				controller.showErrorMessage("Richiesta non valida","Errore");
 				break;
 				
 			case SENDER_USER_INVALID_STATUS:
@@ -119,27 +130,18 @@ public class LogoutRequestSender extends RequestSenderThread
 	protected void successResponseHandler() 
 	{
 		//deregistro la callback dal registry
-		try 
-		{
+		try {
 			serverRMI.unregisterUserRMIChannel(nickname);
 			UnicastRemoteObject.unexportObject(callback,true);
-		} 
-		catch (NoSuchObjectException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} 
-		catch (RemoteException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} 
-		catch (UserNotFindException e) {
-			// TODO Auto-generated catch block
+		} catch (RemoteException | UserNotFindException e) {
+			controller.showErrorMessage("Errore nel protcollo RMI,in fase di Logout","ERRORE LOGOUT");
 			e.printStackTrace();
 		}
-		
-		//chiudo hub
-		controller.getWindow().setVisible(false);
-		controller.getWindow().dispose();
+		finally {
+			//chiudo hub
+			controller.getWindow().setVisible(false);
+			controller.getWindow().dispose();
+		}
 	}
 	
 }

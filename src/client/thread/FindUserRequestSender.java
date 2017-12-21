@@ -19,8 +19,17 @@ public class FindUserRequestSender extends RequestSenderThread
 	private String nicknameUserToFind;
 	private String nicknameUser;
 	private DefaultListModel<User> friendList;
+	
+	
 	private static final int YES = 0;
 	
+	/**
+	 * Inizializza i parametri della richiesta 
+	 * @param controller controller della finestra in cui viene inviato la richiesta
+	 * @param nicknameUser nickname dell'utente che invia la richiesta
+	 * @param nicknameUserToFind nickname dell'utente da ricercare
+	 * @param friendList modello della lista degli amici dell'utente che invia la richiesta
+	 */
 	public FindUserRequestSender(Controller controller,String nicknameUser,String nicknameUserToFind,DefaultListModel<User> friendList)
 	{
 		super(controller);
@@ -116,10 +125,7 @@ public class FindUserRequestSender extends RequestSenderThread
 	
 	@Override
 	protected void successResponseHandler() 
-	{
-		//TODO richiedo se vuole diventare amico
-		//showInfoMessage("Utente trovato");
-		
+	{	
 		//richiedo se vuole diventare amico
 		int choice = JOptionPane.showConfirmDialog(controller.getWindow(),"Utente "+nicknameUserToFind+" Trovato! Vuoi diventare suo amico?");
 		

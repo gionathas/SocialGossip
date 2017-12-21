@@ -1,8 +1,12 @@
 package client;
 
 import client.controller.LoginController;
-import client.controller.*;
 
+/**
+ * Bootstrapper del client
+ * @author Gionatha Sturba
+ *
+ */
 public class SocialGossipClient 
 {
 	/**

@@ -3,15 +3,15 @@ package client.controller;
 import java.util.Arrays;
 
 /**
- * Classe per la gestione dei dati inseriti dall'utente nei form
+ * Classe per il controllo dei dati inseriti dall'utente nei form
  * @author Gionatha Sturba
  *
  */
 public class FormInputChecker 
 {
 	
-	public static final int MIN_PASS_CHAR_LEN = 5;
-	public static final int MIN_USER_CHAR_LEN = 3;
+	public static final int MIN_PASS_CHAR_LEN = 4; //minimo numero caratteri password
+	public static final int MIN_USER_CHAR_LEN = 3; //minimo numero caratteri nickname
 	
 	public static final String LOGIN_ERROR_INFO_STRING = "Username o password non validi,controlla i seguenti campi:\n"
 			+ "1)Username: Spazi non consentiti. Caratteri minimi 3.\n"

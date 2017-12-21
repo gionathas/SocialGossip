@@ -1,7 +1,6 @@
 package communication.TCPMessages.request;
 
 import communication.TCPMessages.Message;
-import communication.TCPMessages.Message.Type;
 
 /**
  * Rappresenta un generico messaggio di richiesta tra client e server.
@@ -11,21 +10,18 @@ import communication.TCPMessages.Message.Type;
  */
 public class RequestMessage extends Message 
 {
-	
 	public enum Type {ACCESS,LOGOUT,INTERACTION} //tipi possibili di un messaggio di richiesta
 	public static String FIELD_REQUEST_TYPE = "request-type";
 	public static String FIELD_REQUEST_NICKNAME_SENDER= "nickname";
 	
 	//stato interno
 	protected RequestMessage.Type requestType;
-	protected String nicknameSender;
 	
 	public RequestMessage(RequestMessage.Type requestType,String nickname)
 	{
 		super(Message.Type.REQUEST); //creo un messaggio di tipo richiesta
 		
 		//inizializzo stato interno
-		this.nicknameSender = nickname;
 		this.requestType = requestType;
 		
 		switch (requestType) 

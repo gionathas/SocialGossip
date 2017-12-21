@@ -1,6 +1,5 @@
 package communication.TCPMessages;
 
-import java.awt.TrayIcon.MessageType;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -10,7 +9,6 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
-import communication.TCPMessages.*;
 import communication.TCPMessages.request.InteractionRequest;
 import communication.TCPMessages.request.RegisterRequest;
 import communication.TCPMessages.request.RequestAccessMessage;
@@ -22,7 +20,7 @@ import communication.TCPMessages.response.SuccessfulLogin;
 import server.model.*;
 
 /**
- * Analizza un messaggio in formato in Json
+ * Deserializza i campi di un messaggio ricevuto in formato in Json.
  * @author Gionatha Sturba
  *
  */
@@ -45,7 +43,7 @@ public class MessageAnalyzer
 	}
 	
 	/**
-	 * @param JsonMessage
+	 * @param JsonMessage oggetto Json rappresentante il messaggio
 	 * @return tipo del messaggio,oppure null se non e' stato trovato
 	 */
 	public static Message.Type getMessageType(JSONObject JsonMessage)
@@ -66,7 +64,7 @@ public class MessageAnalyzer
 	
 	/**
 	 * 
-	 * @param JsonMessage
+	 * @param JsonMessage oggetto Json rappresentante il messaggio
 	 * @return tipo della risposta,null se non e' stato trovato
 	 */
 	public static ResponseMessage.Type getResponseType(JSONObject JsonMessage)
@@ -99,9 +97,7 @@ public class MessageAnalyzer
 	
 	/**
 	 * 
-	 * @param JsonMessage
-	 * @param amiciList
-	 * @param chatRoomList
+	 * @param JsonMessage oggetto Json rappresentante il messaggio
 	 * @return lista degli amici dell'utente loggato,null se non e' stata trovata
 	 */
 	public static List<User> getListaAmici(JSONObject JsonMessage)
@@ -133,6 +129,11 @@ public class MessageAnalyzer
 		return amiciList;
 	}
 	
+	/**
+	 *
+	 * @param JsonMessage oggetto Json rappresentante il messaggio
+	 * @return ritorna un istanza dell'utente che e' presente nel messaggio
+	 */
 	private static User getUser(JSONObject JsonMessage)
 	{
 		String name = (String) JsonMessage.get(User.FIELD_NAME);
@@ -143,7 +144,7 @@ public class MessageAnalyzer
 	
 	/**
 	 * 
-	 * @param JsonMessage
+	 * @param JsonMessage oggetto Json rappresentante il messaggio
 	 * @return tipo dell'errore nel messaggio di errore,null se non e' stato trovato
 	 */
 	public static ResponseFailedMessage.Errors getResponseFailedErrorType(JSONObject JsonMessage)
@@ -249,7 +250,7 @@ public class MessageAnalyzer
 	
 	/**
 	 * 
-	 * @param JsonMessage
+	 * @param JsonMessage oggetto Json rappresentante il messaggio
 	 * @return tipo della richiesta di interazione con un altro utente
 	 */
 	public static InteractionRequest.Type getInteractionType(JSONObject JsonMessage)

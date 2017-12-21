@@ -84,7 +84,7 @@ public final class Grafo<E>
     public void addVertice(E vertice)throws VertexAlreadyExist
     {
         //se il vertice e' gia presente
-        if(adj.containsKey(vertice))
+        if(containsVertice(vertice))
             throw new VertexAlreadyExist();
         
         //altrimenti inserisco
@@ -209,7 +209,12 @@ public final class Grafo<E>
             throw new NullPointerException();
         }
         
-        return adj.containsKey(vertice);
+        for (E item : adj.keySet()) {
+			if(item.equals(vertice))
+				return true;
+		}
+        
+        return false;
     }
     
     /**

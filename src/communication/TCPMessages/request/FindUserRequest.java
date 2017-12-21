@@ -1,10 +1,9 @@
 package communication.TCPMessages.request;
 
-import communication.TCPMessages.request.InteractionRequest.Type;
 
 /**
  * Richiesta di ricerca di un utente
- * @author gio
+ * @author Gionatha Sturba
  *
  */
 public class FindUserRequest extends InteractionRequest 

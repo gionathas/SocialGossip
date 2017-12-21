@@ -1,10 +1,9 @@
 package communication.TCPMessages.request;
 
-import communication.TCPMessages.request.RequestMessage.Type;
 
 /**
  * Messaggio di richiesta di logout
- * @author gio
+ * @author Gionatha Sturba
  *
  */
 public class LogoutRequest extends RequestMessage

@@ -13,13 +13,13 @@ import server.model.exception.UserStatusException;
 import utils.graph.exception.VertexAlreadyExist;
 
 /**
- * Sistema di gestione accessi degli utenti al sistema
- * @author gio
+ * Sistema di gestione accessi degli utenti al sistema di Social Gossip
+ * @author Gionatha Sturba
  *
  */
 public class AccessSystem
 {
-	private Network rete;
+	private Network rete; //rete degli utenti
 	
 	public AccessSystem(Network rete)
 	{

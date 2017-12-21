@@ -1,7 +1,10 @@
 package communication.TCPMessages.request;
 
-import communication.TCPMessages.request.RequestAccessMessage.Type;
-
+/**
+ * Messaggio di richiesta di registrazione al sistema
+ * @author Gionatha Sturba
+ *
+ */
 public class RegisterRequest extends RequestAccessMessage
 {
 	public final static String FIELD_REGISTER_REQUEST_LANGUAGE = "language"; 

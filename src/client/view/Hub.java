@@ -9,8 +9,6 @@ import javax.swing.JScrollPane;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JTextField;
-import java.awt.event.ActionListener;
-import java.awt.event.ActionEvent;
 import javax.swing.JSeparator;
 import javax.swing.SwingConstants;
 
@@ -20,6 +18,11 @@ import server.model.User;
 import java.awt.Color;
 import java.awt.Font;
 
+/**
+ * GUI dell'hub che utilizza un utente per interagire con gli altri utenti e chatroom.
+ * @author Gionatha Sturba
+ *
+ */
 public class Hub extends JFrame {
 
 	/**

@@ -19,9 +19,20 @@ public class FriendshipRequestSender extends RequestSenderThread
 	private String nicknameSender;
 	private DefaultListModel<User> friendList;
 	
+	/**
+	 * Inizializza i parametri della richiesta di amicizia
+	 * @param controller controller della finestra 
+	 * @param nicknameSender nickname utente che invia richiesta
+	 * @param nicknameReceiverFriend nickname utente che riceve richiesta
+	 * @param friendList modello della lista degli amici dell'utente richiedente
+	 */
 	public FriendshipRequestSender(Controller controller,String nicknameSender,String nicknameReceiverFriend,DefaultListModel<User> friendList) 
 	{
 		super(controller);
+		
+		if(controller == null || nicknameSender == null || nicknameReceiverFriend == null || friendList == null)
+			throw new NullPointerException();
+		
 		this.nicknameReceiverFriend = nicknameReceiverFriend;
 		this.nicknameSender = nicknameSender;
 		this.friendList = friendList;

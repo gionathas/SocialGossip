@@ -19,7 +19,7 @@ import utils.graph.exception.VertexAlreadyExist;
  */
 public class Network
 {
-	private Grafo<User> grafo; //grafo non orientato,rappresenta relazioni tra utenti
+	private Grafo<User> grafo; //grafo non orientato,rappresenta il grafo degli utenti
 	
 	public Network()
 	{
@@ -39,8 +39,8 @@ public class Network
 	}
 	
 	/**
-	 * 
-	 * @param nickname
+	 * Cerca un utente e se esiste ne ritorna l'istanza
+	 * @param nickname nickname dell'utente da cercare
 	 * @return utente cercato,altrimenti null se non e' registrato
 	 */
 	public User cercaUtente(String nickname)
@@ -54,6 +54,13 @@ public class Network
 		}
 	}
 	
+	/**
+	 * Aggiunge un utente al grafo,se questo non esiste gia'
+	 * @param nickname nickname dell'utente da aggiungere
+	 * @param password password dell'utente
+	 * @param language lingua dell'utente
+	 * @throws VertexAlreadyExist se l'utente esiste gia'
+	 */
 	public void aggiungiUtente(String nickname,String password,String language)throws VertexAlreadyExist
 	{
 		if(nickname == null || password == null || language == null)

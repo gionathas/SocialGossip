@@ -3,35 +3,15 @@ package client.controller;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.net.ConnectException;
-import java.net.Socket;
-import java.net.UnknownHostException;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
 
-import javax.swing.JFrame;
-
-import org.json.simple.JSONObject;
-import org.json.simple.parser.ParseException;
 
 import client.thread.LoginRequestSender;
-import client.thread.RequestSenderThread;
 import client.view.LoginForm;
-import client.view.RegisterForm;
-import communication.TCPMessages.Message;
-import communication.TCPMessages.MessageAnalyzer;
-import communication.TCPMessages.request.LoginRequest;
-import communication.TCPMessages.response.ResponseFailedMessage;
-import communication.TCPMessages.response.ResponseMessage;
-import communication.TCPMessages.response.ResponseFailedMessage.Errors;
-import server.model.User;
+
 
 /**
  * Controller del form di login
- * @author gio
+ * @author Gionatha Sturba
  *
  */
 public class LoginController extends Controller

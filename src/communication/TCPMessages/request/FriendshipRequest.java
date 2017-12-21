@@ -1,10 +1,9 @@
 package communication.TCPMessages.request;
 
-import communication.TCPMessages.request.InteractionRequest.Type;
 
 /**
  * Messaggio di richiesta amicizia
- * @author gio
+ * @author Gionatha Sturba
  *
  */
 public class FriendshipRequest extends InteractionRequest 

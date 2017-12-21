@@ -1,7 +1,10 @@
 package communication.TCPMessages.request;
 
-import communication.TCPMessages.request.RequestAccessMessage.Type;
-
+/**
+ * Messaggio di richiesta di login
+ * @author Gionatha Sturba
+ *
+ */
 public class LoginRequest extends RequestAccessMessage
 {
 	public LoginRequest(String nickname,String password)

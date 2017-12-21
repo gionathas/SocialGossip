@@ -29,13 +29,12 @@ import server.model.exception.UserStatusException;
 
 /**
  * Thread del server che si occupa di gestire una nuova richiesta da parte di un client
- * @author gio
- *
+ * @author Gionatha Sturba
  */
 public class UserRequestHandler implements Runnable
 {
-	private Socket client;
-	private Network reteSG; //rete social Gossip
+	private Socket client; //connessioni TCP con il client
+	private Network reteSG; //rete degli utenti di Social Gossip
 
 	
 	public UserRequestHandler(Socket client,Network reteSG)
@@ -97,6 +96,11 @@ public class UserRequestHandler implements Runnable
 		}
 	}
 	
+	/**
+	 * Analizza la richiesta del client
+	 * @param StringMessage messaggio del client
+	 * @param out stream per rispondere al client
+	 */
 	private void analyzeRequestMessage(String StringMessage,DataOutputStream out)
 	{	
 		try 
@@ -177,11 +181,23 @@ public class UserRequestHandler implements Runnable
 		} 
 	}
 	
+	/**
+	 * Invia una risposta al client
+	 * @param response risposta da inviare
+	 * @param out stream sulla quale inviare la risposta
+	 * @throws IOException se ci sono errori nell'invio della risposta
+	 */
 	private void sendResponseMessage(ResponseMessage response,DataOutputStream out) throws IOException
 	{
 		out.writeUTF(response.getJsonMessage());
 	}
 	
+	/**
+	 * Gestisce una richiesta di interazione da parte dell'utente
+	 * @param message messaggio del client
+	 * @param nicknameSender nickname dell'utente sender
+	 * @param out stream sulla quale rispondere al clients
+	 */
 	private void interactionRequestHandler(JSONObject message,String nicknameSender,DataOutputStream out)
 	{	
 		try 
@@ -255,7 +271,7 @@ public class UserRequestHandler implements Runnable
 	}
 	
 	/**
-	 * Gestione messaggio di richiesta
+	 * Gestisce una richiesta di accesso al sistema
 	 * @param message
 	 * @param nickname
 	 * @param out
@@ -314,11 +330,10 @@ public class UserRequestHandler implements Runnable
 	
 	/**
 	 * Gestione richiesta amicizia tra 2 utente
-	 * @param a
-	 * @param b
-	 * @param out
-	 * @return
-	 * @throws IOException 
+	 * @param a utente richiedente
+	 * @param b utente richiesto
+	 * @param out stream output
+	 * @throws IOException errore invio risposta
 	 */
 	private void friendshipRequestHandler(User a, User b ,DataOutputStream out) throws IOException
 	{
@@ -351,11 +366,11 @@ public class UserRequestHandler implements Runnable
 	
 	/**
 	 * Gestione richiesta login
-	 * @param accessSystem
-	 * @param nickname
-	 * @param password
-	 * @param out
-	 * @throws IOException
+	 * @param accessSystem sistema di gestione accessi al sistema
+	 * @param nickname nickname utente che si vuole loggare
+	 * @param password password utente
+	 * @param out stream output
+	 * @throws IOException errore invio riposta
 	 */
 	private void loginRequestHandler(AccessSystem accessSystem,String nickname,String password,DataOutputStream out) throws IOException
 	{
@@ -398,10 +413,10 @@ public class UserRequestHandler implements Runnable
 	
 	/**
 	 * Gestione richiesta di logout
-	 * @param accessSystem
-	 * @param nickname
-	 * @param out
-	 * @throws IOException
+	 * @param accessSystem sistema di gestione accessi al sistema
+	 * @param nickname nickname utente che si vuole sloggare
+	 * @param out stream output
+	 * @throws IOException errore invio risposta
 	 */
 	private void logoutRequestHandler(AccessSystem accessSystem,String nickname,DataOutputStream out) throws IOException
 	{
@@ -433,12 +448,12 @@ public class UserRequestHandler implements Runnable
 	
 	/**
 	 * Gestione richiesta registrazione
-	 * @param accessSystem
-	 * @param nickname
-	 * @param password
-	 * @param out
-	 * @param language
-	 * @throws IOException
+	 * @param accessSystem sistema di gestione accessi al sistema
+	 * @param nickname nickname utente che si vuole registrare
+	 * @param password passwords scelta
+	 * @param language lingua scelta
+	 * @param out stream output
+	 * @throws IOException errore invio risposta
 	 */
 	private void registerRequestHandler(AccessSystem accessSystem,String nickname,String password,DataOutputStream out,String language) throws IOException
 	{

@@ -16,29 +16,31 @@ import communication.TCPMessages.MessageAnalyzer;
 import communication.TCPMessages.request.RequestMessage;
 import communication.TCPMessages.response.ResponseFailedMessage;
 import communication.TCPMessages.response.ResponseMessage;
-import communication.TCPMessages.response.ResponseSuccessMessage;
 
 /**
  * Modello astratto che rappresenta un Thread che invia una richiesta al server tramite connessione TCP
- * @author gio
+ * @author Gionatha Sturba
  *
  */
 public abstract class RequestSenderThread extends Thread 
 {	
-	private Socket connection;
-	private DataInputStream in;
-	private DataOutputStream out;
+	private Socket connection; //connessione TCP con il server
+	private DataInputStream in; //input stream della connessione
+	private DataOutputStream out; //output stream della connessione
 	
 	protected final String serverName = "localhost";
 	protected final int port = 5000;
 	
-	protected Controller controller;
-	protected RequestMessage request;
-	protected String JsonResponse;
-	protected JSONObject response;
-	protected boolean init;
+	protected Controller controller; //controller della finestra dove viene richiamato il thread
+	protected RequestMessage request; //messaggio di richiesta da inviare al server
+	protected String JsonResponse; //risposta in formato Json che invia il server
+	protected JSONObject response; //risposta parsata in formato Json
+	protected boolean init; //per gestire corretta inizializzazione del thread
 	
-	
+	/**
+	 * Crea un nuovo thread per inviare una richiesta
+	 * @param controller controller della finestra dove viene richiamato il thread
+	 */
 	public RequestSenderThread(Controller controller)
 	{
 		super();
@@ -61,6 +63,7 @@ public abstract class RequestSenderThread extends Thread
 	 */
 	public void run()
 	{
+		//fase di inizializzazione
 		init();
 		
 		if(init)
@@ -73,11 +76,13 @@ public abstract class RequestSenderThread extends Thread
 				in = new DataInputStream(connection.getInputStream());
 				out = new DataOutputStream(connection.getOutputStream());
 				
+				//creo messaggio di richiesta
 				createRequest();
 				
 				//se la richiesta e' stata creata,invio il messaggio
 				if(request != null)
 				{
+					//invio richiesta al server
 					out.writeUTF(request.getJsonMessage());
 					
 					//non appena arriva la risposta la leggo
@@ -137,8 +142,8 @@ public abstract class RequestSenderThread extends Thread
 	{
 		try 
 		{
-			//parso json rappresentate risposta del server
-			System.out.println(JsonResponse);
+			//parso messaggio Json rappresentate risposta del server
+			System.out.println(JsonResponse); //TODO DEBUG
 			response = MessageAnalyzer.parse(JsonResponse);
 			
 			//se non e' un messaggio di risposta
@@ -148,6 +153,7 @@ public abstract class RequestSenderThread extends Thread
 				return;
 			}
 			
+			//analizzo il tipo del messaggio di risposta
 			ResponseMessage.Type outcome = MessageAnalyzer.getResponseType(response);
 			
 			//tipo risposta non trovato

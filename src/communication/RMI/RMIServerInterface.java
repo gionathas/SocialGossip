@@ -7,9 +7,8 @@ import server.model.exception.UserNotFindException;
 import server.model.exception.UserStatusException;
 
 /**
- * Interfaccia fornita dal server per far registrare al client le proprie Callback
- * @author gio
- *
+ * Interfaccia fornita dal server per far registrare al client le proprie Callback,attraverso il protocollo RMI
+ * @author Gionatha Sturba
  */
 public interface RMIServerInterface extends Remote
 {

@@ -6,42 +6,61 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 
 /**
- * Classe astratta del controllo di una finestra
- * @author gio
+ * Classe astratta per il controllo di una finestra
+ * @author Gionatha Sturba
  *
  */
 public abstract class Controller 
 {
-	protected JFrame window;
+	protected JFrame window; //finestra relativo al controllo
 	
 	public Controller()
 	{	
 		this.window = new JFrame();
 	}
 	
+	/** 
+	 * Setta visibilita' della finestra del controllo
+	 * @param visible
+	 */
 	public void setVisible(boolean visible)
 	{
 		window.setVisible(visible);
 	}
 	
+	/**
+	 * Chiude la finestra del controllo
+	 */
 	public void close()
 	{
 		window.dispose();
 	}
 	
+	/**
+	 * 
+	 * @return la finestra del controllo
+	 */
 	public JFrame getWindow() {
 		return window;
 	}
 	
+	/**
+	 * Setta la finestra del controllo
+	 * @param frame
+	 */
 	protected void setWindow(JFrame frame) {
+		
+		if(window == null)
+			throw new NullPointerException();
+		
 		this.window = frame;
 	}
 	
 	/**
 	 * Mostra un messaggio di notifica,specificando se operare in modalita bloccante o meno
-	 * @param message
-	 * @param title
-	 * @param block
+	 * @param message messaggio da mostrare
+	 * @param title titolo del messaggio
+	 * @param block per scegliere se operare in modalita' bloccante
 	 */
 	public void showInfoMessage(String message,String title,boolean block)
 	{
@@ -69,5 +88,8 @@ public abstract class Controller
 		JOptionPane.showMessageDialog(window,message,title,JOptionPane.ERROR_MESSAGE);
 	}
 	
+	/**
+	 * Metodo per inizializzare eventuali listener dei componenti della finestra
+	 */
 	protected abstract void initListeners();
 }

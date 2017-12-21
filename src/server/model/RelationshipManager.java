@@ -8,12 +8,11 @@ import server.model.exception.UserNotFindException;
 
 /**
  * Gestisce le relazioni tra gli utenti di SocialGossip
- * @author gio
- *
+ * @author Gionatha Sturba
  */
 public class RelationshipManager 
 {
-	private Network reteSG;
+	private Network reteSG; //rete degli utenti di Social Gossip
 
 	public RelationshipManager(Network reteSocialGossip) 
 	{

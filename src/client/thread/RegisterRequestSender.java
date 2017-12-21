@@ -2,24 +2,18 @@ package client.thread;
 
 import java.util.List;
 
-import org.json.simple.JSONObject;
-import org.json.simple.parser.ParseException;
-
 import client.controller.Controller;
 import client.controller.FormInputChecker;
 import client.controller.HubController;
-import client.controller.LoginController;
-import communication.TCPMessages.Message;
-import communication.TCPMessages.MessageAnalyzer;
+
 import communication.TCPMessages.request.RegisterRequest;
-import communication.TCPMessages.response.ResponseFailedMessage;
-import communication.TCPMessages.response.ResponseMessage;
+
 import communication.TCPMessages.response.ResponseFailedMessage.Errors;
 import server.model.User;
 
 /**
- * Thread che si occupa di gestire la richiesta di registrazione lato client
- * @author gio
+ * Thread che gestisce l'invio una richiesta di registrazione
+ * @author Gionatha Sturba
  *
  */
 public class RegisterRequestSender extends RequestSenderThread
@@ -29,9 +23,21 @@ public class RegisterRequestSender extends RequestSenderThread
 	private char[] confirm_pass;
 	private String language;
 	
+	/**
+	 * Setta i parametri per la configurazione della richiesta di registrazione
+	 * @param controller controller della finestra che richiede l'invio della richiesta
+	 * @param nickname nickname dell'utente
+	 * @param pass password dell'utente
+	 * @param confirmPass password di conferma dell'utente
+	 * @param lang linguaggio dell'utente
+	 */
 	public RegisterRequestSender(Controller controller,String nickname,char[] pass,char[]confirmPass,String lang) 
 	{
 		super(controller);
+		
+		if(controller == null || nickname == null || pass == null || confirmPass == null || lang == null)
+			throw new NullPointerException();
+		
 		this.nickname = nickname;
 		this.password = pass;
 		this. confirm_pass = confirmPass;

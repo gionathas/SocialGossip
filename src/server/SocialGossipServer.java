@@ -16,7 +16,12 @@ import server.model.Network;
 import server.model.RMIChannelManager;
 import server.thread.UserRequestHandler;
 
-
+/**
+ * Rappresenta la struttura del server di Social Gossip.
+ * Implementa anche il bootstrapper del server.
+ * @author Gionatha Sturba
+ *
+ */
 public class SocialGossipServer implements Runnable
 {
 	private Network reteSG; //rappresenta la struttura della rete degli utenti di social gossip
@@ -41,6 +46,7 @@ public class SocialGossipServer implements Runnable
 	{	
 		try 
 		{
+			//inizializzo protocollo RMI
 			initRMI();
 			
 			while(true)
@@ -59,6 +65,10 @@ public class SocialGossipServer implements Runnable
 		}
 	}
 	
+	/**
+	 * Inizializzazione del protocollo RMI lato server
+	 * @throws RemoteException se c'e' un errore nell'inizializzazione del protocollo RMI. 
+	 */
 	public void initRMI() throws RemoteException
 	{
 		//oggetto che gestisce i canali RMI degli utenti
@@ -76,7 +86,11 @@ public class SocialGossipServer implements Runnable
 		//istanzio l'oggetto 
 		reg.rebind(SERVER_RMI_SERVICE_NAME,stub);
 	}
-		
+	
+	/**
+	 * Bootstrapper del server
+	 * @param args
+	 */
 	public static void main(String[] args) 
 	{
 		//TODO parse con configParse
