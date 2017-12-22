@@ -1,5 +1,12 @@
 package client.controller;
 
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.net.Socket;
+
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -13,10 +20,22 @@ import javax.swing.JOptionPane;
 public abstract class Controller 
 {
 	protected JFrame window; //finestra relativo al controllo
+	protected Socket connection; //connessione TCP con il server
+	protected DataInputStream in; //stream input, per ricevere dal server
+	protected DataOutputStream out; //stream output,per inviare messaggi al server
 	
-	public Controller()
+	public Controller(Socket connection,DataInputStream in,DataOutputStream out)
 	{	
+		if(connection == null || in == null || out == null)
+			throw new NullPointerException();
+		
+		if(connection.isClosed())
+			throw new IllegalArgumentException();
+		
 		this.window = new JFrame();
+		this.connection = connection;
+		this.in = in;
+		this.out = out;
 	}
 	
 	/** 
@@ -26,14 +45,6 @@ public abstract class Controller
 	public void setVisible(boolean visible)
 	{
 		window.setVisible(visible);
-	}
-	
-	/**
-	 * Chiude la finestra del controllo
-	 */
-	public void close()
-	{
-		window.dispose();
 	}
 	
 	/**
@@ -91,5 +102,43 @@ public abstract class Controller
 	/**
 	 * Metodo per inizializzare eventuali listener dei componenti della finestra
 	 */
-	protected abstract void initListeners();
+	protected void initListeners()
+	{
+		//richiesta logout alla chiusura della finestra
+		window.addWindowListener(new WindowAdapter()
+	        {
+	            @Override
+	            public void windowClosing(WindowEvent e)
+	            {
+	            	closeConnection();
+	            	closeWindow();
+	            }
+	        });
+	}
+	
+	public void closeWindow()
+	{
+		window.setVisible(false);
+    	window.dispose();
+	}
+	
+	/*
+	 * Chiusura della finestra
+	 */
+	public void closeConnection()
+	{
+		//chiudiamo la connessione e gli stream
+		try {
+			if(connection != null)
+				connection.close();
+			
+			if(in != null)
+				in.close();
+			
+			if(out != null)
+				out.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 }

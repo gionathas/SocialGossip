@@ -1,12 +1,9 @@
 package client.thread;
 
-import java.io.BufferedInputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.net.ConnectException;
 import java.net.Socket;
-import java.net.UnknownHostException;
 
 import org.json.simple.JSONObject;
 import org.json.simple.parser.ParseException;
@@ -25,9 +22,9 @@ import communication.TCPMessages.response.ResponseMessage;
  */
 public abstract class RequestSenderThread extends Thread 
 {	
-	private Socket connection; //connessione TCP con il server
-	private DataInputStream in; //input stream della connessione
-	private DataOutputStream out; //output stream della connessione
+	protected Socket connection; //connessione TCP con il server
+	protected DataInputStream in; //input stream della connessione
+	protected DataOutputStream out; //output stream della connessione
 	
 	protected final String serverName = "localhost";
 	protected final int port = 5000;
@@ -42,17 +39,23 @@ public abstract class RequestSenderThread extends Thread
 	 * Crea un nuovo thread per inviare una richiesta
 	 * @param controller controller della finestra dove viene richiamato il thread
 	 */
-	public RequestSenderThread(Controller controller)
+	public RequestSenderThread(Controller controller,Socket connection,DataInputStream in,DataOutputStream out)
 	{
 		super();
 		
-		if(controller == null)
+		if(controller == null || connection == null || in == null || out == null)
 			throw new NullPointerException();
 		
+		if(connection.isClosed() == true) {
+			throw new IllegalArgumentException();
+		}
+		
 		this.controller = controller;
-		connection = new Socket();
-		in = null;
-		out = null;
+		this.connection = connection;
+		this.in = in;
+		this.out = out;
+		
+		//parametri non inizializati
 		request = null;
 		JsonResponse = null;
 		response = null;
@@ -69,14 +72,7 @@ public abstract class RequestSenderThread extends Thread
 		
 		if(init)
 		{
-			try 
-			{
-				//apro connessione
-				connection = new Socket(serverName, port);
-				//apro stream di comunicazione
-				in = new DataInputStream(new BufferedInputStream(connection.getInputStream()));
-				out = new DataOutputStream(connection.getOutputStream());
-				
+			try {
 				//creo messaggio di richiesta
 				createRequest();
 				
@@ -92,47 +88,12 @@ public abstract class RequestSenderThread extends Thread
 					//analizzo risposta e mando una risposta la server
 					analyzeResponse(JsonResponse);
 				}
-			} 
-			catch(ConnectException e) {
-				ConnectErrorHandler();
-				e.printStackTrace();
-			}
-			catch (UnknownHostException e) 
-			{
-				UnKwownHostErrorHandler();
-				e.printStackTrace();
-			} 
-			catch (IOException e) 
-			{
+			} catch (IOException e) {
 				IOErrorHandler();
 				e.printStackTrace();
 			}
-			finally 
-			{
-				try
-				{
-					//chiud connessione se aperta
-					if(connection != null){
-						connection.close();
-					}
-					
-					//chiudo stream input se aperto
-					if(in != null) {
-						in.close();
-					}
-					
-					//chiudo stream output se aperto
-					if(out != null) {
-						out.close();
-					}
-				}
-				catch(IOException e)
-				{
-					IOErrorHandler();
-					e.printStackTrace();
-				}
-			}
-		}
+
+		}		
 	}
 	
 	/**
@@ -207,14 +168,7 @@ public abstract class RequestSenderThread extends Thread
 	 * Creazione messaggio di richiesta da inviare al server
 	 */
 	protected abstract void createRequest();
-	/**
-	 * Gestione errore di connessione al server
-	 */
-	protected abstract void ConnectErrorHandler();
-	/**
-	 * Gestione errore server non trovato
-	 */
-	protected abstract void UnKwownHostErrorHandler();
+
 	/**
 	 * Gestione errore di IO
 	 */

@@ -1,6 +1,9 @@
 package client.thread;
 
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.net.Socket;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 
@@ -33,11 +36,11 @@ public class LogoutRequestSender extends RequestSenderThread
 	 * @param serverRMI Interfaccia RMI per informare il server del Logout
 	 * @param callback callback da deregistrare al momento del Logout
 	 */
-	public LogoutRequestSender(Controller controller,String nickname,RMIServerInterface serverRMI,RMIClientNotifyEvent callback) 
+	public LogoutRequestSender(Controller controller,Socket connection,DataInputStream in,DataOutputStream out,String nickname,RMIServerInterface serverRMI,RMIClientNotifyEvent callback) 
 	{	
-		super(controller);
+		super(controller,connection,in,out);
 		
-		if(controller == null || nickname == null || serverRMI == null || callback == null)
+		if(nickname == null || serverRMI == null || callback == null)
 			throw new NullPointerException();
 		
 		this.nickname = nickname;
@@ -65,16 +68,6 @@ public class LogoutRequestSender extends RequestSenderThread
 	protected void createRequest() 
 	{
 		request = new LogoutRequest(nickname);
-	}
-
-	@Override
-	protected void ConnectErrorHandler() {
-		controller.showErrorMessage("Servizio attualmente non disponibile","Errore");
-	}
-
-	@Override
-	protected void UnKwownHostErrorHandler() {
-		controller.showErrorMessage("Server non trovato","Errore");
 	}
 
 	@Override
@@ -138,9 +131,9 @@ public class LogoutRequestSender extends RequestSenderThread
 			e.printStackTrace();
 		}
 		finally {
-			//chiudo hub
-			controller.getWindow().setVisible(false);
-			controller.getWindow().dispose();
+			//chiudo connessione e hub
+			controller.closeConnection();
+			controller.closeWindow();
 		}
 	}
 	

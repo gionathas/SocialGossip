@@ -1,5 +1,8 @@
 package client.thread;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.net.Socket;
 import java.util.List;
 
 import client.controller.Controller;
@@ -26,9 +29,9 @@ public class LoginRequestSender extends RequestSenderThread
 	 * @param nickname nickname scelto dall'utente
 	 * @param password password scelta dall'utente
 	 */
-	public LoginRequestSender(Controller controller,String nickname,char[] password) 
+	public LoginRequestSender(Controller controller,Socket connection,DataInputStream in,DataOutputStream out,String nickname,char[] password) 
 	{
-		super(controller);
+		super(controller,connection,in,out);
 		
 		if(controller == null || nickname == null || password == null)
 			throw new NullPointerException();
@@ -60,17 +63,6 @@ public class LoginRequestSender extends RequestSenderThread
 	protected void createRequest() 
 	{
 		request = new LoginRequest(nickname,new String(password));
-	}
-
-	@Override
-	protected void ConnectErrorHandler() 
-	{
-		controller.showErrorMessage("Servizio attualmente non disponibile","Errore");
-	}
-
-	@Override
-	protected void UnKwownHostErrorHandler() {
-		controller.showErrorMessage("Server non trovato","Errore");			
 	}
 
 	@Override
@@ -147,11 +139,10 @@ public class LoginRequestSender extends RequestSenderThread
 	}
 	
 	private void startHubView(String nickname,List<User>amiciList) {
-		HubController hub = new HubController(nickname,amiciList,controller.getWindow().getLocation());
+		HubController hub = new HubController(connection,in,out,nickname,amiciList,controller.getWindow().getLocation());
 		
 		//chiudo form di login
-		controller.getWindow().setVisible(false);
-		controller.getWindow().dispose();
+		controller.closeWindow();
 		
 		hub.setVisible(true);
 	}

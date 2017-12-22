@@ -1,5 +1,9 @@
 package client.thread;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.net.Socket;
+
 import javax.swing.DefaultListModel;
 import javax.swing.JOptionPane;
 
@@ -30,9 +34,10 @@ public class FindUserRequestSender extends RequestSenderThread
 	 * @param nicknameUserToFind nickname dell'utente da ricercare
 	 * @param friendList modello della lista degli amici dell'utente che invia la richiesta
 	 */
-	public FindUserRequestSender(Controller controller,String nicknameUser,String nicknameUserToFind,DefaultListModel<User> friendList)
+	public FindUserRequestSender(Controller controller,Socket connection,DataInputStream in,DataOutputStream out,String nicknameUser,
+			String nicknameUserToFind,DefaultListModel<User> friendList)
 	{
-		super(controller);
+		super(controller,connection,in,out);
 		this.nicknameUserToFind = nicknameUserToFind;
 		this.nicknameUser = nicknameUser;
 		this.friendList = friendList;
@@ -55,16 +60,6 @@ public class FindUserRequestSender extends RequestSenderThread
 	@Override
 	protected void createRequest() {
 		request = new FindUserRequest(nicknameUser,nicknameUserToFind);
-	}
-
-	@Override
-	protected void ConnectErrorHandler() {
-		controller.showErrorMessage("Servizio attualmente non disponibile","Errore");
-	}
-
-	@Override
-	protected void UnKwownHostErrorHandler() {
-		controller.showErrorMessage("Server non trovato","Errore");
 	}
 
 	@Override
@@ -133,7 +128,7 @@ public class FindUserRequestSender extends RequestSenderThread
 		if(choice == YES)
 		{
 			//faccio partire il thread che gestira' la richiesta di amicizia
-			new FriendshipRequestSender(controller,nicknameUser,nicknameUserToFind,friendList).start();
+			new FriendshipRequestSender(controller,connection,in,out,nicknameUser,nicknameUserToFind,friendList).start();
 		}
 
 		

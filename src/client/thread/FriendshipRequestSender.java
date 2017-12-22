@@ -1,5 +1,9 @@
 package client.thread;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.net.Socket;
+
 import javax.swing.DefaultListModel;
 
 import client.controller.Controller;
@@ -26,11 +30,12 @@ public class FriendshipRequestSender extends RequestSenderThread
 	 * @param nicknameReceiverFriend nickname utente che riceve richiesta
 	 * @param friendList modello della lista degli amici dell'utente richiedente
 	 */
-	public FriendshipRequestSender(Controller controller,String nicknameSender,String nicknameReceiverFriend,DefaultListModel<User> friendList) 
+	public FriendshipRequestSender(Controller controller,Socket connection,DataInputStream in,DataOutputStream out,
+			String nicknameSender,String nicknameReceiverFriend,DefaultListModel<User> friendList) 
 	{
-		super(controller);
+		super(controller,connection,in,out);
 		
-		if(controller == null || nicknameSender == null || nicknameReceiverFriend == null || friendList == null)
+		if(nicknameSender == null || nicknameReceiverFriend == null || friendList == null)
 			throw new NullPointerException();
 		
 		this.nicknameReceiverFriend = nicknameReceiverFriend;
@@ -47,15 +52,6 @@ public class FriendshipRequestSender extends RequestSenderThread
 	protected void createRequest() 
 	{
 		request = new FriendshipRequest(nicknameSender,nicknameReceiverFriend);
-	}
-
-	protected void ConnectErrorHandler() {
-		controller.showErrorMessage("Servizio attualmente non disponibile","Errore");
-	}
-
-	@Override
-	protected void UnKwownHostErrorHandler() {
-		controller.showErrorMessage("Server non trovato","Errore");
 	}
 
 	@Override

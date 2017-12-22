@@ -3,6 +3,9 @@ package client.controller;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.net.Socket;
 
 import client.thread.RegisterRequestSender;
 import client.view.RegisterForm;
@@ -18,17 +21,10 @@ public class RegisterController extends Controller
 	private RegisterForm registerView;
 	private Controller controller = this;
 	
-	public RegisterController()
+	public RegisterController(Socket connection,DataInputStream in,DataOutputStream out,Point location)
 	{
-		registerView = new RegisterForm();
-		setWindow(registerView);
-		
-		initListeners();
-		
-	}
-	
-	public RegisterController(Point location)
-	{
+		super(connection,in,out);
+
 		registerView = new RegisterForm();
 		setWindow(registerView);
 		window.setLocation(location);
@@ -52,7 +48,7 @@ public class RegisterController extends Controller
 			public void actionPerformed(ActionEvent e) 
 			{
 				//faccio partire il thread che si occupera' delle richiesta di registrazione
-				new RegisterRequestSender(controller,registerView.getUsernameField().getText(),registerView.getPasswordField().getPassword(),
+				new RegisterRequestSender(controller,connection, in, out, registerView.getUsernameField().getText(),registerView.getPasswordField().getPassword(),
 						registerView.getConfirmPasswordField().getPassword(),(String)registerView.getComboBox().getSelectedItem()).start();
 			}
 		});
@@ -63,11 +59,10 @@ public class RegisterController extends Controller
 	 */
 	private void startLoginForm()
 	{
-		window.setVisible(false);
-		window.dispose();
+		closeWindow();
 		
 		//avvio schermata di login
-		LoginController login = new LoginController(window.getLocation());
+		LoginController login = new LoginController(connection,in,out,window.getLocation());
 		login.setVisible(true);
 	}
 }

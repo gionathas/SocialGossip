@@ -5,6 +5,9 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.net.Socket;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
@@ -53,8 +56,10 @@ public class HubController extends Controller
 	 * @param amiciList lista degli amici dell'utente
 	 * @param location posizione finestra
 	 */
-	public HubController(String nickname,List<User> amiciList,Point location) 
+	public HubController(Socket connection,DataInputStream in,DataOutputStream out,String nickname,List<User> amiciList,Point location) 
 	{
+		super(connection,in,out);
+		
 		hubView = new HubWindow();
 		setWindow(hubView);
 		window.setLocation(location);
@@ -67,10 +72,9 @@ public class HubController extends Controller
 		catch (Exception e) 
 		{			
 			//chiudo sessione
-			window.setVisible(false);
-			window.dispose();
-			
-			
+			closeConnection();
+			closeWindow();
+					
 			e.printStackTrace();
 		} 
 	}
@@ -101,7 +105,7 @@ public class HubController extends Controller
 		initRMI(nickname);
 		
 		//TODO sconfiguro thread listener che ascolta i messaggi arrivati da altre chat 
-		initListenerNotificationChatMessage();
+		//initListenerNotificationChatMessage();
 		
 	}
 	
@@ -143,7 +147,7 @@ public class HubController extends Controller
 	            @Override
 	            public void windowClosing(WindowEvent e)
 	            {
-	                new LogoutRequestSender(controller,user.getNickname(),serverRMI,callback).start();
+	                new LogoutRequestSender(controller,connection,in,out,user.getNickname(),serverRMI,callback).start();
 	            }
 	        });
 		
@@ -152,7 +156,7 @@ public class HubController extends Controller
 			public void actionPerformed(ActionEvent arg0) 
 			{
 				//avvio procedura di logout
-                new LogoutRequestSender(controller,user.getNickname(),serverRMI,callback).start();
+                new LogoutRequestSender(controller,connection,in,out,user.getNickname(),serverRMI,callback).start();
 			}
 		});
 		
@@ -163,7 +167,7 @@ public class HubController extends Controller
 			public void actionPerformed(ActionEvent e) 
 			{
 				//avvio thread che gestisce la richiesta di ricerca utente
-				new FindUserRequestSender(controller,user.getNickname(),hubView.getTextField().getText(),hubView.getModelUserFriendList()).start();
+				new FindUserRequestSender(controller,connection,in,out,user.getNickname(),hubView.getTextField().getText(),hubView.getModelUserFriendList()).start();
 			}
 		});
 	}

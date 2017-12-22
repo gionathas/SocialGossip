@@ -1,5 +1,8 @@
 package client.thread;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.net.Socket;
 import java.util.List;
 
 import client.controller.Controller;
@@ -31,11 +34,11 @@ public class RegisterRequestSender extends RequestSenderThread
 	 * @param confirmPass password di conferma dell'utente
 	 * @param lang linguaggio dell'utente
 	 */
-	public RegisterRequestSender(Controller controller,String nickname,char[] pass,char[]confirmPass,String lang) 
+	public RegisterRequestSender(Controller controller,Socket connection,DataInputStream in,DataOutputStream out,String nickname,char[] pass,char[]confirmPass,String lang) 
 	{
-		super(controller);
+		super(controller,connection,in,out);
 		
-		if(controller == null || nickname == null || pass == null || confirmPass == null || lang == null)
+		if(nickname == null || pass == null || confirmPass == null || lang == null)
 			throw new NullPointerException();
 		
 		this.nickname = nickname;
@@ -61,16 +64,6 @@ public class RegisterRequestSender extends RequestSenderThread
 	protected void createRequest() 
 	{
 		request = new RegisterRequest(nickname,new String(password),language);
-	}
-
-	@Override
-	protected void ConnectErrorHandler() {
-		controller.showErrorMessage("Servizio attualmente non disponibile","Errore");			
-	}
-
-	@Override
-	protected void UnKwownHostErrorHandler() {
-		controller.showErrorMessage("Server non trovato","Errore");
 	}
 
 	@Override
@@ -128,11 +121,10 @@ public class RegisterRequestSender extends RequestSenderThread
 	
 	private void startHubView(String nickname,List<User> amiciList) 
 	{
-		HubController hub = new HubController(nickname,amiciList,controller.getWindow().getLocation());
+		HubController hub = new HubController(connection,in,out,nickname,amiciList,controller.getWindow().getLocation());
 		
 		//chiudo form di login
-		controller.setVisible(false);
-		controller.close();
+		controller.closeWindow();
 		
 		hub.setVisible(true);
 	}

@@ -3,6 +3,7 @@ package server.thread;
 import java.io.BufferedInputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.EOFException;
 import java.io.IOException;
 import java.net.Socket;
 import java.util.LinkedList;
@@ -54,47 +55,54 @@ public class UserRequestHandler implements Runnable
 	{
 		DataInputStream in = null;
 		DataOutputStream out = null;
-			
+		
+		
 		try 
 		{
 			in = new DataInputStream(new BufferedInputStream(client.getInputStream()));
 			out = new DataOutputStream(client.getOutputStream());
 			
-			//leggo messaggio inviatomi dal client
-			String request = in.readUTF();
-			System.out.println("received: "+request);
-			
-			//analizzo richiesta del client
-			analyzeRequestMessage(request,out);
-			
-		} 
-		catch (IOException e) 
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-		finally 
-		{
-			try 
+			//fin quando il client mi invia richieste
+			while(true)
 			{
-				//chiudo connessione con il client
-				client.close();
-				
-				//chiudo stream
-				if(in != null)
-					in.close();
-				
-				if(out != null)
-					out.close();
-			} 
-			catch (IOException e) 
-			{
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				try 
+				{
+					//leggo messaggio inviatomi dal client
+					String request = in.readUTF();
+					System.out.println("received: "+request);
+					
+					//analizzo richiesta del client
+					analyzeRequestMessage(request,out);
+				}
+				//client ha chiuso la connessione
+				catch(EOFException e) {
+					System.out.println("Chiusura client");
+					break;
+				}
+				catch (IOException e) {
+					e.printStackTrace();
+				}
 			}
 			
+		} 
+		catch (IOException e1) {
+			e1.printStackTrace();
 		}
+		//chiudo connessione e stream
+		finally 
+		{
+			try {
+				if(client != null)
+					client.close();
+				if(in != null)
+					in.close();
+				if(out != null)
+					out.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		
 	}
 	
 	/**
