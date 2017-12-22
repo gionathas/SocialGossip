@@ -1,6 +1,8 @@
 package client.controller;
 
+import java.awt.Dimension;
 import java.awt.Point;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
@@ -16,11 +18,14 @@ import java.rmi.server.RemoteObject;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Random;
 
 import javax.swing.DefaultListModel;
+import javax.swing.JList;
 
 import client.thread.FindUserRequestSender;
 import client.thread.LogoutRequestSender;
+import client.view.ChatWindow;
 import client.view.HubWindow;
 import communication.RMI.RMIClientNotifyEvent;
 import communication.RMI.RMIServerInterface;
@@ -38,7 +43,10 @@ public class HubController extends Controller
 {
 	private HubWindow hubView;
 	private User user; //utente che controlla l'hub
+	
+	//utilita'
 	private Controller controller = this;
+	private Random rand;
 	
 	//gestione RMI
 	private RMIServerInterface serverRMI = null;
@@ -63,6 +71,8 @@ public class HubController extends Controller
 		hubView = new HubWindow();
 		setWindow(hubView);
 		window.setLocation(location);
+		
+		rand = new Random(System.currentTimeMillis());
 		
 		try 
 		{
@@ -147,6 +157,10 @@ public class HubController extends Controller
 	            @Override
 	            public void windowClosing(WindowEvent e)
 	            {
+	            	closeAllChats();
+	            	
+	            	//TODO chiudere tutte le finestre di chatroom
+	            	
 	                new LogoutRequestSender(controller,connection,in,out,user.getNickname(),serverRMI,callback).start();
 	            }
 	        });
@@ -155,6 +169,10 @@ public class HubController extends Controller
 		hubView.getBtnLogout().addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) 
 			{
+				closeAllChats();
+				
+				//TODO chiudere chatroom
+				
 				//avvio procedura di logout
                 new LogoutRequestSender(controller,connection,in,out,user.getNickname(),serverRMI,callback).start();
 			}
@@ -170,6 +188,84 @@ public class HubController extends Controller
 				new FindUserRequestSender(controller,connection,in,out,user.getNickname(),hubView.getTextField().getText(),hubView.getModelUserFriendList()).start();
 			}
 		});
+		
+		//al click sul bottone AVVIA CHAT
+		hubView.getBtnAvviaChat().addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) 
+			{
+				//apro la chat richiesta
+				openChat();
+			}
+		});
+	}
+	
+	private void openChat()
+	{
+		JList<User> list = hubView.getUserFriendList();
+		
+		synchronized (list) 
+		{
+			User selectedUser = list.getSelectedValue();
+			
+			//se non e' stato selezionato nessun utente
+			if(selectedUser == null)
+			{
+				showInfoMessage("Seleziona un utente con cui avviare una chat","Nessun utente selezionatao",false);
+			}
+			else {
+				ChatController chat = null;
+				
+				//cerco se esiste gia' un istanza della chat,tra le liste
+				for (ChatController currentChat : chats) 
+				{
+					//chat trovata
+					if(currentChat.getReceiver().equals(selectedUser))
+					{
+						chat = currentChat;
+						break;
+					}
+				}
+				
+				//se non ho trovato la chat,ne creo una nuova e la aggiungo alla lista
+				if(chat == null) 
+				{
+					chat = new ChatController(connection, in, out,user,selectedUser,generateRandomLocation());
+					chats.add(chat);
+					chat.setVisible(true);
+				}
+				//chat trovata,la mostro
+				else {
+					//se non e' gia' visibile
+					if(!chat.isVisible())
+						chat.setVisible(true);
+				}
+			}
+		}
+	}
+	
+	private void closeAllChats()
+	{
+		//chiudo tutte le finestre di chat
+    	for (ChatController chat : chats) {
+			chat.closeWindow();
+		}
+	}
+	
+	private void closeAllChatRoom()
+	{
+		//TODO
+	}
+	
+	private Point generateRandomLocation() {
+		//genero un posizione a caso dove generare la chat
+		Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+		 
+		int x = rand.nextInt(screenSize.width - ChatWindow.WIDTH);
+		int y = rand.nextInt(screenSize.height - ChatWindow.HEIGHT);
+				
+		return new Point(x,y);
 	}
 	
 	/**

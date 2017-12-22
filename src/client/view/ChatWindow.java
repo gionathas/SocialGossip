@@ -26,6 +26,9 @@ public class ChatWindow extends JFrame {
 	 */
 	private static final long serialVersionUID = 7018723357317188387L;
 	private JTextArea conversationArea;
+	
+	public static final int WIDTH = 370;
+	public static final int HEIGHT = 400;
 
 	/**
 	 * Launch the application.
@@ -34,7 +37,7 @@ public class ChatWindow extends JFrame {
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
-					ChatWindow frame = new ChatWindow();
+					ChatWindow frame = new ChatWindow("ciao");
 					frame.setVisible(true);
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -46,12 +49,12 @@ public class ChatWindow extends JFrame {
 	/**
 	 * Create the frame.
 	 */
-	public ChatWindow() {
+	public ChatWindow(String title) {
 		getContentPane().setBackground(SystemColor.desktop);
-		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setBounds(100, 100, 370, 400);
+		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+		setBounds(100, 100,WIDTH, HEIGHT);
 		setResizable(false);
-		setTitle("CHAT");
+		setTitle(title);
 		getContentPane().setLayout(null);
 		
 		Border border = BorderFactory.createLineBorder(Color.BLACK);
