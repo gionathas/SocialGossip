@@ -1,5 +1,6 @@
 package client.thread;
 
+import java.io.BufferedInputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -73,7 +74,7 @@ public abstract class RequestSenderThread extends Thread
 				//apro connessione
 				connection = new Socket(serverName, port);
 				//apro stream di comunicazione
-				in = new DataInputStream(connection.getInputStream());
+				in = new DataInputStream(new BufferedInputStream(connection.getInputStream()));
 				out = new DataOutputStream(connection.getOutputStream());
 				
 				//creo messaggio di richiesta

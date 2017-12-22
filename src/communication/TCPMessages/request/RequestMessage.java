@@ -10,7 +10,7 @@ import communication.TCPMessages.Message;
  */
 public class RequestMessage extends Message 
 {
-	public enum Type {ACCESS,LOGOUT,INTERACTION} //tipi possibili di un messaggio di richiesta
+	public enum Type {ACCESS,LOGOUT,INTERACTION,CHAT_NOTIFICATION_CHAN} //tipi possibili di un messaggio di richiesta
 	public static String FIELD_REQUEST_TYPE = "request-type";
 	public static String FIELD_REQUEST_NICKNAME_SENDER= "nickname";
 	
@@ -39,6 +39,10 @@ public class RequestMessage extends Message
 			case INTERACTION:
 				jsonMessage.put(this.FIELD_REQUEST_TYPE,RequestMessage.Type.INTERACTION.name());
 				break;
+			
+			//se e' una richiesta di settaggio canale di notifica messaggi chat
+			case CHAT_NOTIFICATION_CHAN:
+				jsonMessage.put(this.FIELD_REQUEST_TYPE,RequestMessage.Type.CHAT_NOTIFICATION_CHAN.name());
 
 			default:
 				throw new IllegalArgumentException();

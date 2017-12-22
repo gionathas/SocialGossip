@@ -1,5 +1,6 @@
 package server.thread;
 
+import java.io.BufferedInputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -56,7 +57,7 @@ public class UserRequestHandler implements Runnable
 			
 		try 
 		{
-			in = new DataInputStream(client.getInputStream());
+			in = new DataInputStream(new BufferedInputStream(client.getInputStream()));
 			out = new DataOutputStream(client.getOutputStream());
 			
 			//leggo messaggio inviatomi dal client

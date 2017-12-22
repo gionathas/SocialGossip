@@ -23,7 +23,7 @@ import java.awt.Font;
  * @author Gionatha Sturba
  *
  */
-public class Hub extends JFrame {
+public class HubWindow extends JFrame {
 
 	/**
 	 * 
@@ -45,10 +45,11 @@ public class Hub extends JFrame {
 	/**
 	 * Create the frame.
 	 */
-	public Hub() 
+	public HubWindow() 
 	{
 		setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		setTitle("Social Gossip");
+		setResizable(false);
 		setBounds(100, 100, 800,600);
 		contentPane = new JPanel();
 		setContentPane(contentPane);

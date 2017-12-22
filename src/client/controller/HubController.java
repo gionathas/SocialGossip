@@ -11,13 +11,14 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.RemoteObject;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.LinkedList;
 import java.util.List;
 
 import javax.swing.DefaultListModel;
 
 import client.thread.FindUserRequestSender;
 import client.thread.LogoutRequestSender;
-import client.view.Hub;
+import client.view.HubWindow;
 import communication.RMI.RMIClientNotifyEvent;
 import communication.RMI.RMIServerInterface;
 
@@ -32,12 +33,16 @@ import server.model.exception.UserStatusException;
  */
 public class HubController extends Controller
 {
-	private Hub hubView;
+	private HubWindow hubView;
 	private User user; //utente che controlla l'hub
 	private Controller controller = this;
 	
+	//gestione RMI
 	private RMIServerInterface serverRMI = null;
 	private RMIClientNotifyEvent callback;
+	
+	//gestione finestre chat e chatRoom
+	private List<ChatController> chats;
 	
 	private static final String SERVER_RMI_SERVICE_NAME = "SocialGossipNotification";
 	private static final int SERVER_RMI_PORT = 6000;
@@ -50,7 +55,7 @@ public class HubController extends Controller
 	 */
 	public HubController(String nickname,List<User> amiciList,Point location) 
 	{
-		hubView = new Hub();
+		hubView = new HubWindow();
 		setWindow(hubView);
 		window.setLocation(location);
 		
@@ -80,6 +85,7 @@ public class HubController extends Controller
 	{	
 		user = new User(nickname);
 		hubView.setWelcomeText("Loggato come: "+nickname);
+		chats = new LinkedList<ChatController>();
 
 		//se mi e' stata passata una lista di amici e di chatRoom
 		if(amiciList != null) {
@@ -94,7 +100,9 @@ public class HubController extends Controller
 		//configuro RMI per ricevere notifiche sullo stato degli amici e sulle nuove amicizie
 		initRMI(nickname);
 		
-		//TODO far partire connessioni per le notifiche dei messaggi
+		//TODO sconfiguro thread listener che ascolta i messaggi arrivati da altre chat 
+		initListenerNotificationChatMessage();
+		
 	}
 	
 	/**

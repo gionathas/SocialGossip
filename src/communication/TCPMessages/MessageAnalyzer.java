@@ -242,6 +242,11 @@ public class MessageAnalyzer
 		{
 			return RequestMessage.Type.INTERACTION;
 		}
+		//messaggio richiesta settaggio canale notifica chat
+		else if(type.equals(RequestMessage.Type.CHAT_NOTIFICATION_CHAN.name())) 
+		{
+			return RequestMessage.Type.CHAT_NOTIFICATION_CHAN;
+		}
 		else {
 			//TODO implementare altri casi
 			return null;

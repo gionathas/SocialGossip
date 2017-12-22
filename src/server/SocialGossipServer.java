@@ -25,8 +25,8 @@ import server.thread.UserRequestHandler;
 public class SocialGossipServer implements Runnable
 {
 	private Network reteSG; //rappresenta la struttura della rete degli utenti di social gossip
-	private ServerSocket listenerSocket; //socket in cui e' in ascolto il server
-	private ThreadPoolExecutor executor; //pool di thread per gestire i vari client che arrivano
+	private ServerSocket listenerSocket = null; //socket in cui e' in ascolto il server
+	private ThreadPoolExecutor executor = null; //pool di thread per gestire i vari client che arrivano
 	
 	private static final String SERVER_RMI_SERVICE_NAME = "SocialGossipNotification";
 	private static final int SERVER_RMI_PORT = 6000;
@@ -62,6 +62,23 @@ public class SocialGossipServer implements Runnable
 		{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		}
+		finally 
+		{
+			try 
+			{
+				//chiudo socket di accettazione
+				if(listenerSocket != null)
+					listenerSocket.close();
+				
+				//chiudo il pool di thread
+				if(executor != null)
+					executor.shutdownNow();
+			} 
+			catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 	}
 	
