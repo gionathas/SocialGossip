@@ -1,12 +1,17 @@
 package client.controller;
 
 import java.awt.Point;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.net.Socket;
 
+import javax.swing.JTextArea;
+
+import client.thread.requestSender.SendTextToUser;
 import client.view.ChatWindow;
 import server.model.User;
 
@@ -15,6 +20,7 @@ public class ChatController extends Controller
 	private ChatWindow chatView;
 	private User owner; //utente possessore della chat
 	private User receiver; //utente con cui chatta l'owner
+	private Controller controller = this;
 
 	public ChatController(Socket connection,DataInputStream in,DataOutputStream out,User owner,User receiver,Point location)
 	{
@@ -29,6 +35,8 @@ public class ChatController extends Controller
 		
 		this.owner = owner;
 		this.receiver = receiver;
+		
+		initListeners();
 	}
 	
 	@Override
@@ -39,6 +47,17 @@ public class ChatController extends Controller
 			
 			public void windowClosing(WindowEvent e) {
 				closeChat();
+			}
+		});
+		
+		//al click sul bottone INVIA
+		chatView.getBtnInviaTextButton().addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent arg0) 
+			{
+				//parte il thread che gestisce l'invio del messaggio
+				new SendTextToUser(controller, connection, in, out,owner.getNickname(),receiver.getNickname(),chatView.getTextArea(),chatView.getConversationArea()).start();
 			}
 		});
 	}
@@ -61,6 +80,14 @@ public class ChatController extends Controller
 
 	public User getReceiver() {
 		return receiver;
+	}
+	
+	public JTextArea getTextArea() {
+		return chatView.getTextArea();
+	}
+	
+	public JTextArea getJConversationArea() {
+		return chatView.getConversationArea();
 	}
 
 }

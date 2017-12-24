@@ -23,8 +23,9 @@ import java.util.Random;
 import javax.swing.DefaultListModel;
 import javax.swing.JList;
 
-import client.thread.FindUserRequestSender;
-import client.thread.LogoutRequestSender;
+import client.thread.ListenerChatMessage;
+import client.thread.requestSender.FindUserRequestSender;
+import client.thread.requestSender.LogoutRequestSender;
 import client.view.ChatWindow;
 import client.view.HubWindow;
 import communication.RMI.RMIClientNotifyEvent;
@@ -48,9 +49,10 @@ public class HubController extends Controller
 	private Controller controller = this;
 	private Random rand;
 	
-	//gestione RMI
+	//gestione RMI,notifiche messaggi
 	private RMIServerInterface serverRMI = null;
 	private RMIClientNotifyEvent callback;
+	private ListenerChatMessage listenerChatMessage;
 	
 	//gestione finestre chat e chatRoom
 	private List<ChatController> chats;
@@ -79,6 +81,7 @@ public class HubController extends Controller
 			initComponents(nickname,amiciList);
 			initListeners();
 		} 
+		//errore in fase di inizializzazione
 		catch (Exception e) 
 		{			
 			//chiudo sessione
@@ -114,8 +117,11 @@ public class HubController extends Controller
 		//configuro RMI per ricevere notifiche sullo stato degli amici e sulle nuove amicizie
 		initRMI(nickname);
 		
-		//TODO sconfiguro thread listener che ascolta i messaggi arrivati da altre chat 
-		//initListenerNotificationChatMessage();
+		//configuro thread listener che ascolta i messaggi arrivati da altre chat,e lo faccio partire
+		listenerChatMessage = new ListenerChatMessage(this,user,chats, connection.getInetAddress(),connection.getPort());
+		listenerChatMessage.start();
+		
+		//TODO configurare thread per ricevere mesaggi chatroom
 		
 	}
 	
@@ -157,6 +163,10 @@ public class HubController extends Controller
 	            @Override
 	            public void windowClosing(WindowEvent e)
 	            {
+	            	//termino thread attivi
+	            	listenerChatMessage.shutdown();
+	            	
+	            	
 	            	closeAllChats();
 	            	
 	            	//TODO chiudere tutte le finestre di chatroom
@@ -169,6 +179,10 @@ public class HubController extends Controller
 		hubView.getBtnLogout().addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) 
 			{
+				
+				//termino thread attivi
+            	listenerChatMessage.shutdown();
+            	
 				closeAllChats();
 				
 				//TODO chiudere chatroom
@@ -196,12 +210,12 @@ public class HubController extends Controller
 			public void actionPerformed(ActionEvent e) 
 			{
 				//apro la chat richiesta
-				openChat();
+				openChatFromList();
 			}
 		});
 	}
 	
-	private void openChat()
+	private void openChatFromList()
 	{
 		JList<User> list = hubView.getUserFriendList();
 		
@@ -240,10 +254,43 @@ public class HubController extends Controller
 					//se non e' gia' visibile
 					if(!chat.isVisible())
 						chat.setVisible(true);
-				}
+				}				
 			}
 		}
 	}
+	
+	public ChatController openChatFromNewMessage(User sender)
+	{
+		ChatController chat = null;
+		
+		//cerco se esiste gia' un istanza della chat
+		for (ChatController currentChat : chats) 
+		{
+			//chat trovata
+			if(currentChat.getReceiver().equals(sender))
+			{
+				chat = currentChat;
+				break;
+			}
+		}
+		
+		//se non ho trovato la chat,ne creo una nuova e la aggiungo alla lista
+		if(chat == null) 
+		{
+			chat = new ChatController(connection, in, out,user,sender,generateRandomLocation());
+			chats.add(chat);
+			chat.setVisible(true);
+		}
+		//chat trovata,la mostro
+		else {
+			//se non e' gia' visibile
+			if(!chat.isVisible())
+				chat.setVisible(true);
+		}
+		
+		return chat;
+	}
+	
 	
 	private void closeAllChats()
 	{

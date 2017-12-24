@@ -1,4 +1,4 @@
-package client.thread;
+package client.thread.requestSender;
 
 
 import java.io.DataInputStream;

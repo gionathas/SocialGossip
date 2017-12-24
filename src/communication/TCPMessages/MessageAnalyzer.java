@@ -9,10 +9,12 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
+import communication.TCPMessages.notification.NewIncomingMessage;
 import communication.TCPMessages.request.InteractionRequest;
 import communication.TCPMessages.request.RegisterRequest;
 import communication.TCPMessages.request.RequestAccessMessage;
 import communication.TCPMessages.request.RequestMessage;
+import communication.TCPMessages.request.SendMessageRequest;
 import communication.TCPMessages.response.ResponseFailedMessage;
 import communication.TCPMessages.response.ResponseMessage;
 import communication.TCPMessages.response.SuccessFriendship;
@@ -58,8 +60,61 @@ public class MessageAnalyzer
 		
 		if(type.equals(Message.Type.REQUEST.name()))
 			return Message.Type.REQUEST;
-		else
+		else if(type.equals(Message.Type.RESPONSE.name()))
 			return Message.Type.RESPONSE;
+		else if(type.equals(Message.Type.NOTIFICATION.name()))
+			return Message.Type.NOTIFICATION;
+		else
+			return null;
+	}
+	
+	/**
+	 * 
+	 * @param JsonMessage
+	 * @return nome del mittente del messaggio di notifica del messaggio testuale,null se non e' stato trovato
+	 */
+	public static String getIncomingMessageSenderNickname(JSONObject JsonMessage)
+	{
+		if(JsonMessage == null)
+			throw new NullPointerException();
+		
+		return (String) JsonMessage.get(NewIncomingMessage.FIELD_INCOMING_MESSAGE_SENDER_NICKNAME);
+	}
+	
+	/**
+	 * 
+	 * @param JsonMessage
+	 * @return tipo del mittente del messaggio di notifica del messaggio testuale,null se non e' stato trovato
+	 */
+	public static NewIncomingMessage.ReceiverType getIncomingMessageReceiverType(JSONObject JsonMessage)
+	{
+		if(JsonMessage == null)
+			throw new NullPointerException();
+		
+		String type = (String)JsonMessage.get(NewIncomingMessage.FIELD_INCOMING_MESSAGE_RECEIVER_TYPE);
+		
+		if(type == null)
+			return null;
+		
+		if(type.equals(NewIncomingMessage.ReceiverType.USER.name()))
+			return NewIncomingMessage.ReceiverType.USER;
+		else if(type.equals(NewIncomingMessage.ReceiverType.CHATROOM.name()))
+			return NewIncomingMessage.ReceiverType.CHATROOM;
+		else
+			return null;
+	}
+	
+	/**
+	 * 
+	 * @param JsonMessage
+	 * @return testo del messaggio del messaggio di notifica del messaggio testuale,null se non e' stato trovato
+	 */
+	public static String getIncomingMessageText(JSONObject JsonMessage)
+	{
+		if(JsonMessage == null)
+			throw new NullPointerException();
+		
+		return (String) JsonMessage.get(NewIncomingMessage.FIELD_INCOMING_MESSAGE_SENDER_NICKNAME);
 	}
 	
 	/**
@@ -314,6 +369,50 @@ public class MessageAnalyzer
 			throw new NullPointerException();
 		
 		return (String) JsonMessage.get(InteractionRequest.FIELD_NICKNAME_RECEIVER);
+	}
+	
+	/**
+	 * 
+	 * @param JsonMessage
+	 * @return tipo del ricevente del messaggio testuale,null se non e' stato trovato
+	 */
+	public static SendMessageRequest.ReceiverType getReceiverType(JSONObject JsonMessage)
+	{
+		if(JsonMessage == null)
+			throw new NullPointerException();
+		
+		String type = (String) JsonMessage.get(SendMessageRequest.FIELD_RECEIVER_TYPE);
+		
+		//campo non trovato
+		if(type == null)
+			return null;
+		
+		//se e' un messaggio di richiesta ricerca utente
+		if(type.equals(SendMessageRequest.ReceiverType.USER.name()))
+		{
+			return SendMessageRequest.ReceiverType.USER;
+		}
+		else if(type.equals(SendMessageRequest.ReceiverType.CHATROOM.name()))
+		{
+			return SendMessageRequest.ReceiverType.CHATROOM;
+		}
+		else {
+			return null;
+		}
+		
+	}
+	
+	/**
+	 * 
+	 * @param JsonMessage
+	 * @return stringa che rappresenta messaggio testuale,null se non e' stato trovato
+	 */
+	public static String getText(JSONObject JsonMessage)
+	{
+		if(JsonMessage == null)
+			throw new NullPointerException();
+		
+		return (String) JsonMessage.get(SendMessageRequest.FIELD_TEXT_MESSAGE);
 	}
 	
 	/**

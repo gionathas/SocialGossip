@@ -43,6 +43,7 @@ public class RequestMessage extends Message
 			//se e' una richiesta di settaggio canale di notifica messaggi chat
 			case CHAT_NOTIFICATION_CHAN:
 				jsonMessage.put(this.FIELD_REQUEST_TYPE,RequestMessage.Type.CHAT_NOTIFICATION_CHAN.name());
+				break;
 
 			default:
 				throw new IllegalArgumentException();

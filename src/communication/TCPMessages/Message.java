@@ -10,7 +10,7 @@ import org.json.simple.JSONObject;
  */
 public class Message
 {
-	public enum Type {REQUEST,RESPONSE}; //enum che indica i tipi che puo' avere un  messaggio
+	public enum Type {REQUEST,RESPONSE,NOTIFICATION}; //enum che indica i tipi che puo' avere un  messaggio
 	public static final String FIELD_MESSAGE_TYPE = "message-type"; //nome del field type all'interno di json
 	
 	//stato interno
@@ -24,19 +24,9 @@ public class Message
 		//creazione oggetto json
 		jsonMessage = new JSONObject();
 		
-		//se e' un messaggio di richiesta
-		if(messageType.equals(Message.Type.REQUEST))
-		{
-			jsonMessage.put(Message.FIELD_MESSAGE_TYPE,Message.Type.REQUEST.name());
-		}
-		//altrimenti e' un messaggio di risposta
-		else {
-			jsonMessage.put(Message.FIELD_MESSAGE_TYPE,Message.Type.RESPONSE.name());
-		}
-	}
-	
-	public Message.Type getMessageType() {
-		return this.messageType;
+		//inserisco tipo del messaggio
+		jsonMessage.put(Message.FIELD_MESSAGE_TYPE,messageType.name());
+
 	}
 	
 	public String getJsonMessage() {

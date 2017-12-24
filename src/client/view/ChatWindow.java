@@ -1,20 +1,15 @@
 package client.view;
 
-import java.awt.BorderLayout;
 import java.awt.EventQueue;
 
 import javax.swing.BorderFactory;
 import javax.swing.JFrame;
-import javax.swing.JPanel;
-import javax.swing.border.EmptyBorder;
-import java.awt.FlowLayout;
+
 import javax.swing.JTextArea;
-import javax.swing.border.TitledBorder;
 import javax.swing.border.LineBorder;
 import java.awt.Color;
 
 import javax.swing.border.Border;
-import javax.swing.border.CompoundBorder;
 import javax.swing.JButton;
 import java.awt.SystemColor;
 import java.awt.Font;
@@ -26,6 +21,10 @@ public class ChatWindow extends JFrame {
 	 */
 	private static final long serialVersionUID = 7018723357317188387L;
 	private JTextArea conversationArea;
+	private JTextArea textArea;
+	private JButton btnInviaTextButton;
+	private JButton btnInviaFile;
+	
 	
 	public static final int WIDTH = 370;
 	public static final int HEIGHT = 400;
@@ -66,20 +65,36 @@ public class ChatWindow extends JFrame {
 		conversationArea.setBorder(new LineBorder(new Color(0, 0, 0), 2, true));
 		getContentPane().add(conversationArea);
 		
-		JTextArea textArea = new JTextArea();
+		textArea = new JTextArea();
 		textArea.setFont(new Font("Dialog", Font.PLAIN, 17));
 		textArea.setBackground(new Color(240, 248, 255));
 		textArea.setBounds(10, 300, 250, 50);
 		textArea.setBorder(border);
 		getContentPane().add(textArea);
 		
-		JButton btnNewButton = new JButton("Invia");
-		btnNewButton.setBounds(270, 300, 90, 50);
-		getContentPane().add(btnNewButton);
+		btnInviaTextButton = new JButton("Invia");
+		btnInviaTextButton.setBounds(270, 300, 90, 50);
+		getContentPane().add(btnInviaTextButton);
 		
-		JButton btnInviaFile = new JButton("Invia File");
+		btnInviaFile = new JButton("Invia File");
 		btnInviaFile.setBounds(10, 276, 100, 20);
 		getContentPane().add(btnInviaFile);
 		
+	}
+
+	public JButton getBtnInviaTextButton() {
+		return btnInviaTextButton;
+	}
+
+	public JButton getBtnInviaFile() {
+		return btnInviaFile;
+	}
+
+	public JTextArea getConversationArea() {
+		return conversationArea;
+	}
+
+	public JTextArea getTextArea() {
+		return textArea;
 	}
 }

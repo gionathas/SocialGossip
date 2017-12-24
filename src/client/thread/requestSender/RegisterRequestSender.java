@@ -1,4 +1,4 @@
-package client.thread;
+package client.thread.requestSender;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -8,7 +8,6 @@ import java.util.List;
 import client.controller.Controller;
 import client.controller.FormInputChecker;
 import client.controller.HubController;
-
 import communication.TCPMessages.request.RegisterRequest;
 
 import communication.TCPMessages.response.ResponseFailedMessage.Errors;

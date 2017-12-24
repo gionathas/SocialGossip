@@ -6,6 +6,7 @@ import java.io.DataOutputStream;
 import java.io.EOFException;
 import java.io.IOException;
 import java.net.Socket;
+import java.nio.channels.Pipe.SinkChannel;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -14,9 +15,11 @@ import org.json.simple.parser.ParseException;
 
 import communication.TCPMessages.Message;
 import communication.TCPMessages.MessageAnalyzer;
+import communication.TCPMessages.notification.NewChatMessage;
 import communication.TCPMessages.request.InteractionRequest;
 import communication.TCPMessages.request.RequestAccessMessage;
 import communication.TCPMessages.request.RequestMessage;
+import communication.TCPMessages.request.SendMessageRequest;
 import communication.TCPMessages.response.ResponseFailedMessage;
 import communication.TCPMessages.response.ResponseMessage;
 import communication.TCPMessages.response.ResponseSuccessMessage;
@@ -37,9 +40,10 @@ public class UserRequestHandler implements Runnable
 {
 	private Socket client; //connessioni TCP con il client
 	private Network reteSG; //rete degli utenti di Social Gossip
+	private List<NotificationUserChatChannel> notificationUsersChatMessage; //canali per notificare gli utenti dell'arrivo dei messaggi 
 
-	
-	public UserRequestHandler(Socket client,Network reteSG)
+
+	public UserRequestHandler(Socket client,Network reteSG,List<NotificationUserChatChannel> notificationUsersChatMessage)
 	{
 		super();
 
@@ -48,6 +52,7 @@ public class UserRequestHandler implements Runnable
 		
 		this.client = client;
 		this.reteSG = reteSG;
+		this.notificationUsersChatMessage = notificationUsersChatMessage;
 		
 	}
 	
@@ -120,7 +125,7 @@ public class UserRequestHandler implements Runnable
 			//controllo che sia un messaggio di richiesta altrimenti invio messaggio di errore
 			if(MessageAnalyzer.getMessageType(message) != Message.Type.REQUEST)
 			{
-				sendResponseMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.INVALID_REQUEST),out);
+				sendMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.INVALID_REQUEST),out);
 				return;
 			}
 			
@@ -133,7 +138,7 @@ public class UserRequestHandler implements Runnable
 			//nickname non trovato, oppure tipo richiesta non trovato,invio messaggio di errore
 			if(nicknameSender == null || requestType == null)
 			{
-				sendResponseMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.INVALID_REQUEST),out);
+				sendMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.INVALID_REQUEST),out);
 				return;
 			}
 			
@@ -154,13 +159,19 @@ public class UserRequestHandler implements Runnable
 					logoutRequestHandler(accessSystem,nicknameSender,out);
 					break;
 				
+				//richiesta interazione tra utenti o chatroom
 				case INTERACTION:
 					interactionRequestHandler(message,nicknameSender,out);
+					break;
+				
+				//richiesta registrazione canale notifiche messaggi chat
+				case CHAT_NOTIFICATION_CHAN:
+					chatNotificationChannelRequestHandler(nicknameSender,out);
 					break;
 
 				//richiesta non valida
 				default:
-					sendResponseMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.INVALID_REQUEST),out);
+					sendMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.INVALID_REQUEST),out);
 					return;
 			}
 			
@@ -174,7 +185,7 @@ public class UserRequestHandler implements Runnable
 		{
 			try {
 				//invio messaggio di errore richiesta non valida
-				sendResponseMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.INVALID_REQUEST),out);
+				sendMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.INVALID_REQUEST),out);
 			} catch (IOException e1) {
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
@@ -196,9 +207,43 @@ public class UserRequestHandler implements Runnable
 	 * @param out stream sulla quale inviare la risposta
 	 * @throws IOException se ci sono errori nell'invio della risposta
 	 */
-	private void sendResponseMessage(ResponseMessage response,DataOutputStream out) throws IOException
+	private void sendMessage(Message response,DataOutputStream out) throws IOException
 	{
 		out.writeUTF(response.getJsonMessage());
+	}
+	
+	private void chatNotificationChannelRequestHandler(String nickname,DataOutputStream out) throws IOException
+	{
+		//cerco utente mittente del messaggio
+		User user = reteSG.cercaUtente(nickname);
+		
+		//se il mittente non e' registrato,invio messaggio di errore
+		if(user == null)
+		{
+			sendMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.SENDER_USER_NOT_FOUND),out);
+			return;
+		}
+		
+		//se il mittente non e' online,invio messaggio di errore
+		if(!user.isOnline()) {
+			sendMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.SENDER_USER_INVALID_STATUS),out);
+			return;
+		}
+		
+		//utente valido registro il canale per ricevere notifiche dei messaggi dagli altri utenti
+		synchronized (notificationUsersChatMessage) {
+			
+			NotificationUserChatChannel channel = new NotificationUserChatChannel(user,client);
+			
+			//aggiungo canale alla lista dei canali
+			notificationUsersChatMessage.add(channel);
+			
+			System.out.println(notificationUsersChatMessage.toString());
+
+		}
+		
+		//mando messaggio di OK al mittente
+		sendMessage(new ResponseSuccessMessage(),out);
 	}
 	
 	/**
@@ -217,13 +262,13 @@ public class UserRequestHandler implements Runnable
 			//se il mittente non e' registrato,invio messaggio di errore
 			if(sender == null)
 			{
-				sendResponseMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.SENDER_USER_NOT_FOUND),out);
+				sendMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.SENDER_USER_NOT_FOUND),out);
 				return;
 			}
 			
 			//se il mittente non e' online,invio messaggio di errore
 			if(!sender.isOnline()) {
-				sendResponseMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.SENDER_USER_INVALID_STATUS),out);
+				sendMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.SENDER_USER_INVALID_STATUS),out);
 				return;
 			}
 			
@@ -231,7 +276,7 @@ public class UserRequestHandler implements Runnable
 			
 			//se non ho trovato il nick del receiver nel messaggio
 			if(nicknameReceiver == null) {
-				sendResponseMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.INVALID_REQUEST),out);
+				sendMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.INVALID_REQUEST),out);
 				return;
 			}
 			
@@ -240,13 +285,13 @@ public class UserRequestHandler implements Runnable
 			
 			//se il receiver non e' registrato
 			if(receiver == null) {
-				sendResponseMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.RECEIVER_USER_NOT_FOUND),out);
+				sendMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.RECEIVER_USER_NOT_FOUND),out);
 				return;
 			}
 			
 			//se gli utenti sono gli stessi
 			if(sender.equals(receiver)) {
-				sendResponseMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.SAME_USERS),out);
+				sendMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.SAME_USERS),out);
 				return;
 			}
 			
@@ -258,7 +303,7 @@ public class UserRequestHandler implements Runnable
 				//richiesta di ricerca utente destinatario
 				case FIND_USER_REQUEST:
 					//controllo gia' fatti rispondo con un messaggio di OK
-					sendResponseMessage(new ResponseSuccessMessage(),out);
+					sendMessage(new ResponseSuccessMessage(),out);
 					break;
 				
 				//richiesta amicizia con utente destinatario
@@ -266,9 +311,14 @@ public class UserRequestHandler implements Runnable
 					friendshipRequestHandler(sender,receiver,out);
 					break;
 				
+				case MESSAGE_SEND_REQUEST:
+					messageSendHandler(sender,receiver,out,message);
+					break;
 				//TODO inserire altri casi
-	
+				
+				//richiesta non valida
 				default:
+					sendMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.INVALID_REQUEST),out);
 					break;
 			}
 			
@@ -297,7 +347,7 @@ public class UserRequestHandler implements Runnable
 		//caso password non trovata o tipo richiesta di accesso non trovato
 		if(password == null || requestAccessType == null)
 		{
-			sendResponseMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.INVALID_REQUEST),out);
+			sendMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.INVALID_REQUEST),out);
 			return;
 		}
 		
@@ -319,7 +369,7 @@ public class UserRequestHandler implements Runnable
 				//caso lingua non trovata
 				if(language == null)
 				{
-					sendResponseMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.INVALID_REQUEST),out);
+					sendMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.INVALID_REQUEST),out);
 					return;
 				}
 				
@@ -330,7 +380,7 @@ public class UserRequestHandler implements Runnable
 				
 			//caso messaggio non valido
 			default:
-				sendResponseMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.INVALID_REQUEST),out);
+				sendMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.INVALID_REQUEST),out);
 				return;
 				
 		}
@@ -356,12 +406,12 @@ public class UserRequestHandler implements Runnable
 			if(friendship) 
 			{	
 				//invio messaggio di successo al mittente
-				sendResponseMessage(new SuccessFriendship(b.isOnline()), out);
+				sendMessage(new SuccessFriendship(b.isOnline()), out);
 				return;
 			}
 			//se erano gia' amici
 			else {
-				sendResponseMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.ALREADY_FRIEND), out);
+				sendMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.ALREADY_FRIEND), out);
 				return;
 			}
 		} 
@@ -370,6 +420,92 @@ public class UserRequestHandler implements Runnable
 			e.printStackTrace();
 		} catch (SameUserException e) {
 			e.printStackTrace();
+		}
+	}
+	
+	/**
+	 * Gestisce le richiesta di invio di un messaggio testuale
+	 * @param a
+	 * @param b
+	 * @param out
+	 * @param message
+	 * @throws IOException
+	 */
+	private void messageSendHandler(User a,User b,DataOutputStream out,JSONObject message) throws IOException
+	{	
+		//analizzo tipo del ricevente
+		SendMessageRequest.ReceiverType type = MessageAnalyzer.getReceiverType(message);
+		
+		//prendo messaggio da inviare
+		String text = MessageAnalyzer.getText(message);
+		
+		//se non e' stato trovato il tipo del ricevente oppure il messaggio
+		if(type == null || text == null) {
+			sendMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.INVALID_REQUEST),out);
+			return;
+		}
+		
+		try {
+			switch(type) 
+			{
+				//il destinatario e' un utente
+				case USER:
+					sendUserMessageHandler(a,b,text,out);
+					break;
+				
+				//il destinatario e' una chatroom
+				case CHATROOM:
+					//TODO
+					break;
+				
+				//errore richiesta
+				default:
+					sendMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.INVALID_REQUEST),out);
+					break;
+				
+			}
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	/**
+	 * Gestisce la richiesta di invio di un messaggio testuale ad un utente
+	 * @param sender
+	 * @param receiver
+	 * @param text
+	 * @param out
+	 * @throws IOException
+	 */
+	private void sendUserMessageHandler(User sender,User receiver,String text,DataOutputStream out) throws IOException
+	{
+		Socket notifyChannelReceiver = null;
+		
+		//prendo canale di notiica dei messaggi del receiver
+		synchronized (notificationUsersChatMessage) {
+			notifyChannelReceiver = notificationUsersChatMessage.get(notificationUsersChatMessage.indexOf(new NotificationUserChatChannel(receiver,null))).getNotifyChannel();
+		}
+		
+		synchronized (notifyChannelReceiver) 
+		{
+			//se il receiver non e' online,oppure se non ha un canale settato per ricevere i messaggi, invio un messaggio di errore al sender
+			if(!receiver.isOnline()) {
+				sendMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.RECEIVER_USER_INVALID_STATUS),out);
+				return;
+			}
+			
+			//TODO implementare traduzione del messaggio per il destinatario
+			
+			
+			//creo il messaggio di notifica da inviare al receiver
+			NewChatMessage msg = new NewChatMessage(sender.getNickname(), text);
+			
+			//invio il messaggio di notifica al receiver
+			sendMessage(msg,new DataOutputStream(notifyChannelReceiver.getOutputStream()));
+			
+			//messaggio inviato,mando messaggio di ok al sender
+			sendMessage(new ResponseSuccessMessage(),out);
 		}
 	}
 	
@@ -396,7 +532,7 @@ public class UserRequestHandler implements Runnable
 		catch (PasswordMismatchingException e) 
 		{
 			//invio messaggio di errore password errata
-			sendResponseMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.PASSWORD_MISMATCH),out);
+			sendMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.PASSWORD_MISMATCH),out);
 			e.printStackTrace();
 			return;
 		} 
@@ -404,20 +540,20 @@ public class UserRequestHandler implements Runnable
 		catch (UserStatusException e) 
 		{
 			//invio messaggio di errore stato utente non valido
-			sendResponseMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.SENDER_USER_INVALID_STATUS),out);
+			sendMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.SENDER_USER_INVALID_STATUS),out);
 			e.printStackTrace();
 			return;
 		} 
 		catch (UserNotFindException e) 
 		{
 			//invio messaggio di errore, utente non trovato
-			sendResponseMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.SENDER_USER_NOT_FOUND),out);
+			sendMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.SENDER_USER_NOT_FOUND),out);
 			e.printStackTrace();
 			return;
 		}
 		
 		//TODO operazione e' andata a buon fine mando un messaggio di OK,con la lista degli amici e delle chatroom
-		sendResponseMessage(new SuccessfulLogin(amici),out);
+		sendMessage(new SuccessfulLogin(amici),out);
 	}
 	
 	/**
@@ -437,7 +573,7 @@ public class UserRequestHandler implements Runnable
 		catch(UserNotFindException e) 
 		{
 			//invio messaggio di errore, utente non trovato
-			sendResponseMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.SENDER_USER_NOT_FOUND),out);
+			sendMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.SENDER_USER_NOT_FOUND),out);
 			e.printStackTrace();
 			return;
 		} 
@@ -445,13 +581,13 @@ public class UserRequestHandler implements Runnable
 		catch (UserStatusException e) 
 		{
 			//invio messaggio di errore stato utente non valido
-			sendResponseMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.SENDER_USER_INVALID_STATUS),out);
+			sendMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.SENDER_USER_INVALID_STATUS),out);
 			e.printStackTrace();
 			return;
 		}
 		
 		//operazione e' andata a buon fine mando un messaggio di OK
-		sendResponseMessage(new ResponseSuccessMessage(),out);
+		sendMessage(new ResponseSuccessMessage(),out);
 		
 	}
 	
@@ -474,12 +610,12 @@ public class UserRequestHandler implements Runnable
 		//caso utente gia' registrato con quel nick
 		catch (UserAlreadyRegistered e) 
 		{	
-			sendResponseMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.USER_ALREADY_REGISTERED),out);
+			sendMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.USER_ALREADY_REGISTERED),out);
 			e.printStackTrace();
 			return;
 		}
 		
 		//operazione e' andata a buon fine mando un messaggio di OK
-		sendResponseMessage(new ResponseSuccessMessage(),out);
+		sendMessage(new ResponseSuccessMessage(),out);
 	}
 }

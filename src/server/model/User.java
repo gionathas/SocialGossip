@@ -1,6 +1,7 @@
 package server.model;
 
 import java.io.Serializable;
+import java.net.Socket;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
@@ -25,8 +26,11 @@ public class User implements Serializable
 	private String password;
 	private boolean online;
 	private String lingua; //ISO 639-2 Code
-	private RMIClientNotifyEvent RMIchannel; //canale per notifiche RMI
 	private List<User> amici;
+
+	
+	//gestione notifiche eventi
+	private RMIClientNotifyEvent RMIchannel = null; //canale per notifiche RMI
 	
 	public static final int LANG_LENGHT = 2; //lunghezza della stringa del codice della lingua
 	public static final String NO_LANG = null;
@@ -52,7 +56,6 @@ public class User implements Serializable
 		this.online = online;
 		this.lingua = lingua;
 		this.amici = new LinkedList<User>();
-		this.RMIchannel = null;
 	}
 	
 	/**
@@ -70,7 +73,6 @@ public class User implements Serializable
 		this.password = null;
 		this.lingua = null;
 		this.amici = null;
-		this.RMIchannel = null;
 
 	}
 	
@@ -88,7 +90,6 @@ public class User implements Serializable
 		this.online = false;
 		this.lingua = null;
 		this.amici = null;
-		this.RMIchannel = null;
 
 	}
 	
@@ -107,7 +108,6 @@ public class User implements Serializable
 		this.online = false;
 		this.lingua = null;
 		this.amici = null;
-		this.RMIchannel = null;
 
 	}
 	
@@ -127,7 +127,6 @@ public class User implements Serializable
 		this.online = false;
 		this.lingua = lingua;
 		this.amici = null;
-		this.RMIchannel = null;
 	}
 	
 	
@@ -148,6 +147,7 @@ public class User implements Serializable
 	}
 	
 	/**
+	 * Setta il canale RMI usato dall'utente per ricevere notifiche sullo stato degli altri utenti o sulle nuove amicizie
 	 * @param RMIchannel canale RMI che si vuole associare all'utente.Se si inserisce null se disassocia il precedente canale RMI.
 	 */
 	public synchronized void setRMIchannel(RMIClientNotifyEvent RMIchannel) {

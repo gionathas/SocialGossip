@@ -8,7 +8,7 @@ package communication.TCPMessages.request;
  */
 public class ChatNotification extends RequestMessage
 {
-	public ChatNotification(Type requestType, String nickname) 
+	public ChatNotification(String nickname) 
 	{
 		super(RequestMessage.Type.CHAT_NOTIFICATION_CHAN, nickname);
 	}

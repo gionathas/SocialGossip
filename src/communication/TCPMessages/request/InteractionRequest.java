@@ -19,18 +19,7 @@ public class InteractionRequest extends RequestMessage
 		//inserisco nel messaggio nickname del receiver
 		jsonMessage.put(FIELD_NICKNAME_RECEIVER,nicknameReceiver);
 		
-		switch (type) 
-		{
-			//in caso di richiesta: ricerca utente,richiesta amicizia
-			case FIND_USER_REQUEST:
-			case FRIENDSHIP_REQUEST:
-				jsonMessage.put(FIELD_INTERACTION_REQUEST_TYPE,type.name());
-				break;
-				
-				
-			//TODO inserire altri casi
-			default:
-				throw new IllegalArgumentException();
-		}
+		//inserisco tipe del messaggio di interazione
+		jsonMessage.put(FIELD_INTERACTION_REQUEST_TYPE,type.name());
 	}
 }
