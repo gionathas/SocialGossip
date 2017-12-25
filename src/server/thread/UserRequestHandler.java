@@ -495,11 +495,17 @@ public class UserRequestHandler implements Runnable
 		
 		synchronized (notifyChannelReceiver) 
 		{
-			//TODO implementare traduzione del messaggio per il destinatario
+			String translatedText = text;
 			
+			//traduzione del messaggio per il destinatario
+			try {
+				 translatedText = Translator.translate(text,sender.getLingua(),receiver.getLingua());
+			} 
+			//errore nella traduzione,si invia il messaggio originale non tradotto
+			catch (Exception e) {}
 			
 			//creo il messaggio di notifica da inviare al receiver
-			NewChatMessage msg = new NewChatMessage(sender.getNickname(), text);
+			NewChatMessage msg = new NewChatMessage(sender.getNickname(), translatedText);
 			
 			//invio il messaggio di notifica al receiver
 			sendMessage(msg,new DataOutputStream(notifyChannelReceiver.getOutputStream()));

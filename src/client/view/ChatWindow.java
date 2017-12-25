@@ -13,6 +13,7 @@ import javax.swing.border.Border;
 import javax.swing.JButton;
 import java.awt.SystemColor;
 import java.awt.Font;
+import javax.swing.JScrollPane;
 
 public class ChatWindow extends JFrame {
 
@@ -28,6 +29,8 @@ public class ChatWindow extends JFrame {
 	
 	public static final int WIDTH = 370;
 	public static final int HEIGHT = 400;
+	private JScrollPane scrollPane;
+	private JScrollPane scrollPane_1;
 
 	/**
 	 * Launch the application.
@@ -57,21 +60,27 @@ public class ChatWindow extends JFrame {
 		getContentPane().setLayout(null);
 		
 		Border border = BorderFactory.createLineBorder(Color.BLACK);
+		
+		scrollPane = new JScrollPane();
+		scrollPane.setBounds(10, 12, 350, 250);
+		getContentPane().add(scrollPane);
 
 		conversationArea = new JTextArea();
+		scrollPane.setViewportView(conversationArea);
 		conversationArea.setFont(new Font("Dialog", Font.BOLD, 15));
 		conversationArea.setBackground(new Color(240, 248, 255));
 		conversationArea.setEditable(false);
-		conversationArea.setBounds(10, 12, 350, 250);
 		conversationArea.setBorder(new LineBorder(new Color(0, 0, 0), 2, true));
-		getContentPane().add(conversationArea);
+		
+		scrollPane_1 = new JScrollPane();
+		scrollPane_1.setBounds(10, 300, 250, 50);
+		getContentPane().add(scrollPane_1);
 		
 		textArea = new JTextArea();
+		scrollPane_1.setViewportView(textArea);
 		textArea.setFont(new Font("Dialog", Font.PLAIN, 17));
 		textArea.setBackground(new Color(240, 248, 255));
-		textArea.setBounds(10, 300, 250, 50);
 		textArea.setBorder(border);
-		getContentPane().add(textArea);
 		
 		btnInviaTextButton = new JButton("Invia");
 		btnInviaTextButton.setBounds(270, 300, 90, 50);
