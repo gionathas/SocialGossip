@@ -91,7 +91,7 @@ public class TextSender extends RequestSenderThread
 		//se il messaggio e' stato inviato con successo,lo aggiungo alla conversation area
 		synchronized (conversationArea) 
 		{
-			conversationArea.append(senderNick+": "+text);
+			conversationArea.append("["+senderNick+"]"+": "+text+"\n");
 		}
 	}
 }

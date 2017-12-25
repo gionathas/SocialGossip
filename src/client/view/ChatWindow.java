@@ -59,6 +59,7 @@ public class ChatWindow extends JFrame {
 		Border border = BorderFactory.createLineBorder(Color.BLACK);
 
 		conversationArea = new JTextArea();
+		conversationArea.setFont(new Font("Dialog", Font.BOLD, 15));
 		conversationArea.setBackground(new Color(240, 248, 255));
 		conversationArea.setEditable(false);
 		conversationArea.setBounds(10, 12, 350, 250);

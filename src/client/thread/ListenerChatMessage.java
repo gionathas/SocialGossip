@@ -193,7 +193,7 @@ public class ListenerChatMessage extends Thread
 							
 							synchronized (conversationArea) 
 							{
-								conversationArea.append(sender+": "+text);
+								conversationArea.append("["+sender+"]"+": "+text+"\n");
 							}
 						}
 						

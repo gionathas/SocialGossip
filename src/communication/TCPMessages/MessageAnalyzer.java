@@ -114,7 +114,7 @@ public class MessageAnalyzer
 		if(JsonMessage == null)
 			throw new NullPointerException();
 		
-		return (String) JsonMessage.get(NewIncomingMessage.FIELD_INCOMING_MESSAGE_SENDER_NICKNAME);
+		return (String) JsonMessage.get(NewIncomingMessage.FIELD_INCOMING_MESSAGE_TEXT);
 	}
 	
 	/**

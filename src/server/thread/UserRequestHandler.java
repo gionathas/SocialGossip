@@ -482,19 +482,19 @@ public class UserRequestHandler implements Runnable
 	{
 		Socket notifyChannelReceiver = null;
 		
-		//prendo canale di notiica dei messaggi del receiver
+		//se il receiver non e' online,oppure se non ha un canale settato per ricevere i messaggi, invio un messaggio di errore al sender
+		if(!receiver.isOnline()) {
+			sendMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.RECEIVER_USER_INVALID_STATUS),out);
+			return;
+		}
+		
+		//prendo canale di notifica dei messaggi del receiver
 		synchronized (notificationUsersChatMessage) {
 			notifyChannelReceiver = notificationUsersChatMessage.get(notificationUsersChatMessage.indexOf(new NotificationUserChatChannel(receiver,null))).getNotifyChannel();
 		}
 		
 		synchronized (notifyChannelReceiver) 
 		{
-			//se il receiver non e' online,oppure se non ha un canale settato per ricevere i messaggi, invio un messaggio di errore al sender
-			if(!receiver.isOnline()) {
-				sendMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.RECEIVER_USER_INVALID_STATUS),out);
-				return;
-			}
-			
 			//TODO implementare traduzione del messaggio per il destinatario
 			
 			
@@ -586,7 +586,9 @@ public class UserRequestHandler implements Runnable
 			return;
 		}
 		
-		//operazione e' andata a buon fine mando un messaggio di OK
+		
+		//operazione e' andata a buon fine mando un messaggio di OK,e rimuovo i canali di notifica relativi all'utente
+		notificationUsersChatMessage.remove(new NotificationUserChatChannel(new User(nickname),null));
 		sendMessage(new ResponseSuccessMessage(),out);
 		
 	}
