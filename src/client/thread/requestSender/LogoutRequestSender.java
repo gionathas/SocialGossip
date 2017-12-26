@@ -51,17 +51,19 @@ public class LogoutRequestSender extends RequestSenderThread
 	@Override
 	protected void init() 
 	{
-		//mostro finestra che chiede se si vuole uscire veramente
-		int choice = JOptionPane.showConfirmDialog(controller.getWindow(),"Sei sicuro di voler uscire?");
+//		//mostro finestra che chiede se si vuole uscire veramente
+//		//int choice = JOptionPane.showConfirmDialog(controller.getWindow(),"Sei sicuro di voler uscire?");
+//		
+//		//se la scelta e' diversa da Si,mi fermo
+//		if(choice != YES) {
+//			init = false;
+//		}
+//		//se la scelta e' stata si
+//		else {
+//			init = true;
+//		}
 		
-		//se la scelta e' diversa da Si,mi fermo
-		if(choice != YES) {
-			init = false;
-		}
-		//se la scelta e' stata si
-		else {
-			init = true;
-		}
+		init = true;
 	}
 
 	@Override

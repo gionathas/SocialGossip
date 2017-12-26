@@ -1,6 +1,7 @@
 package server.thread;
 
 import java.io.BufferedInputStream;
+import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.EOFException;
@@ -16,6 +17,7 @@ import org.json.simple.parser.ParseException;
 import communication.TCPMessages.Message;
 import communication.TCPMessages.MessageAnalyzer;
 import communication.TCPMessages.notification.NewChatMessage;
+import communication.TCPMessages.notification.NewIncomingFile;
 import communication.TCPMessages.request.InteractionRequest;
 import communication.TCPMessages.request.RequestAccessMessage;
 import communication.TCPMessages.request.RequestMessage;
@@ -41,6 +43,7 @@ public class UserRequestHandler implements Runnable
 	private Socket client; //connessioni TCP con il client
 	private Network reteSG; //rete degli utenti di Social Gossip
 	private List<NotificationUserChatChannel> notificationUsersChatMessage; //canali per notificare gli utenti dell'arrivo dei messaggi 
+	private boolean isNotificationThread = false;
 
 
 	public UserRequestHandler(Socket client,Network reteSG,List<NotificationUserChatChannel> notificationUsersChatMessage)
@@ -78,6 +81,10 @@ public class UserRequestHandler implements Runnable
 					
 					//analizzo richiesta del client
 					analyzeRequestMessage(request,out);
+					
+					//se un thread che ha avviato un canale di notifica puo' terminare
+					if(isNotificationThread)
+						break;
 				}
 				//client ha chiuso la connessione
 				catch(EOFException e) {
@@ -96,15 +103,18 @@ public class UserRequestHandler implements Runnable
 		//chiudo connessione e stream
 		finally 
 		{
-			try {
-				if(client != null)
-					client.close();
-				if(in != null)
-					in.close();
-				if(out != null)
-					out.close();
-			} catch (IOException e) {
-				e.printStackTrace();
+			if(!isNotificationThread)
+			{
+				try {
+					if(client != null)
+						client.close();
+					if(in != null)
+						in.close();
+					if(out != null)
+						out.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
 			}
 		}
 		
@@ -214,6 +224,8 @@ public class UserRequestHandler implements Runnable
 	
 	private void chatNotificationChannelRequestHandler(String nickname,DataOutputStream out) throws IOException
 	{
+		isNotificationThread = true;
+		
 		//cerco utente mittente del messaggio
 		User user = reteSG.cercaUtente(nickname);
 		
@@ -314,8 +326,11 @@ public class UserRequestHandler implements Runnable
 				case MESSAGE_SEND_REQUEST:
 					messageSendHandler(sender,receiver,out,message);
 					break;
-				//TODO inserire altri casi
 				
+				case FILE_SEND_REQUEST:
+					fileSendRequest(sender,receiver,out,message);
+					break;
+					
 				//richiesta non valida
 				default:
 					sendMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.INVALID_REQUEST),out);
@@ -470,6 +485,43 @@ public class UserRequestHandler implements Runnable
 		}
 	}
 	
+	private void fileSendRequest(User sender,User receiver,DataOutputStream out,JSONObject message) throws IOException
+	{
+		String filename = MessageAnalyzer.getSendFileFilename(message);
+		
+		//nome file non trovato
+		if(filename == null) {
+			sendMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.INVALID_REQUEST),out);
+			return;
+		}
+		
+		Socket notifyChannelReceiver = null;
+		
+		//se il receiver non e' online,oppure se non ha un canale settato per ricevere i messaggi, invio un messaggio di errore al sender
+		if(!receiver.isOnline()) {
+			sendMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.RECEIVER_USER_INVALID_STATUS),out);
+			return;
+		}
+		
+		//prendo canale di notifica dei messaggi del receiver
+		synchronized (notificationUsersChatMessage) {
+			notifyChannelReceiver = notificationUsersChatMessage.get(notificationUsersChatMessage.indexOf(new NotificationUserChatChannel(receiver,null))).getNotifyChannel();
+		}
+		
+		//invio un messaggio di notifica al receiver,dell'arrivo del file
+		synchronized (notifyChannelReceiver) 
+		{
+			NewIncomingFile msg = new NewIncomingFile(sender.getNickname(),filename);
+			
+			//invio il messaggio di notifica al receiver
+			sendMessage(msg,new DataOutputStream(notifyChannelReceiver.getOutputStream()));
+						
+			//inoltro la risposta del destinatario al mittente
+			out.writeUTF(new DataInputStream(new BufferedInputStream(notifyChannelReceiver.getInputStream())).readUTF());
+		}
+		
+	}
+	
 	/**
 	 * Gestisce la richiesta di invio di un messaggio testuale ad un utente
 	 * @param sender
@@ -592,9 +644,15 @@ public class UserRequestHandler implements Runnable
 			return;
 		}
 		
-		
 		//operazione e' andata a buon fine mando un messaggio di OK,e rimuovo i canali di notifica relativi all'utente
-		notificationUsersChatMessage.remove(new NotificationUserChatChannel(new User(nickname),null));
+		synchronized (notificationUsersChatMessage) {
+			NotificationUserChatChannel UserNotifyChannel = notificationUsersChatMessage.get(notificationUsersChatMessage.indexOf(new NotificationUserChatChannel(new User(nickname),null)));
+			Socket connection = UserNotifyChannel.getNotifyChannel();
+			connection.close();
+			notificationUsersChatMessage.remove(UserNotifyChannel);
+		}
+		
+		//invio messaggio di ok
 		sendMessage(new ResponseSuccessMessage(),out);
 		
 	}

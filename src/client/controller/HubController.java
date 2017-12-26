@@ -118,7 +118,7 @@ public class HubController extends Controller
 		initRMI(nickname);
 		
 		//configuro thread listener che ascolta i messaggi arrivati da altre chat,e lo faccio partire
-		listenerChatMessage = new ListenerChatMessage(this,user,chats, connection.getInetAddress(),connection.getPort());
+		listenerChatMessage = new ListenerChatMessage(this,user,connection.getInetAddress(),connection.getPort());
 		listenerChatMessage.start();
 		
 		//TODO configurare thread per ricevere mesaggi chatroom

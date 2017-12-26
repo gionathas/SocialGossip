@@ -1,10 +1,13 @@
 package client.thread;
 
+import java.awt.TrayIcon.MessageType;
 import java.io.BufferedInputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.net.BindException;
 import java.net.InetAddress;
+import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.List;
 
@@ -18,8 +21,10 @@ import client.controller.Controller;
 import client.controller.HubController;
 import communication.TCPMessages.Message;
 import communication.TCPMessages.MessageAnalyzer;
+import communication.TCPMessages.notification.NotificationMessage;
 import communication.TCPMessages.notification.NewIncomingMessage.ReceiverType;
 import communication.TCPMessages.request.ChatNotification;
+import communication.TCPMessages.response.AcceptedFileReceive;
 import communication.TCPMessages.response.ResponseFailedMessage;
 import communication.TCPMessages.response.ResponseMessage;
 import server.model.User;
@@ -38,7 +43,9 @@ public class ListenerChatMessage extends Thread
 	private DataOutputStream out;
 	private int port;
 	private HubController controller;
-	private List<ChatController> chats; //lista delle chat dell'utente
+	
+	private static final int FIRST_PORT = 7000;
+	private static final int LAST_PORT = 8000;
 
 	
 	/**
@@ -48,18 +55,17 @@ public class ListenerChatMessage extends Thread
 	 * @param port porta del server
 	 * @throws Exception se viene riscontrato un errore nell'inizializzazione del thread
 	 */
-	public ListenerChatMessage(HubController controller,User user,List<ChatController> chats,InetAddress address,int port) throws Exception
+	public ListenerChatMessage(HubController controller,User user,InetAddress address,int port) throws Exception
 	{
 		super();
 		
-		if(user == null || address == null || controller == null || chats == null)
+		if(user == null || address == null || controller == null )
 			throw new NullPointerException();
 		
 		this.controller = controller;
 		this.user = user;
 		this.serverAddress = address;
 		this.port = port;
-		this.chats = chats;
 		
 		init();
 	}
@@ -169,39 +175,150 @@ public class ListenerChatMessage extends Thread
 		//se e' un messaggio di notifica
 		if(MessageAnalyzer.getMessageType(notificationMessage) == Message.Type.NOTIFICATION) 
 		{
-			//se e' un messaggio di una chat
-			if(MessageAnalyzer.getIncomingMessageReceiverType(notificationMessage) == ReceiverType.USER)
-			{
 				//prendo nickname del mittente
-				String sender = MessageAnalyzer.getIncomingMessageSenderNickname(notificationMessage);
+				String sender = MessageAnalyzer.getNotificationMessageSenderNickname(notificationMessage);
 				
 				//se il mittente e' valido
 				if(sender != null)
 				{
-					//se il messaggio e' valido
-					String text = MessageAnalyzer.getIncomingMessageText(notificationMessage);
+					//prendo il tipo del messaggio di notifica
+					NotificationMessage.EventType notificationType = MessageAnalyzer.getNotificationMessageEventType(notificationMessage);
 					
-					if(text != null)
+					//se il messaggio di notifica e' valido
+					if(notificationType != null) 
 					{
-						//cerco la chat con l'utente che ha inviato il messaggio
-						ChatController chat = controller.openChatFromNewMessage(new User(sender));
-						
-						synchronized (chat) 
+						switch (notificationType) 
 						{
-							//aggiungo messaggio arrivato alla conversation area della chat
-							JTextArea conversationArea = chat.getJConversationArea();
+							//ricevuto messaggio testuale
+							case NEW_MESSAGE:
+								
+								//se e' un messaggio di una chat
+								if(MessageAnalyzer.getIncomingMessageReceiverType(notificationMessage) == ReceiverType.USER)
+								{
+								
+									//se il messaggio e' valido
+									String text = MessageAnalyzer.getIncomingMessageText(notificationMessage);
+									
+									if(text != null)
+									{
+										//cerco la chat con l'utente che ha inviato il messaggio
+										ChatController chat = controller.openChatFromNewMessage(new User(sender));
+										
+										synchronized (chat) 
+										{
+											//aggiungo messaggio arrivato alla conversation area della chat
+											JTextArea conversationArea = chat.getJConversationArea();
+											
+											synchronized (conversationArea) 
+											{
+												conversationArea.append("["+sender+"]"+": "+text+"\n");
+											}
+										}
+										
+										//controller.showInfoMessage(sender+" ti ha inviato un messaggio","NUOVO MESSAGGIO",false);
+									}
+								}
+								//caso di chatroom
+								else {
+									//TODO
+								}
+								break;
 							
-							synchronized (conversationArea) 
-							{
-								conversationArea.append("["+sender+"]"+": "+text+"\n");
-							}
+							//ricevuto file
+							case NEW_FILE:
+								
+								//preparo un socket per ricevere il file,e poi avvio il thread che si occupera' della ricezione del file
+								ServerSocket serverReceiver = initServerFileReceiver();
+								ResponseMessage response;
+								
+								//se il server per ricevere il file e' stato creato correttamente
+								if(serverReceiver != null)
+								{
+									//invio messaggio di successo con ip e porta su cui si e' in ascolto
+									response = new AcceptedFileReceive(serverReceiver.getInetAddress().getHostAddress(),serverReceiver.getLocalPort());
+									
+									//invio risposta
+									try {
+										out.writeUTF(response.getJsonMessage());
+									} catch (IOException e) {
+										e.printStackTrace();
+										return;
+									}
+									
+									//faccio partire il thread che si occupera' di ricevere il file
+									new FileReceiver(serverReceiver).start();
+									
+									//nome del file
+									String filename = MessageAnalyzer.getIncomingFileFilename(notificationMessage);
+									
+									//se il nome del file e' valido
+									if(filename != null)
+									{
+										//cerco la chat con l'utente che ha inviato il messaggio
+										ChatController chat = controller.openChatFromNewMessage(new User(sender));
+										
+										synchronized (chat) 
+										{
+											//aggiungo messaggio arrivato alla conversation area della chat
+											JTextArea conversationArea = chat.getJConversationArea();
+											
+											synchronized (conversationArea) 
+											{
+												conversationArea.append("RICEVUTO FILE: "+filename+".\n "+"Il file verra' ora scaricato e "+
+											"salvato sulla \ncartella resources/download"+"\n");
+											}
+										}
+									}
+									
+								}
+								//errore creazione server ricezione file
+								else {
+									response = new ResponseFailedMessage(ResponseFailedMessage.Errors.CANNOT_RECEIVE_FILE);
+									
+									//invio risposta
+									try {
+										out.writeUTF(response.getJsonMessage());
+									} catch (IOException e) {
+										e.printStackTrace();
+									}
+								}
+								break;
+								
+							default:
+								break;
 						}
-						
-						//controller.showInfoMessage(sender+" ti ha inviato un messaggio","NUOVO MESSAGGIO",false);
 					}
+					
 				}
-			}
 		}
+	}
+	
+	private ServerSocket initServerFileReceiver()
+	{
+		ServerSocket server= null;
+		boolean find = false;
+		
+		for (int i = FIRST_PORT; i < LAST_PORT ; i++) 
+		{
+			try {
+				server = new ServerSocket(i);
+				
+				//se il server e' stato creato,possiamo ritornare
+				find = true;
+			}
+			catch(BindException e) {
+				//si continua la ricerca delle porte
+			}
+			catch (IOException e) {
+				e.printStackTrace();
+			}
+			
+			if(find == true)
+				break;
+			
+		}
+		
+		return server;
 	}
 	
 	public void shutdown()

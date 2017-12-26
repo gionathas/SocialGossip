@@ -11,6 +11,7 @@ import java.net.Socket;
 
 import javax.swing.JTextArea;
 
+import client.thread.requestSender.FileSender;
 import client.thread.requestSender.SendTextToUser;
 import client.view.ChatWindow;
 import server.model.User;
@@ -58,6 +59,16 @@ public class ChatController extends Controller
 			{
 				//parte il thread che gestisce l'invio del messaggio
 				new SendTextToUser(controller, connection, in, out,owner.getNickname(),receiver.getNickname(),chatView.getTextArea(),chatView.getConversationArea()).start();
+			}
+		});
+		
+		//al click sul bottono INVIA FILE
+		chatView.getBtnInviaFile().addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent arg0) 
+			{
+				new FileSender(controller, connection, in, out,owner.getNickname(),receiver.getNickname()).start();
 			}
 		});
 	}

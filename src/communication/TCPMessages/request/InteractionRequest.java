@@ -8,7 +8,7 @@ package communication.TCPMessages.request;
  */
 public class InteractionRequest extends RequestMessage
 {
-	public enum Type{FIND_USER_REQUEST,FRIENDSHIP_REQUEST,MESSAGE_SEND_REQUEST}
+	public enum Type{FIND_USER_REQUEST,FRIENDSHIP_REQUEST,MESSAGE_SEND_REQUEST,FILE_SEND_REQUEST}
 	public final static String FIELD_NICKNAME_RECEIVER = "nickname-receiver";
 	public final static String FIELD_INTERACTION_REQUEST_TYPE = "interaction-type";
 	

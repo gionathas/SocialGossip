@@ -34,6 +34,10 @@ public class Translator
 		if(text.isEmpty() || fromLang.length() != LANGUAGE_STRING_LEN || toLang.length() != LANGUAGE_STRING_LEN)
 			throw new IllegalArgumentException();
 		
+		//se le lingue sono uguali,non bisogna effettuare la traduzione
+		if(fromLang.equals(toLang))
+			return text;
+		
 		//creo url per la richiesta al server REST MyMemory
 		String requestURL = createRequestURL(text,fromLang,toLang);
 		

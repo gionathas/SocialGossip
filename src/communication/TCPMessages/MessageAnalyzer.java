@@ -9,12 +9,16 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
+import communication.TCPMessages.notification.NewIncomingFile;
 import communication.TCPMessages.notification.NewIncomingMessage;
+import communication.TCPMessages.notification.NotificationMessage;
 import communication.TCPMessages.request.InteractionRequest;
 import communication.TCPMessages.request.RegisterRequest;
 import communication.TCPMessages.request.RequestAccessMessage;
 import communication.TCPMessages.request.RequestMessage;
+import communication.TCPMessages.request.SendFileRequest;
 import communication.TCPMessages.request.SendMessageRequest;
+import communication.TCPMessages.response.AcceptedFileReceive;
 import communication.TCPMessages.response.ResponseFailedMessage;
 import communication.TCPMessages.response.ResponseMessage;
 import communication.TCPMessages.response.SuccessFriendship;
@@ -71,14 +75,40 @@ public class MessageAnalyzer
 	/**
 	 * 
 	 * @param JsonMessage
-	 * @return nome del mittente del messaggio di notifica del messaggio testuale,null se non e' stato trovato
+	 * @return tipo del messaggio di notifica,null se non e' stato trovato
 	 */
-	public static String getIncomingMessageSenderNickname(JSONObject JsonMessage)
+	public static NotificationMessage.EventType getNotificationMessageEventType(JSONObject JsonMessage)
 	{
 		if(JsonMessage == null)
 			throw new NullPointerException();
 		
-		return (String) JsonMessage.get(NewIncomingMessage.FIELD_INCOMING_MESSAGE_SENDER_NICKNAME);
+		String type = (String) JsonMessage.get(NotificationMessage.FIELD_NOTIFICATION_TYPE);
+		
+		if(type == null) {
+			return null;
+		}
+		
+		//nuovo messaggio
+		if(type.equals(NotificationMessage.EventType.NEW_FILE.name()))
+			return NotificationMessage.EventType.NEW_FILE;
+		//nuovo file
+		else if(type.equals(NotificationMessage.EventType.NEW_MESSAGE.name()))
+			return NotificationMessage.EventType.NEW_MESSAGE;
+		else
+			return null;
+	}
+	
+	/**
+	 * 
+	 * @param JsonMessage
+	 * @return nome del mittente del messaggio di notifica del messaggio testuale,null se non e' stato trovato
+	 */
+	public static String getNotificationMessageSenderNickname(JSONObject JsonMessage)
+	{
+		if(JsonMessage == null)
+			throw new NullPointerException();
+		
+		return (String) JsonMessage.get(NotificationMessage.FIELD_NOTIFICATION_SENDER_NICKNAME);
 	}
 	
 	/**
@@ -115,6 +145,19 @@ public class MessageAnalyzer
 			throw new NullPointerException();
 		
 		return (String) JsonMessage.get(NewIncomingMessage.FIELD_INCOMING_MESSAGE_TEXT);
+	}
+	
+	/**
+	 * 
+	 * @param JsonMessage
+	 * @return nome del file che sta inviando il mittente,null se non e' stato trovato
+	 */
+	public static String getIncomingFileFilename(JSONObject JsonMessage)
+	{
+		if(JsonMessage == null)
+			throw new NullPointerException();
+		
+		return (String) JsonMessage.get(NewIncomingFile.FIELD_INCOMING_FILE_FILENAME);
 	}
 	
 	/**
@@ -259,6 +302,11 @@ public class MessageAnalyzer
 		{
 			return ResponseFailedMessage.Errors.SAME_USERS;
 		}
+		//errore utente gia' amici
+		else if(type.equals(ResponseFailedMessage.Errors.CANNOT_RECEIVE_FILE.name()))
+		{
+			return ResponseFailedMessage.Errors.CANNOT_RECEIVE_FILE;
+		}
 		else {
 			//TODO inserire altri casi
 			return null;
@@ -310,6 +358,45 @@ public class MessageAnalyzer
 	
 	/**
 	 * 
+	 * @param JsonMessage
+	 * @return nome del file che si vuole inviare,null se non e' stato trovato
+	 */
+	public static final String getSendFileFilename(JSONObject JsonMessage)
+	{
+		if(JsonMessage == null)
+			throw new NullPointerException();
+		
+		return (String) JsonMessage.get(SendFileRequest.FIELD_SEND_FILE_REQUEST_FILENAME);
+	}
+	
+	/**
+	 * 
+	 * @param JsonMessage
+	 * @return hostname del client che deve ricevere il file,null se non e' stato trovato
+	 */
+	public static final String getFileReceiverHostname(JSONObject JsonMessage)
+	{
+		if(JsonMessage == null)
+			throw new NullPointerException();
+		
+		return (String) JsonMessage.get(AcceptedFileReceive.FIELD_ACCEPTED_FILE_RECEIVE_HOSTNAME);
+	}
+	
+	/**
+	 * 
+	 * @param JsonMessage
+	 * @return porta dell'hostname del client che deve ricevere il file,-1 se non e' stata trovata
+	 */
+	public static final long getFileReceiverPort(JSONObject JsonMessage)
+	{
+		if(JsonMessage == null)
+			throw new NullPointerException();
+		
+		return (long) JsonMessage.get(AcceptedFileReceive.FIELD_ACCEPTED_FILE_RECEIVE_PORT);
+	}
+	
+	/**
+	 * 
 	 * @param JsonMessage oggetto Json rappresentante il messaggio
 	 * @return tipo della richiesta di interazione con un altro utente
 	 */
@@ -338,6 +425,10 @@ public class MessageAnalyzer
 		else if(type.equals(InteractionRequest.Type.FRIENDSHIP_REQUEST.name())) 
 		{
 			return InteractionRequest.Type.FRIENDSHIP_REQUEST;
+		}
+		else if(type.equals(InteractionRequest.Type.FILE_SEND_REQUEST.name())) 
+		{
+			return InteractionRequest.Type.FILE_SEND_REQUEST;
 		}
 		else {
 			//TODO implementare altri casi
