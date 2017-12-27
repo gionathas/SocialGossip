@@ -27,8 +27,6 @@ public class LogoutRequestSender extends RequestSenderThread
 	private RMIServerInterface serverRMI;
 	private RMIClientNotifyEvent callback;
 	
-	private static final int YES = 0;
-
 	/**
 	 * Inizializza i parametri per l'invio della richiesta
 	 * @param controller controller della finestra che richiede l'invio
@@ -50,19 +48,7 @@ public class LogoutRequestSender extends RequestSenderThread
 
 	@Override
 	protected void init() 
-	{
-//		//mostro finestra che chiede se si vuole uscire veramente
-//		//int choice = JOptionPane.showConfirmDialog(controller.getWindow(),"Sei sicuro di voler uscire?");
-//		
-//		//se la scelta e' diversa da Si,mi fermo
-//		if(choice != YES) {
-//			init = false;
-//		}
-//		//se la scelta e' stata si
-//		else {
-//			init = true;
-//		}
-		
+	{	
 		init = true;
 	}
 

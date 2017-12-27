@@ -3,7 +3,16 @@ package client.thread.requestSender;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
+import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.net.SocketAddress;
+import java.net.UnknownHostException;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
+import java.nio.channels.SocketChannel;
+import java.util.RandomAccess;
 
 import javax.swing.JOptionPane;
 
@@ -114,12 +123,56 @@ public class FileSender extends RequestSenderThread
 		String hostname = MessageAnalyzer.getFileReceiverHostname(response);
 		long port = MessageAnalyzer.getFileReceiverPort(response);
 		
+		//client a cui dobbiamo connetterci
+		SocketChannel peer = null;
+		
 		if(hostname == null)
 		{
 			controller.showErrorMessage("Errore nella ricerca dei parametri dell'indirizzo del client","ERRORE");
 			return;
 		}
 		
-		//TODO sendFIle
+		try {
+			
+			//mi connetto al client a cui devo inviare il file
+			peer = SocketChannel.open();
+			peer.connect(new InetSocketAddress(hostname,(int) port));
+			
+			//accedo al file da inviare
+			RandomAccessFile aFile = new RandomAccessFile(file,"r");
+			FileChannel inChannel = aFile.getChannel();
+			
+			ByteBuffer buffer = ByteBuffer.allocate(1024);
+			
+			//leggo i byte del file e li invio
+			while(inChannel.read(buffer) > 0) {
+				buffer.flip();
+				
+				//invio dati al client
+				while(buffer.hasRemaining())
+				{
+					peer.write(buffer);
+				}
+				
+				buffer.clear();
+			}
+			
+			aFile.close();
+			
+		} catch (UnknownHostException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}finally {
+			try {
+				if(peer != null)
+					peer.close();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
 	}
 }

@@ -7,8 +7,11 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.BindException;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketAddress;
+import java.nio.channels.ServerSocketChannel;
 import java.util.List;
 
 import javax.swing.JTextArea;
@@ -167,7 +170,7 @@ public class ListenerChatMessage extends Thread
 		
 	}
 	
-	private void analyzeNotifcation(String JsonNotification) throws ParseException
+	private void analyzeNotifcation(String JsonNotification) throws ParseException, IOException
 	{
 		System.out.println(JsonNotification); //TODO DEBUG
 		JSONObject notificationMessage = MessageAnalyzer.parse(JsonNotification);
@@ -228,14 +231,38 @@ public class ListenerChatMessage extends Thread
 							case NEW_FILE:
 								
 								//preparo un socket per ricevere il file,e poi avvio il thread che si occupera' della ricezione del file
-								ServerSocket serverReceiver = initServerFileReceiver();
+								ServerSocketChannel server= ServerSocketChannel.open();
+								boolean find = false;
+								int port;
+								
+								//cerco una porta libera
+								for (port = FIRST_PORT; port < LAST_PORT ; port++) 
+								{
+									try {
+										server.socket().bind(new InetSocketAddress(port));
+										
+										//se il server e' stato creato,possiamo ritornare
+										find = true;
+									}
+									catch(BindException e) {
+										//si continua la ricerca delle porte
+									}
+									catch (IOException e) {
+										e.printStackTrace();
+									}
+									
+									if(find == true)
+										break;
+									
+								}
+								
 								ResponseMessage response;
 								
 								//se il server per ricevere il file e' stato creato correttamente
-								if(serverReceiver != null)
+								if(find)
 								{
 									//invio messaggio di successo con ip e porta su cui si e' in ascolto
-									response = new AcceptedFileReceive(serverReceiver.getInetAddress().getHostAddress(),serverReceiver.getLocalPort());
+									response = new AcceptedFileReceive("localhost",port);
 									
 									//invio risposta
 									try {
@@ -245,15 +272,15 @@ public class ListenerChatMessage extends Thread
 										return;
 									}
 									
-									//faccio partire il thread che si occupera' di ricevere il file
-									new FileReceiver(serverReceiver).start();
-									
 									//nome del file
 									String filename = MessageAnalyzer.getIncomingFileFilename(notificationMessage);
 									
 									//se il nome del file e' valido
 									if(filename != null)
 									{
+										//faccio partire il thread che si occupera' di ricevere il file
+										new FileReceiver(server,filename).start();
+										
 										//cerco la chat con l'utente che ha inviato il messaggio
 										ChatController chat = controller.openChatFromNewMessage(new User(sender));
 										
@@ -291,34 +318,6 @@ public class ListenerChatMessage extends Thread
 					
 				}
 		}
-	}
-	
-	private ServerSocket initServerFileReceiver()
-	{
-		ServerSocket server= null;
-		boolean find = false;
-		
-		for (int i = FIRST_PORT; i < LAST_PORT ; i++) 
-		{
-			try {
-				server = new ServerSocket(i);
-				
-				//se il server e' stato creato,possiamo ritornare
-				find = true;
-			}
-			catch(BindException e) {
-				//si continua la ricerca delle porte
-			}
-			catch (IOException e) {
-				e.printStackTrace();
-			}
-			
-			if(find == true)
-				break;
-			
-		}
-		
-		return server;
 	}
 	
 	public void shutdown()
