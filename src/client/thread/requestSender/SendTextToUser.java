@@ -7,8 +7,8 @@ import java.net.Socket;
 import javax.swing.JTextArea;
 
 import client.controller.Controller;
-import communication.TCPMessages.request.UserMessage;
-import communication.TCPMessages.response.ResponseFailedMessage.Errors;
+import communication.TCPMessages.request.interaction.UserMessage;
+import communication.TCPMessages.response.fail.ResponseFailedMessage.Errors;
 
 public class SendTextToUser extends TextSender
 {

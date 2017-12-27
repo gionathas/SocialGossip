@@ -1,4 +1,4 @@
-package communication.TCPMessages.request;
+package communication.TCPMessages.request.interaction;
 
 /**
  * Messaggio di richiesta invio messaggio testuale

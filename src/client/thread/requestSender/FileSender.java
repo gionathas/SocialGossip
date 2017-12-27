@@ -18,8 +18,8 @@ import javax.swing.JOptionPane;
 
 import client.controller.Controller;
 import communication.TCPMessages.MessageAnalyzer;
-import communication.TCPMessages.request.SendFileRequest;
-import communication.TCPMessages.response.ResponseFailedMessage.Errors;
+import communication.TCPMessages.request.interaction.SendFileRequest;
+import communication.TCPMessages.response.fail.ResponseFailedMessage.Errors;
 
 public class FileSender extends RequestSenderThread
 {

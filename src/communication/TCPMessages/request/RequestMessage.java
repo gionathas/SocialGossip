@@ -10,7 +10,7 @@ import communication.TCPMessages.Message;
  */
 public class RequestMessage extends Message 
 {
-	public enum Type {ACCESS,LOGOUT,INTERACTION,CHAT_NOTIFICATION_CHAN} //tipi possibili di un messaggio di richiesta
+	public enum Type {ACCESS,LOGOUT,INTERACTION,CHAT_NOTIFICATION_CHAN,CHATROOM_REQUEST} //tipi possibili di un messaggio di richiesta
 	public static String FIELD_REQUEST_TYPE = "request-type";
 	public static String FIELD_REQUEST_NICKNAME_SENDER= "nickname";
 	
@@ -24,30 +24,8 @@ public class RequestMessage extends Message
 		//inizializzo stato interno
 		this.requestType = requestType;
 		
-		switch (requestType) 
-		{
-			//se e' una richiesta di accesso
-			case ACCESS:
-				jsonMessage.put(this.FIELD_REQUEST_TYPE,RequestMessage.Type.ACCESS.name());
-				break;
-				
-			//se e' una richiesta di logout
-			case LOGOUT:
-				jsonMessage.put(this.FIELD_REQUEST_TYPE,RequestMessage.Type.LOGOUT.name());
-				break;
-			//se e' una richiesta di interazione con un altro utente
-			case INTERACTION:
-				jsonMessage.put(this.FIELD_REQUEST_TYPE,RequestMessage.Type.INTERACTION.name());
-				break;
-			
-			//se e' una richiesta di settaggio canale di notifica messaggi chat
-			case CHAT_NOTIFICATION_CHAN:
-				jsonMessage.put(this.FIELD_REQUEST_TYPE,RequestMessage.Type.CHAT_NOTIFICATION_CHAN.name());
-				break;
-
-			default:
-				throw new IllegalArgumentException();
-		}		
+		//inserisco tipo della richiesta
+		jsonMessage.put(this.FIELD_REQUEST_TYPE,requestType.name());	
 		
 		//inserisco il nome del mittente
 		jsonMessage.put(this.FIELD_REQUEST_NICKNAME_SENDER,nickname);

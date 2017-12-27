@@ -1,4 +1,4 @@
-package communication.TCPMessages.response;
+package communication.TCPMessages.response.success;
 
 /**
  * Messaggio di risposta di accettazione di ricezione di un file

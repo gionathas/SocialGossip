@@ -7,8 +7,8 @@ import org.json.simple.parser.ParseException;
 
 import communication.TCPMessages.Message;
 import communication.TCPMessages.MessageAnalyzer;
-import communication.TCPMessages.request.LoginRequest;
 import communication.TCPMessages.request.RequestMessage;
+import communication.TCPMessages.request.access.LoginRequest;
 
 /**
  * test funzionamento struttura messaggi

@@ -26,6 +26,7 @@ import server.thread.UserRequestHandler;
 public class SocialGossipServer implements Runnable
 {
 	private Network reteSG; //rappresenta la struttura della rete degli utenti di social gossip
+	private List<ChatRoom> chatrooms; //lista delle chatroom attive
 	
 	private ServerSocket listenerSocket = null; //socket in cui e' in ascolto il server
 	private ThreadPoolExecutor executor = null; //pool di thread per gestire i vari client che arrivano
@@ -43,6 +44,7 @@ public class SocialGossipServer implements Runnable
 		reteSG = new Network();
 		listenerSocket = new ServerSocket(port);
 		executor = (ThreadPoolExecutor) Executors.newCachedThreadPool();
+		chatrooms = new LinkedList<ChatRoom>();
 	}
 	
 	//ciclo di vita del server di social gossip
@@ -60,7 +62,7 @@ public class SocialGossipServer implements Runnable
 				Socket newClient = listenerSocket.accept();
 				
 				//sottometto la gestione del client arrivato ad un thread del pool
-				executor.submit(new UserRequestHandler(newClient,reteSG,notificationUsersChatMessage));
+				executor.submit(new UserRequestHandler(newClient,reteSG,chatrooms,notificationUsersChatMessage));
 				
 			}
 		} 

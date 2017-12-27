@@ -1,4 +1,4 @@
-package communication.TCPMessages.request;
+package communication.TCPMessages.request.access;
 
 /**
  * Messaggio di richiesta di registrazione al sistema

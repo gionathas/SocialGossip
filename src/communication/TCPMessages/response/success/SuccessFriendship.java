@@ -1,4 +1,4 @@
-package communication.TCPMessages.response;
+package communication.TCPMessages.response.success;
 
 /**
  * Risposta di successo alla richiesta di amicizia

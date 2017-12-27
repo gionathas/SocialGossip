@@ -12,8 +12,8 @@ import client.controller.Controller;
 import communication.TCPMessages.Message;
 import communication.TCPMessages.MessageAnalyzer;
 import communication.TCPMessages.request.RequestMessage;
-import communication.TCPMessages.response.ResponseFailedMessage;
 import communication.TCPMessages.response.ResponseMessage;
+import communication.TCPMessages.response.fail.ResponseFailedMessage;
 
 /**
  * Modello astratto che rappresenta un Thread che invia una richiesta al server tramite connessione TCP

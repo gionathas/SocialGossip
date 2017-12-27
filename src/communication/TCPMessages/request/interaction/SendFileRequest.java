@@ -1,4 +1,4 @@
-package communication.TCPMessages.request;
+package communication.TCPMessages.request.interaction;
 
 /**
  * Richiesta di invio di un file ad un utente

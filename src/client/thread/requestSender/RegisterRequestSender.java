@@ -8,9 +8,8 @@ import java.util.List;
 import client.controller.Controller;
 import client.controller.FormInputChecker;
 import client.controller.HubController;
-import communication.TCPMessages.request.RegisterRequest;
-
-import communication.TCPMessages.response.ResponseFailedMessage.Errors;
+import communication.TCPMessages.request.access.RegisterRequest;
+import communication.TCPMessages.response.fail.ResponseFailedMessage.Errors;
 import server.model.User;
 
 /**

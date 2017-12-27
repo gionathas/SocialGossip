@@ -9,8 +9,8 @@ import client.controller.Controller;
 import client.controller.FormInputChecker;
 import client.controller.HubController;
 import communication.TCPMessages.MessageAnalyzer;
-import communication.TCPMessages.request.LoginRequest;
-import communication.TCPMessages.response.ResponseFailedMessage.Errors;
+import communication.TCPMessages.request.access.LoginRequest;
+import communication.TCPMessages.response.fail.ResponseFailedMessage.Errors;
 import server.model.User;
 
 /**

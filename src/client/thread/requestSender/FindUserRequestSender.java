@@ -9,8 +9,8 @@ import javax.swing.JOptionPane;
 
 import client.controller.Controller;
 import client.controller.FormInputChecker;
-import communication.TCPMessages.request.FindUserRequest;
-import communication.TCPMessages.response.ResponseFailedMessage.Errors;
+import communication.TCPMessages.request.interaction.FindUserRequest;
+import communication.TCPMessages.response.fail.ResponseFailedMessage.Errors;
 import server.model.User;
 
 /**

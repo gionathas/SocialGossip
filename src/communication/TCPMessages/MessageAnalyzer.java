@@ -12,17 +12,18 @@ import org.json.simple.parser.ParseException;
 import communication.TCPMessages.notification.NewIncomingFile;
 import communication.TCPMessages.notification.NewIncomingMessage;
 import communication.TCPMessages.notification.NotificationMessage;
-import communication.TCPMessages.request.InteractionRequest;
-import communication.TCPMessages.request.RegisterRequest;
-import communication.TCPMessages.request.RequestAccessMessage;
 import communication.TCPMessages.request.RequestMessage;
-import communication.TCPMessages.request.SendFileRequest;
-import communication.TCPMessages.request.SendMessageRequest;
-import communication.TCPMessages.response.AcceptedFileReceive;
-import communication.TCPMessages.response.ResponseFailedMessage;
+import communication.TCPMessages.request.access.RegisterRequest;
+import communication.TCPMessages.request.access.RequestAccessMessage;
+import communication.TCPMessages.request.chatroom.ChatRoomRequest;
+import communication.TCPMessages.request.interaction.InteractionRequest;
+import communication.TCPMessages.request.interaction.SendFileRequest;
+import communication.TCPMessages.request.interaction.SendMessageRequest;
 import communication.TCPMessages.response.ResponseMessage;
-import communication.TCPMessages.response.SuccessFriendship;
-import communication.TCPMessages.response.SuccessfulLogin;
+import communication.TCPMessages.response.fail.ResponseFailedMessage;
+import communication.TCPMessages.response.success.AcceptedFileReceive;
+import communication.TCPMessages.response.success.SuccessFriendship;
+import communication.TCPMessages.response.success.SuccessfulLogin;
 import server.model.*;
 
 /**
@@ -350,10 +351,59 @@ public class MessageAnalyzer
 		{
 			return RequestMessage.Type.CHAT_NOTIFICATION_CHAN;
 		}
+		//messaggio richiesta settaggio canale notifica chat
+		else if(type.equals(RequestMessage.Type.CHATROOM_REQUEST.name())) 
+		{
+			return RequestMessage.Type.CHATROOM_REQUEST;
+		}
 		else {
 			//TODO implementare altri casi
 			return null;
 		}	
+	}
+	
+	/**
+	 * 
+	 * @param JsonMessage
+	 * @return nome della nuova chatroom da creare,null se non e' stata trovata
+	 */
+	public static final String getChatRoomName(JSONObject JsonMessage)
+	{
+		if(JsonMessage == null)
+			throw new NullPointerException();
+		
+		return (String) JsonMessage.get(ChatRoomRequest.FIELD_CHATROOM_REQUEST_NAME);
+	}
+	
+	/**
+	 * 
+	 * @param JsonMessage
+	 * @return tipo della richiesta che coinvolge una chatroom,null se non e' stata trovata
+	 */
+	public static ChatRoomRequest.ChatroomRequests getChatRoomRequestType(JSONObject JsonMessage)
+	{
+		if(JsonMessage == null)
+			throw new NullPointerException();
+		
+		String type = (String) JsonMessage.get(ChatRoomRequest.FIELD_CHATROOM_REQUEST_TYPE);
+		
+		if(type == null)
+			return null;
+		
+		//richiesta partecipazione a chatroom
+		if(type.equals(ChatRoomRequest.ChatroomRequests.JOIN_CHATROOM.name()))
+		{
+			return ChatRoomRequest.ChatroomRequests.JOIN_CHATROOM;
+		}
+		//richiesta nuova chatroom
+		else if(type.equals(ChatRoomRequest.ChatroomRequests.NEW_CHATROOM.name()))
+		{
+			return ChatRoomRequest.ChatroomRequests.NEW_CHATROOM;
+		}
+		else {
+			return null;
+		}
+		
 	}
 	
 	/**

@@ -18,15 +18,15 @@ import communication.TCPMessages.Message;
 import communication.TCPMessages.MessageAnalyzer;
 import communication.TCPMessages.notification.NewChatMessage;
 import communication.TCPMessages.notification.NewIncomingFile;
-import communication.TCPMessages.request.InteractionRequest;
-import communication.TCPMessages.request.RequestAccessMessage;
 import communication.TCPMessages.request.RequestMessage;
-import communication.TCPMessages.request.SendMessageRequest;
-import communication.TCPMessages.response.ResponseFailedMessage;
+import communication.TCPMessages.request.access.RequestAccessMessage;
+import communication.TCPMessages.request.interaction.InteractionRequest;
+import communication.TCPMessages.request.interaction.SendMessageRequest;
 import communication.TCPMessages.response.ResponseMessage;
-import communication.TCPMessages.response.ResponseSuccessMessage;
-import communication.TCPMessages.response.SuccessFriendship;
-import communication.TCPMessages.response.SuccessfulLogin;
+import communication.TCPMessages.response.fail.ResponseFailedMessage;
+import communication.TCPMessages.response.success.ResponseSuccessMessage;
+import communication.TCPMessages.response.success.SuccessFriendship;
+import communication.TCPMessages.response.success.SuccessfulLogin;
 import server.model.*;
 import server.model.exception.PasswordMismatchingException;
 import server.model.exception.SameUserException;
@@ -41,20 +41,25 @@ import server.model.exception.UserStatusException;
 public class UserRequestHandler implements Runnable
 {
 	private Socket client; //connessioni TCP con il client
+	
 	private Network reteSG; //rete degli utenti di Social Gossip
+	private List<ChatRoom> chatrooms;
 	private List<NotificationUserChatChannel> notificationUsersChatMessage; //canali per notificare gli utenti dell'arrivo dei messaggi 
+	
+	
 	private boolean isNotificationThread = false;
 
 
-	public UserRequestHandler(Socket client,Network reteSG,List<NotificationUserChatChannel> notificationUsersChatMessage)
+	public UserRequestHandler(Socket client,Network reteSG,List<ChatRoom> chatrooms,List<NotificationUserChatChannel> notificationUsersChatMessage)
 	{
 		super();
 
-		if(client == null || reteSG == null)
+		if(client == null || reteSG == null || chatrooms == null)
 			throw new NullPointerException();
 		
 		this.client = client;
 		this.reteSG = reteSG;
+		this.chatrooms = chatrooms;
 		this.notificationUsersChatMessage = notificationUsersChatMessage;
 		
 	}

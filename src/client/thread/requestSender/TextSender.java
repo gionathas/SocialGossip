@@ -7,7 +7,7 @@ import java.net.Socket;
 import javax.swing.JTextArea;
 
 import client.controller.Controller;
-import communication.TCPMessages.response.ResponseFailedMessage.Errors;
+import communication.TCPMessages.response.fail.ResponseFailedMessage.Errors;
 
 /**
  * Modello del thread che si occuppa di inviare un messaggio testuale

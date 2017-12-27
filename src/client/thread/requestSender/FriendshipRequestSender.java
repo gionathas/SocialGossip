@@ -8,8 +8,8 @@ import javax.swing.DefaultListModel;
 
 import client.controller.Controller;
 import communication.TCPMessages.MessageAnalyzer;
-import communication.TCPMessages.request.FriendshipRequest;
-import communication.TCPMessages.response.ResponseFailedMessage.Errors;
+import communication.TCPMessages.request.interaction.FriendshipRequest;
+import communication.TCPMessages.response.fail.ResponseFailedMessage.Errors;
 import server.model.User;
 
 /**

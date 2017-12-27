@@ -1,5 +1,6 @@
-package communication.TCPMessages.response;
+package communication.TCPMessages.response.fail;
 
+import communication.TCPMessages.response.ResponseMessage;
 import communication.TCPMessages.response.ResponseMessage.Type;
 
 /**

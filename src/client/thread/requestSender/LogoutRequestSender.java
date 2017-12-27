@@ -13,7 +13,7 @@ import client.controller.Controller;
 import communication.RMI.RMIClientNotifyEvent;
 import communication.RMI.RMIServerInterface;
 import communication.TCPMessages.request.LogoutRequest;
-import communication.TCPMessages.response.ResponseFailedMessage;
+import communication.TCPMessages.response.fail.ResponseFailedMessage;
 import server.model.exception.UserNotFindException;
 
 /**

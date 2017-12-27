@@ -27,9 +27,9 @@ import communication.TCPMessages.MessageAnalyzer;
 import communication.TCPMessages.notification.NotificationMessage;
 import communication.TCPMessages.notification.NewIncomingMessage.ReceiverType;
 import communication.TCPMessages.request.ChatNotification;
-import communication.TCPMessages.response.AcceptedFileReceive;
-import communication.TCPMessages.response.ResponseFailedMessage;
 import communication.TCPMessages.response.ResponseMessage;
+import communication.TCPMessages.response.fail.ResponseFailedMessage;
+import communication.TCPMessages.response.success.AcceptedFileReceive;
 import server.model.User;
 
 /**
