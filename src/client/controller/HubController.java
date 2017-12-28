@@ -26,11 +26,12 @@ import javax.swing.JList;
 import client.thread.ListenerChatMessage;
 import client.thread.requestSender.FindUserRequestSender;
 import client.thread.requestSender.LogoutRequestSender;
+import client.thread.requestSender.NewChatRoomRequestSender;
 import client.view.ChatWindow;
 import client.view.HubWindow;
 import communication.RMI.RMIClientNotifyEvent;
 import communication.RMI.RMIServerInterface;
-
+import server.model.ChatRoom;
 import server.model.User;
 import server.model.exception.UserNotFindException;
 import server.model.exception.UserStatusException;
@@ -46,7 +47,7 @@ public class HubController extends Controller
 	private User user; //utente che controlla l'hub
 	
 	//utilita'
-	private Controller controller = this;
+	private HubController controller = this;
 	private Random rand;
 	
 	//gestione RMI,notifiche messaggi
@@ -66,7 +67,7 @@ public class HubController extends Controller
 	 * @param amiciList lista degli amici dell'utente
 	 * @param location posizione finestra
 	 */
-	public HubController(Socket connection,DataInputStream in,DataOutputStream out,String nickname,List<User> amiciList,Point location) 
+	public HubController(Socket connection,DataInputStream in,DataOutputStream out,String nickname,List<User> amiciList,List<ChatRoom> chatRooms,Point location) 
 	{
 		super(connection,in,out);
 		
@@ -78,7 +79,7 @@ public class HubController extends Controller
 		
 		try 
 		{
-			initComponents(nickname,amiciList);
+			initComponents(nickname,amiciList,chatRooms);
 			initListeners();
 		} 
 		//errore in fase di inizializzazione
@@ -98,21 +99,25 @@ public class HubController extends Controller
 	 * @param amiciList lista degli amici dell'utente
 	 * @throws Exception se c'e' un errore nell'inizializzazione dei componenti principali
 	 */
-	private void initComponents(String nickname,List<User> amiciList) throws Exception
+	private void initComponents(String nickname,List<User> amiciList,List<ChatRoom> chatRooms) throws Exception
 	{	
 		user = new User(nickname);
 		hubView.setWelcomeText("Loggato come: "+nickname);
 		chats = new LinkedList<ChatController>();
 
-		//se mi e' stata passata una lista di amici e di chatRoom
+		//se mi e' stata passata una lista di amici
 		if(amiciList != null) {
 			//aggiorno lista amici
 			for (User user : amiciList) {
 				hubView.getModelUserFriendList().addElement(user);
 			}
-			
-			//TODO aggiornare lista chatRoom
 		}
+		
+		//aggiungo lista chatroom attive
+		for(ChatRoom cr : chatRooms) {
+			hubView.getModelChatRoomList().addElement(cr);;
+		}
+		
 		
 		//configuro RMI per ricevere notifiche sullo stato degli amici e sulle nuove amicizie
 		initRMI(nickname);
@@ -211,6 +216,25 @@ public class HubController extends Controller
 			{
 				//apro la chat richiesta
 				openChatFromList();
+			}
+		});
+		
+		//al click sul bottone CREA CHATROOM
+		hubView.getBtnCreaChatroom().addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				new NewChatRoomRequestSender(controller,connection,in,out).start();
+			}
+		});
+		
+		//al click sul bottone unisciti a chatroom
+		hubView.getBtnUniscitiAChatroom().addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				
 			}
 		});
 	}

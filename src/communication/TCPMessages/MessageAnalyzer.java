@@ -1,5 +1,8 @@
 package communication.TCPMessages;
 
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -206,7 +209,6 @@ public class MessageAnalyzer
 		
 		JSONArray listOfFriend;
 		
-		//TODO controllo lista chatroom
 		listOfFriend = (JSONArray) JsonMessage.get(SuccessfulLogin.FIELD_FRIEND_LIST);
 		
 		//campo lista amici non trovato
@@ -226,6 +228,62 @@ public class MessageAnalyzer
 		}
 		
 		return amiciList;
+	}
+	
+	/**
+	 * 
+	 * @param Json Message
+	 * @return lista delle chatroom attive,null se non sono state trovate
+	 */
+	public static List<ChatRoom> getListaChatRoom(JSONObject JsonMessage)
+	{
+		if(JsonMessage == null)
+			throw new NullPointerException();
+		
+		JSONArray listOfChatRoom;
+		
+		listOfChatRoom = (JSONArray) JsonMessage.get(SuccessfulLogin.FIELD_CHATROOM_LIST);
+		
+		//campo lista amici non trovato
+		if(listOfChatRoom == null)
+			return null;
+		
+		//lista che contiene gli amici dell'utente loggato
+		List<ChatRoom> chatroomList = new LinkedList<ChatRoom>();
+		
+		//creo la lista degli amici dell'utente
+		Iterator<JSONObject> iteratorChatroom = listOfChatRoom.iterator();
+		
+		//aggiungo utenti alla lista
+		while(iteratorChatroom.hasNext()) 
+		{
+			chatroomList.add(getChatRoom(iteratorChatroom.next()));
+		}
+		
+		return chatroomList;
+	}
+	
+	/**
+	 * 
+	 * @param JsonMessage
+	 * @return un istanza di una chatroom che e' presente nel messaggio
+	 */
+	private static ChatRoom getChatRoom(JSONObject JsonMessage)
+	{
+		String name = (String) JsonMessage.get(ChatRoom.FIELD_NAME);
+		String address = (String) JsonMessage.get(ChatRoom.FIELD_ADDRESS);
+		long port = (long) JsonMessage.get(ChatRoom.FIELD_PORT);
+		
+		try {
+			return new ChatRoom(name,InetAddress.getByName(address),(int) port);
+		} catch (UnknownHostException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return null;
 	}
 	
 	/**

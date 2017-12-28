@@ -7,7 +7,7 @@ package communication.TCPMessages.request.chatroom;
  */
 public class NewChatRoom extends ChatRoomRequest
 {
-	public NewChatRoom(ChatroomRequests type, String nicknameAdmin,String chatRoomName) 
+	public NewChatRoom(String nicknameAdmin,String chatRoomName) 
 	{
 		super(ChatRoomRequest.ChatroomRequests.NEW_CHATROOM,nicknameAdmin,chatRoomName);
 	}

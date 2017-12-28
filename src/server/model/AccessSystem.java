@@ -1,6 +1,7 @@
 package server.model;
 
 import java.rmi.RemoteException;
+import java.util.LinkedList;
 import java.util.List;
 
 import javax.management.InvalidAttributeValueException;
@@ -37,11 +38,11 @@ public class AccessSystem
 	 * @throws PasswordMismatchingException se le password non corrispondono
 	 * @throws UserStatusException se l'utente risulta gia' essere online
 	 * @throws RemoteException se c'e' stato un errore relativo alle notifiche agli amici
-	 * @throws InvalidAttributeValueException se i parametri di log in non sono validi
+	 * @return lista degli amici dell'utente loggato
 	 */
-	public void logIn(String nickname,String password,List<User> amiciList,List<ChatRoom> chatRoomList)throws UserNotFindException, PasswordMismatchingException, UserStatusException, RemoteException
+	public List<User> logIn(String nickname,String password)throws UserNotFindException, PasswordMismatchingException, UserStatusException, RemoteException
 	{
-		if(nickname == null || password == null || amiciList == null || chatRoomList == null)
+		if(nickname == null || password == null)
 			throw new NullPointerException();
 		
 		User registeredUser = rete.cercaUtente(nickname);
@@ -63,6 +64,8 @@ public class AccessSystem
 		//se tutti i controlli sono superati,metto online l'utente
 		registeredUser.setOnline(true);
 		
+		List<User> amiciList = new LinkedList<User>();
+		
 		//aggiorno gli amici
 		for (User friend : registeredUser.getAmici()) 
 		{
@@ -82,7 +85,8 @@ public class AccessSystem
 			
 		};
 		
-		//TODO creo la lista delle chatRoom attive
+		return amiciList;
+		
 	}
 	
 	/**

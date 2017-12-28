@@ -254,8 +254,8 @@ public class User implements Serializable
 		
 		JSONObject jsonUser = new JSONObject();
 		
-		jsonUser.put("name",user.nickname);
-		jsonUser.put("online",user.isOnline());
+		jsonUser.put(FIELD_NAME,user.nickname);
+		jsonUser.put(FIELD_ONLINE,user.isOnline());
 		
 		return jsonUser;
 	}
@@ -279,7 +279,7 @@ public class User implements Serializable
 		//utenti uguali se hanno lo stesso nickname
 		if(other.nickname == null)
 			return false;
-		else if(!other.nickname.equals(this.nickname))
+		else if(!other.nickname.equalsIgnoreCase(this.nickname))
 			return false;
 		
 		return true;

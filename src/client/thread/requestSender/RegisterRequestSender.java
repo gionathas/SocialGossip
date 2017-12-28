@@ -8,8 +8,10 @@ import java.util.List;
 import client.controller.Controller;
 import client.controller.FormInputChecker;
 import client.controller.HubController;
+import communication.TCPMessages.MessageAnalyzer;
 import communication.TCPMessages.request.access.RegisterRequest;
 import communication.TCPMessages.response.fail.ResponseFailedMessage.Errors;
+import server.model.ChatRoom;
 import server.model.User;
 
 /**
@@ -113,13 +115,23 @@ public class RegisterRequestSender extends RequestSenderThread
 
 	@Override
 	protected void successResponseHandler() {
+		
+		List<ChatRoom> chatroomList = MessageAnalyzer.getListaChatRoom(response);
+		
+		//lista delle chatroom dell'utente loggato, non trovata
+		if(chatroomList == null) {
+			controller.showErrorMessage("Errore nel messaggio di risposta del server","Errore");
+			return;
+		}
+		
 		controller.showInfoMessage("Registrazione Avvenuta","Benvenuto",true);
-		startHubView(nickname,null);			
+		
+		startHubView(nickname,chatroomList);			
 	}
 	
-	private void startHubView(String nickname,List<User> amiciList) 
+	private void startHubView(String nickname,List<ChatRoom> chatRooms) 
 	{
-		HubController hub = new HubController(connection,in,out,nickname,amiciList,controller.getWindow().getLocation());
+		HubController hub = new HubController(connection,in,out,nickname,null,chatRooms, controller.getWindow().getLocation());
 		
 		//chiudo form di login
 		controller.closeWindow();

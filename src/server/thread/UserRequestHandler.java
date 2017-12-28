@@ -6,10 +6,15 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.EOFException;
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.net.UnknownHostException;
 import java.nio.channels.Pipe.SinkChannel;
 import java.util.LinkedList;
 import java.util.List;
+
+import javax.xml.ws.soap.AddressingFeature.Responses;
 
 import org.json.simple.JSONObject;
 import org.json.simple.parser.ParseException;
@@ -20,6 +25,7 @@ import communication.TCPMessages.notification.NewChatMessage;
 import communication.TCPMessages.notification.NewIncomingFile;
 import communication.TCPMessages.request.RequestMessage;
 import communication.TCPMessages.request.access.RequestAccessMessage;
+import communication.TCPMessages.request.chatroom.ChatRoomRequest;
 import communication.TCPMessages.request.interaction.InteractionRequest;
 import communication.TCPMessages.request.interaction.SendMessageRequest;
 import communication.TCPMessages.response.ResponseMessage;
@@ -27,6 +33,7 @@ import communication.TCPMessages.response.fail.ResponseFailedMessage;
 import communication.TCPMessages.response.success.ResponseSuccessMessage;
 import communication.TCPMessages.response.success.SuccessFriendship;
 import communication.TCPMessages.response.success.SuccessfulLogin;
+import communication.TCPMessages.response.success.SuccessfulRegistration;
 import server.model.*;
 import server.model.exception.PasswordMismatchingException;
 import server.model.exception.SameUserException;
@@ -46,6 +53,10 @@ public class UserRequestHandler implements Runnable
 	private List<ChatRoom> chatrooms;
 	private List<NotificationUserChatChannel> notificationUsersChatMessage; //canali per notificare gli utenti dell'arrivo dei messaggi 
 	
+	public static final String FIRST_MULTICAST_ADDR = "224.0.0.1";
+	public static final String LAST_MULTICAST_ADDR = "224.0.0.255";
+	public static final int FIRST_MULTICAST_PORT = 8500;
+	public static final int LAST_MULTICAST_PORT = 8755;
 	
 	private boolean isNotificationThread = false;
 
@@ -183,7 +194,12 @@ public class UserRequestHandler implements Runnable
 				case CHAT_NOTIFICATION_CHAN:
 					chatNotificationChannelRequestHandler(nicknameSender,out);
 					break;
-
+				
+				//richiesta azione che coinvlge una chatroom
+				case CHATROOM_REQUEST:
+					ChatRoomRequestHandler(message,nicknameSender,out);
+					break;
+						
 				//richiesta non valida
 				default:
 					sendMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.INVALID_REQUEST),out);
@@ -225,6 +241,122 @@ public class UserRequestHandler implements Runnable
 	private void sendMessage(Message response,DataOutputStream out) throws IOException
 	{
 		out.writeUTF(response.getJsonMessage());
+	}
+	
+	private void ChatRoomRequestHandler(JSONObject message,String nicknameSender,DataOutputStream out) throws IOException
+	{		
+		//cerco utente mittente del messaggio
+		User sender = reteSG.cercaUtente(nicknameSender);
+		
+		//se il mittente non e' registrato,invio messaggio di errore
+		if(sender == null)
+		{
+			sendMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.SENDER_USER_NOT_FOUND),out);
+			return;
+		}
+		
+		//se il mittente non e' online,invio messaggio di errore
+		if(!sender.isOnline()) {
+			sendMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.SENDER_USER_INVALID_STATUS),out);
+			return;
+		}
+		
+		String chatroomName = MessageAnalyzer.getChatRoomName(message);
+		
+		//se non e' stata trovata il nome della chatrooms
+		if(chatroomName == null)
+		{
+			sendMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.INVALID_REQUEST),out);
+			return;
+		}
+		
+		//controllo il tipo della richiesta che coinvolge la chatroom
+		ChatRoomRequest.ChatroomRequests type = MessageAnalyzer.getChatRoomRequestType(message);
+		
+		//tipo richiesta non trovato
+		if(type == null) {
+			sendMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.INVALID_REQUEST),out);
+			return;
+		}
+		
+		switch (type) {
+		case NEW_CHATROOM:
+			newChatRoomRequestHandler(sender,chatroomName,out);
+			break;
+			
+		case JOIN_CHATROOM:
+			//joinChatRoomRequestHandler(sender,chatroomName,out);
+			break;
+		
+		default:
+			sendMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.INVALID_REQUEST),out);
+			break;
+		}
+		
+		
+	}
+	
+	private void newChatRoomRequestHandler(User sender,String chatroomName,DataOutputStream out) throws IOException
+	{
+		//controllo se la chatroom esiste gia'
+		synchronized (chatrooms) {
+			
+			//chatroom gia' esistente
+			if(chatrooms.contains(new ChatRoom(chatroomName)))
+			{
+				sendMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.CHATROOM_ALREADY_REGISTERED), out);
+				return;
+			}
+			//posso creare la nuvoa chatroom
+			else {
+				//creo indirizzo della chatroom
+				int port = FIRST_MULTICAST_PORT + chatrooms.size();
+				String address = getNewChatRoomAddress();
+				
+				//indirizzi non piu disponibili
+				if(address == null)
+				{
+					sendMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.CANNOT_CREATE_CHATROOM), out);
+					return;
+				}
+				
+				//creo l'indirizzo della chatroom assegnatogli
+				InetAddress addr = InetAddress.getByName(address);
+				
+				ChatRoom newChatRoom = new ChatRoom(chatroomName,addr,port);
+				
+				//aggiungo l'utente che ha creato il gruppo. Essendo il primo e' l'admin
+				try {
+					newChatRoom.addNewSubscriber(sender);
+				} 
+				catch (UserAlreadyRegistered e) {
+					sendMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.USER_ALREADY_REGISTERED), out);
+					return;
+				}
+				
+				//aggiungo chatroom alla lista
+				chatrooms.add(newChatRoom);
+			}
+			
+			//mando un messaggio di ok al sender
+			sendMessage(new ResponseSuccessMessage(), out);
+				
+		}
+	}
+	
+	private String getNewChatRoomAddress()
+	{		
+		String[] byteIP = FIRST_MULTICAST_ADDR.split(".");
+		
+		Integer offset = Integer.parseInt(byteIP[3]);
+		
+		offset = offset + chatrooms.size();
+		
+		//se non ci sono piu indirizzi dispoibili
+		if(offset.equals(256))
+			return null;
+		
+		return new String(byteIP[0]+byteIP[1]+byteIP[2]+offset.toString());
 	}
 	
 	private void chatNotificationChannelRequestHandler(String nickname,DataOutputStream out) throws IOException
@@ -582,13 +714,12 @@ public class UserRequestHandler implements Runnable
 	 */
 	private void loginRequestHandler(AccessSystem accessSystem,String nickname,String password,DataOutputStream out) throws IOException
 	{
-		List<User> amici = new LinkedList<User>();
-		List<ChatRoom> chatRoom = new LinkedList<ChatRoom>();
+		List<User> amici = null;		
 		
 		try 
 		{
 			//login sul sistema
-			accessSystem.logIn(nickname,password,amici,chatRoom);
+			amici = accessSystem.logIn(nickname,password);
 			
 		} 
 		//caso password errata
@@ -615,8 +746,10 @@ public class UserRequestHandler implements Runnable
 			return;
 		}
 		
-		//TODO operazione e' andata a buon fine mando un messaggio di OK,con la lista degli amici e delle chatroom
-		sendMessage(new SuccessfulLogin(amici),out);
+		//operazione e' andata a buon fine mando un messaggio di OK,con la lista degli amici e delle chatroom
+		synchronized (chatrooms) {
+			sendMessage(new SuccessfulLogin(amici,chatrooms),out);
+		}
 	}
 	
 	/**
@@ -686,7 +819,10 @@ public class UserRequestHandler implements Runnable
 			return;
 		}
 		
-		//operazione e' andata a buon fine mando un messaggio di OK
-		sendMessage(new ResponseSuccessMessage(),out);
+		synchronized (chatrooms) {
+			//operazione e' andata a buon fine mando un messaggio di OK
+			sendMessage(new SuccessfulRegistration(chatrooms),out);
+		}
+	
 	}
 }

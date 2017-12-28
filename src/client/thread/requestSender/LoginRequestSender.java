@@ -11,6 +11,7 @@ import client.controller.HubController;
 import communication.TCPMessages.MessageAnalyzer;
 import communication.TCPMessages.request.access.LoginRequest;
 import communication.TCPMessages.response.fail.ResponseFailedMessage.Errors;
+import server.model.ChatRoom;
 import server.model.User;
 
 /**
@@ -132,14 +133,20 @@ public class LoginRequestSender extends RequestSenderThread
 			return;
 		}
 		
-		//TODO prendere lista delle chatroom
+		List<ChatRoom> chatroomList = MessageAnalyzer.getListaChatRoom(response);
+		
+		//lista delle chatroom dell'utente loggato, non trovata
+		if(chatroomList == null) {
+			controller.showErrorMessage("Errore nel messaggio di risposta del server","Errore");
+			return;
+		}
 		
 		//faccio partire l'hub 
-		startHubView(nickname,amiciList);
+		startHubView(nickname,amiciList,chatroomList);
 	}
 	
-	private void startHubView(String nickname,List<User>amiciList) {
-		HubController hub = new HubController(connection,in,out,nickname,amiciList,controller.getWindow().getLocation());
+	private void startHubView(String nickname,List<User>amiciList,List<ChatRoom> chatRooms) {
+		HubController hub = new HubController(connection,in,out,nickname,amiciList,chatRooms,controller.getWindow().getLocation());
 		
 		//chiudo form di login
 		controller.closeWindow();

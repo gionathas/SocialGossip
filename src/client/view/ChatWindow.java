@@ -21,16 +21,16 @@ public class ChatWindow extends JFrame {
 	 * 
 	 */
 	private static final long serialVersionUID = 7018723357317188387L;
-	private JTextArea conversationArea;
-	private JTextArea textArea;
-	private JButton btnInviaTextButton;
-	private JButton btnInviaFile;
+	protected JTextArea conversationArea;
+	protected JTextArea textArea;
+	protected JButton btnInviaTextButton;
+	protected JButton btnInviaFile;
 	
 	
 	public static final int WIDTH = 370;
 	public static final int HEIGHT = 400;
-	private JScrollPane scrollPane;
-	private JScrollPane scrollPane_1;
+	protected JScrollPane scrollPane;
+	protected JScrollPane scrollPane_1;
 
 	/**
 	 * Launch the application.
