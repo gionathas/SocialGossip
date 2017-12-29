@@ -11,6 +11,7 @@ import java.util.List;
 import org.json.simple.JSONObject;
 
 import server.model.exception.UserAlreadyRegistered;
+import server.thread.DispatcherChatRoomMessage;
 
 /**
  * Rappresenta un gruppo di utenti in social Gossip
@@ -20,7 +21,11 @@ import server.model.exception.UserAlreadyRegistered;
 public class ChatRoom 
 {
 	private String name;
-	private MulticastSocket ms;
+	private MulticastSocket ms; //indirizzo di multicast
+	private InetAddress messageAddress;
+	private int messagePort;  //porta per ricezione messaggi
+	
+	private DispatcherChatRoomMessage dispatcherMessage;
 	
 	private List<User> subscribers;
 	
@@ -29,28 +34,45 @@ public class ChatRoom
 	
 	//serializzazione
 	public static final String FIELD_NAME = "name";
-	public static final String FIELD_ADDRESS = "address";
-	public static final String FIELD_PORT = "port";
+	public static final String FIELD_MS_ADDRESS = "ms-address";
+	public static final String FIELD_MS_PORT = "ms-port";
+	public static final String FIELD_MESSAGE_ADDRESS = "message-address";
+	public static final String FIELD_MESSAGE_PORT = "message-port";
 
 	/**
 	 * Crea una nuova chatroom vuota,con un nome e un indirizzo assegnato
 	 * @param name
 	 * @param address
-	 * @throws IOException errore creazione socket della chatroom
+	 * @throws Exception 
 	 */
-	public ChatRoom(String name,InetAddress address,int port) throws IOException
+	public ChatRoom(String name,InetAddress msAddress,int msPort,InetAddress messageAddress,int messagePort,boolean serverIstance) throws Exception
 	{
-		if(name == null || address == null)
+		if(name == null || msAddress == null)
 			throw new NullPointerException();
 		
-		if(name.isEmpty() || !address.isMulticastAddress() || port <= 0)
+		if(name.isEmpty() || !msAddress.isMulticastAddress() || msPort <= 0 || messagePort <= 0)
 			throw new IllegalArgumentException();
 		
 		this.name = name;
 		
-		ms = new MulticastSocket(port);
+		//inizializzo multicast
+		ms = new MulticastSocket(msPort);
 		ms.setTimeToLive(LOCAL_ADDRESS);
-		subscribers = new LinkedList<User>();
+		
+		//inizializzo indirizzo thread listener messaggi
+		this.messageAddress = messageAddress;
+		this.messagePort = messagePort;
+		
+		//se e' un istanza del server
+		if(serverIstance)
+		{
+			subscribers = new LinkedList<User>();
+
+			//faccio partire il thread che si occupa di gestire i messaggi della chatroom
+			dispatcherMessage = new DispatcherChatRoomMessage(ms,messagePort);
+			dispatcherMessage.start();
+		}
+		
 	}
 	
 	/**
@@ -70,11 +92,19 @@ public class ChatRoom
 		this.subscribers = null;
 	}
 	
+	public synchronized void close() {
+		dispatcherMessage.interrupt();
+		
+		while(dispatcherMessage.isAlive()) {
+			//aspetto che il thread termini
+		}
+		
+		
+	}
+	
 	public synchronized String getName() {
 		return this.name;
 	}
-	
-	
 	
 	public synchronized List<User> getSubscribers(){
 		return Collections.unmodifiableList(subscribers);
@@ -84,28 +114,14 @@ public class ChatRoom
 		return subscribers.size();
 	}
 	
-	/**
-	 * Invia un messaggio a tutti gli iscritti della chatroom
-	 * @throws IOException errore nell'invio del messaggio
-	 */
-	public void sendMessageToSubscribers(byte[] msg) throws IOException 
-	{
-		if(msg == null)
-			throw new NullPointerException();
-		
-		//creo il pacchetto da inviare
-		DatagramPacket dp = new DatagramPacket(msg,msg.length,ms.getInetAddress(),ms.getLocalPort());
-		
-		//invio il messaggio
-		ms.send(dp);
-	}
+	
 	
 	/**
 	 * Aggiunge un nuovo iscritto alla chatRoom. Il primo utente ad essere inserito e' l'admin
 	 * @param user
 	 * @throws UserAlreadyRegistered
 	 */
-	public void addNewSubscriber(User user) throws UserAlreadyRegistered
+	public synchronized void addNewSubscriber(User user) throws UserAlreadyRegistered
 	{
 		if(user == null)
 			throw new NullPointerException();
@@ -124,9 +140,16 @@ public class ChatRoom
 		
 		JSONObject jsonChatRoom = new JSONObject();
 		
+		//nome chatroom
 		jsonChatRoom.put(FIELD_NAME,cr.getName());
-		jsonChatRoom.put(FIELD_ADDRESS,cr.getIPAddress());
-		jsonChatRoom.put(FIELD_PORT, cr.getPort());
+		//indirizzo multicast
+		jsonChatRoom.put(FIELD_MS_ADDRESS,cr.getIPAddress());
+		//porta indirizzo multicast
+		jsonChatRoom.put(FIELD_MS_PORT, cr.getPort());
+		//indrizzo per ricevere messaggi
+		jsonChatRoom.put(FIELD_MESSAGE_ADDRESS,cr.getMessageAddress());
+		//porta per ricevere messaggi
+		jsonChatRoom.put(FIELD_MESSAGE_PORT,cr.getMessagePort());
 		
 		return jsonChatRoom;
 	}
@@ -135,6 +158,18 @@ public class ChatRoom
 	public String toString()
 	{
 		return "["+name.toUpperCase()+"]"+" Iscritti: "+numSubscribers();
+	}
+	
+	public synchronized MulticastSocket getMulticastSocket() {
+		return ms;
+	}
+	
+	public synchronized InetAddress getMessageAddress() {
+		return messageAddress;
+	}
+	
+	public synchronized Integer getMessagePort() {
+		return new Integer(messagePort);
 	}
 	
 	public synchronized String getIPAddress() {

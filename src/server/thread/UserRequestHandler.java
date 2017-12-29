@@ -6,9 +6,13 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.EOFException;
 import java.io.IOException;
+import java.lang.Thread.State;
+import java.net.BindException;
+import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.nio.channels.Pipe.SinkChannel;
 import java.util.LinkedList;
@@ -19,6 +23,7 @@ import javax.xml.ws.soap.AddressingFeature.Responses;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.ParseException;
 
+import communication.RMI.RMIClientNotifyEvent;
 import communication.TCPMessages.Message;
 import communication.TCPMessages.MessageAnalyzer;
 import communication.TCPMessages.notification.NewChatMessage;
@@ -309,33 +314,55 @@ public class UserRequestHandler implements Runnable
 			}
 			//posso creare la nuvoa chatroom
 			else {
+				
 				//creo indirizzo della chatroom
-				int port = FIRST_MULTICAST_PORT + chatrooms.size();
-				String address = getNewChatRoomAddress();
+				int msPort = getFreePort();
+				String msAddress = getNewChatRoomAddress();
+				int messagePort = getFreePort();
 				
 				//indirizzi non piu disponibili
-				if(address == null)
+				if(msAddress == null || msPort == -1 || messagePort == -1)
 				{
 					sendMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.CANNOT_CREATE_CHATROOM), out);
 					return;
 				}
 				
-				//creo l'indirizzo della chatroom assegnatogli
-				InetAddress addr = InetAddress.getByName(address);
+				// l'indirizzo multicast
+				InetAddress addr = InetAddress.getByName(msAddress);
+				//indirizzo receiver messaggi
+				InetAddress messAddr = InetAddress.getByName("localhost");
 				
-				ChatRoom newChatRoom = new ChatRoom(chatroomName,addr,port);
+				//istanza chatroom da creare
+				ChatRoom newChatRoom = null;
 				
 				//aggiungo l'utente che ha creato il gruppo. Essendo il primo e' l'admin
 				try {
+					newChatRoom = new ChatRoom(chatroomName,addr,msPort,messAddr, messagePort,true);
+
 					newChatRoom.addNewSubscriber(sender);
 				} 
 				catch (UserAlreadyRegistered e) {
 					sendMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.USER_ALREADY_REGISTERED), out);
 					return;
+				} catch (Exception e) {
+					sendMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.CANNOT_CREATE_CHATROOM), out);
+					return;
 				}
 				
 				//aggiungo chatroom alla lista
-				chatrooms.add(newChatRoom);
+				if(newChatRoom != null)
+					chatrooms.add(newChatRoom);
+				
+				//notifico tutti gli utenti della nuova chatroom
+				List<User> users = reteSG.getUtenti();
+				
+				synchronized (users) {
+					for (User user : users) {
+						RMIClientNotifyEvent notifyEvent = user.getRMIchannel();
+						
+						notifyEvent.newChatRoom(newChatRoom);
+					}
+				}
 			}
 			
 			//mando un messaggio di ok al sender
@@ -344,6 +371,10 @@ public class UserRequestHandler implements Runnable
 		}
 	}
 	
+	/**
+	 * 
+	 * @return indirizzo multicast non ancora utilizzato
+	 */
 	private String getNewChatRoomAddress()
 	{		
 		String[] byteIP = FIRST_MULTICAST_ADDR.split(".");
@@ -357,6 +388,30 @@ public class UserRequestHandler implements Runnable
 			return null;
 		
 		return new String(byteIP[0]+byteIP[1]+byteIP[2]+offset.toString());
+	}
+	
+	/**
+	 * 
+	 * @return una porta libera se esiste,altrimenti -1
+	 */
+	private int getFreePort()
+	{
+		int startingPort = 1024;
+		int lastPort = 9000;
+		
+		for (int i = startingPort; i < lastPort; i++) 
+		{
+			try {
+				DatagramSocket s = new DatagramSocket(i);
+				
+				//porta libera
+				return i;
+			} 
+			catch (BindException e) {} 
+			catch (SocketException e) {}
+		}
+		
+		return -1;
 	}
 	
 	private void chatNotificationChannelRequestHandler(String nickname,DataOutputStream out) throws IOException

@@ -3,6 +3,7 @@ package communication.RMI;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 
+import server.model.ChatRoom;
 import server.model.User;
 
 /**
@@ -25,4 +26,11 @@ public interface RMIClientNotifyEvent extends Remote
 	 * @throws RemoteException se c'e' un errore nel protocollo RMI
 	 */
 	public void newFriend(User newFriend)throws RemoteException;
+	
+	/**
+	 * Notifica nuova chatroom
+	 * @param chatroom nuova chatroom attiva
+	 * @throws RemoteException se c'e' un errore nel protocollo RMI
+	 */
+	public void newChatRoom(ChatRoom chatroom)throws RemoteException;
 }

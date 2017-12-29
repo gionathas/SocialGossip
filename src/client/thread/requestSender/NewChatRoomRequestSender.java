@@ -3,13 +3,17 @@ package client.thread.requestSender;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.net.Socket;
+import java.util.List;
 
 import javax.swing.JOptionPane;
 
+import client.controller.ChatRoomController;
 import client.controller.Controller;
 import client.controller.HubController;
+import client.thread.ListenerChatRoomMessage;
 import communication.TCPMessages.request.chatroom.NewChatRoom;
 import communication.TCPMessages.response.fail.ResponseFailedMessage.Errors;
+import server.model.ChatRoom;
 import server.model.User;
 
 /**
@@ -21,11 +25,17 @@ public class NewChatRoomRequestSender extends RequestSenderThread
 {
 	private User user;
 	private String chatroomName;
+	private List<ListenerChatRoomMessage> listenersChatRoomMessages;
 	
 	public NewChatRoomRequestSender(HubController controller, Socket connection, DataInputStream in,
-			DataOutputStream out) 
+			DataOutputStream out,List<ListenerChatRoomMessage> listenersChatRoomMessages) 
 	{
 		super(controller, connection, in, out);
+		
+		if(listenersChatRoomMessages == null)
+			throw new NullPointerException();
+		
+		this.listenersChatRoomMessages = listenersChatRoomMessages;
 	}
 
 	@Override
@@ -103,6 +113,13 @@ public class NewChatRoomRequestSender extends RequestSenderThread
 	protected void successResponseHandler() 
 	{
 		controller.showInfoMessage("ChatRoom "+chatroomName.toUpperCase()+" creata.","ChatRoom creata",false);
+		
+		//TODO aprire chatroom dalla list,che e' stata aggiornata
+		HubController hubController = (HubController) controller;
+		
+		ChatRoomController chatroomControl = hubController.openChatRoomFromNewMessage(new ChatRoom(chatroomName));
+		
+		//TODO manipolare chatroom
 	}
 
 }

@@ -10,6 +10,7 @@ import java.awt.event.WindowEvent;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.net.Socket;
+import java.net.SocketException;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
@@ -20,13 +21,16 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 
+import javax.management.ListenerNotFoundException;
 import javax.swing.DefaultListModel;
 import javax.swing.JList;
 
 import client.thread.ListenerChatMessage;
+import client.thread.ListenerChatRoomMessage;
 import client.thread.requestSender.FindUserRequestSender;
 import client.thread.requestSender.LogoutRequestSender;
 import client.thread.requestSender.NewChatRoomRequestSender;
+import client.view.ChatRoomWindow;
 import client.view.ChatWindow;
 import client.view.HubWindow;
 import communication.RMI.RMIClientNotifyEvent;
@@ -53,10 +57,13 @@ public class HubController extends Controller
 	//gestione RMI,notifiche messaggi
 	private RMIServerInterface serverRMI = null;
 	private RMIClientNotifyEvent callback;
-	private ListenerChatMessage listenerChatMessage;
+	
+	private ListenerChatMessage listenerChatMessage; //thread che ascolta i messaggi provenienti da altri utenti
+	private List<ListenerChatRoomMessage> listenersChatRoomMessages; //lista di thread che ascoltano messaggi provenienti da altre chatroom
 	
 	//gestione finestre chat e chatRoom
 	private List<ChatController> chats;
+	private List<ChatRoomController> chatrooms;
 	
 	private static final String SERVER_RMI_SERVICE_NAME = "SocialGossipNotification";
 	private static final int SERVER_RMI_PORT = 6000;
@@ -104,6 +111,7 @@ public class HubController extends Controller
 		user = new User(nickname);
 		hubView.setWelcomeText("Loggato come: "+nickname);
 		chats = new LinkedList<ChatController>();
+		chatrooms = new LinkedList<ChatRoomController>();
 
 		//se mi e' stata passata una lista di amici
 		if(amiciList != null) {
@@ -126,8 +134,8 @@ public class HubController extends Controller
 		listenerChatMessage = new ListenerChatMessage(this,user,connection.getInetAddress(),connection.getPort());
 		listenerChatMessage.start();
 		
-		//TODO configurare thread per ricevere mesaggi chatroom
-		
+		//insieme di thread listener messaggi chatrooms
+		listenersChatRoomMessages = new LinkedList<ListenerChatRoomMessage>();		
 	}
 	
 	/**
@@ -173,9 +181,8 @@ public class HubController extends Controller
 	            	
 	            	
 	            	closeAllChats();
-	            	
-	            	//TODO chiudere tutte le finestre di chatroom
-	            	
+	            	closeAllChatRoom();
+	            		            	
 	                new LogoutRequestSender(controller,connection,in,out,user.getNickname(),serverRMI,callback).start();
 	            }
 	        });
@@ -189,9 +196,8 @@ public class HubController extends Controller
             	listenerChatMessage.shutdown();
             	
 				closeAllChats();
-				
-				//TODO chiudere chatroom
-				
+				closeAllChatRoom();
+								
 				//avvio procedura di logout
                 new LogoutRequestSender(controller,connection,in,out,user.getNickname(),serverRMI,callback).start();
 			}
@@ -224,7 +230,7 @@ public class HubController extends Controller
 			
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				new NewChatRoomRequestSender(controller,connection,in,out).start();
+				new NewChatRoomRequestSender(controller,connection,in,out,listenersChatRoomMessages).start();
 			}
 		});
 		
@@ -271,7 +277,6 @@ public class HubController extends Controller
 				{
 					chat = new ChatController(connection, in, out,user,selectedUser,generateRandomLocation());
 					chats.add(chat);
-					chat.setVisible(true);
 				}
 				//chat trovata,la mostro
 				else {
@@ -280,6 +285,55 @@ public class HubController extends Controller
 						chat.setVisible(true);
 				}				
 			}
+		}
+	}
+	
+	public void openChatRoomFromList()
+	{
+		JList<ChatRoom> list = hubView.getChatRoomList();
+		
+		synchronized (list) {
+			ChatRoom selectedRoom = list.getSelectedValue();
+			
+			//se non e' stato selezionato nessun utente
+			if(selectedRoom == null)
+			{
+				showInfoMessage("Seleziona una ChatRoom!","Nessuna ChatRoom selezionata",false);
+			}
+			else {
+				ChatRoomController chatroom = null;
+				
+				//cerco se esiste gia' un istanza della chat,tra le liste
+				for (ChatRoomController currentChatRoom : chatrooms) 
+				{
+					//chat trovata
+					if(currentChatRoom.getChatRoomReceiver().equals(selectedRoom))
+					{
+						chatroom = currentChatRoom;
+						break;
+					}
+				}
+				
+				//se non ho trovato la chatroom,ne creo una nuova e la aggiungo alla lista
+				if(chatroom == null) 
+				{
+					try {
+						chatroom = new ChatRoomController(connection, in, out,user,selectedRoom,generateRandomLocation());
+					} catch (SocketException e) {
+						controller.showErrorMessage("Impossibile aprire chatroom richiesta","ERRORE APERTURA CHATROOM");
+						return;
+					}
+					
+					chatrooms.add(chatroom);
+				}
+				//chat trovata,la mostro
+				else {
+					//se non e' gia' visibile
+					if(!chatroom.isVisible())
+						chatroom.setVisible(true);
+				}				
+			}
+			
 		}
 	}
 	
@@ -315,6 +369,30 @@ public class HubController extends Controller
 		return chat;
 	}
 	
+	public ChatRoomController openChatRoomFromNewMessage(ChatRoom chatroom)
+	{
+		ChatRoomController chatroomControl = null;
+		
+		//cerco se esiste gia' un istanza della chat
+		for (ChatRoomController currentChatRoom : chatrooms) 
+		{
+			//chat trovata
+			if(currentChatRoom.getChatRoomReceiver().equals(chatroom))
+			{
+				chatroomControl = currentChatRoom;
+				break;
+			}
+		}
+		
+		if(chatroomControl != null) {
+			//se non e' gia' visibile
+			if(!chatroomControl.isVisible())
+				chatroomControl.setVisible(true);
+		}
+		
+		return chatroomControl;
+	}
+	
 	
 	private void closeAllChats()
 	{
@@ -327,6 +405,13 @@ public class HubController extends Controller
 	private void closeAllChatRoom()
 	{
 		//TODO
+		synchronized (listenersChatRoomMessages) {
+			//chiudo tutti i thread che ascoltano i messaggi dalle chatroom
+			for (ListenerChatRoomMessage listener : listenersChatRoomMessages) {
+				listener.interrupt();
+			}
+		}
+		
 	}
 	
 	private Point generateRandomLocation() {
@@ -387,6 +472,19 @@ public class HubController extends Controller
 			synchronized (list) {
 				//aggiungo l'amico alla lista
 				list.addElement(newFriend);
+			}
+		}
+
+
+		@Override
+		public void newChatRoom(ChatRoom chatroom) throws RemoteException 
+		{
+			DefaultListModel<ChatRoom> list = hubView.getModelChatRoomList();
+			
+			synchronized (list) 
+			{
+				//aggiungo la chatroom alla lista delle chatroom attive
+				list.addElement(chatroom);
 			}
 		}
 	}

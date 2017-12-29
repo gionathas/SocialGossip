@@ -7,7 +7,13 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
 import java.net.Socket;
+import java.net.SocketException;
 
 import javax.swing.JTextArea;
 
@@ -21,12 +27,23 @@ public class ChatRoomController extends Controller
 	private ChatRoomWindow chatView;
 	private User sender;
 	private ChatRoom chatRoomReceiver;
+	
+	//componenti dell'interfaccia grafica dove mostrare il testo
+	private JTextArea textArea;
+	private JTextArea conversationArea;
+	
+	//per invio messaggi
+	private DatagramSocket clientSocket;
+	private InetAddress serverAddress;
+	private int port;
+	private static final int BUFFER_LEN = 1024;
+	private byte[] buffer = new byte[BUFFER_LEN];
 
-	public ChatRoomController(Socket connection, DataInputStream in, DataOutputStream out,User sender,ChatRoom chatRoomReceiver,Point location) 
+	public ChatRoomController(Socket connection, DataInputStream in, DataOutputStream out,User sender,ChatRoom chatRoomReceiver,Point location) throws SocketException 
 	{
 		super(connection, in, out);
 		
-		if(sender == null || chatRoomReceiver == null || location == null)
+		if(sender == null || chatRoomReceiver == null || location == null || textArea == null || conversationArea == null)
 			throw new NullPointerException();
 		
 		chatView = new ChatRoomWindow("CHATROOM["+chatRoomReceiver.getName()+"]");
@@ -35,6 +52,10 @@ public class ChatRoomController extends Controller
 		
 		this.sender = sender;
 		this.chatRoomReceiver = chatRoomReceiver;
+		
+		openChat();
+		serverAddress = chatRoomReceiver.getMessageAddress();
+		this.port = chatRoomReceiver.getMessagePort();
 		
 		initListeners();
 	}
@@ -54,18 +75,53 @@ public class ChatRoomController extends Controller
 			@Override
 			public void actionPerformed(ActionEvent arg0) 
 			{
-				//parte il thread che gestisce l'invio del messaggio
-				//TODO
-				new SendTextToUser(controller, connection, in, out,owner.getNickname(),receiver.getNickname(),chatView.getTextArea(),chatView.getConversationArea()).start();
+				//invio messaggio sulla chatroom
+				sendTextToChatRoom();
 			}
 		});
 	}
 	
+	private void sendTextToChatRoom()
+	{
+		String text = textArea.getText();
+		
+		if(text == null || text.isEmpty()) {
+			return;
+		}
+		//messaggio valido
+		else {
+			text = "["+sender.getNickname()+"]"+": "+text+"\n";
+			
+			//pulisco la textArea
+			textArea.setText("");
+			
+			try {
+				buffer = text.getBytes("UTF-8");
+				
+				//invio il messaggio con un pacchetto UDP
+				DatagramPacket msg = new DatagramPacket(buffer,buffer.length,serverAddress,port);
+				
+				clientSocket.send(msg);
+
+			} catch (UnsupportedEncodingException e) {
+				e.printStackTrace();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+	
+	public ChatRoom getChatRoomReceiver() {
+		return chatRoomReceiver;
+	}
+
 	private void closeChat() {
+		clientSocket.close();
 		window.setVisible(false);
 	}
 	
-	public void openChat() {
+	public void openChat() throws SocketException {
+		clientSocket = new DatagramSocket();
 		window.setVisible(true);
 	}
 	

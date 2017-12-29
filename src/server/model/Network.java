@@ -100,6 +100,16 @@ public class Network
 	
 	/**
 	 * 
+	 * @return lista degli utenti attualmenti isccritti
+	 */
+	public List<User> getUtenti(){
+		synchronized (grafo) {
+			return grafo.getVertici();
+		}
+	}
+	
+	/**
+	 * 
 	 * @param a utente da controllare
 	 * @return lista di utenti amici dell'utente cercato
 	 * @throws UserNotFindException se l'utente risulta non essere iscritto

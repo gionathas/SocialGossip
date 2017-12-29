@@ -271,15 +271,20 @@ public class MessageAnalyzer
 	private static ChatRoom getChatRoom(JSONObject JsonMessage)
 	{
 		String name = (String) JsonMessage.get(ChatRoom.FIELD_NAME);
-		String address = (String) JsonMessage.get(ChatRoom.FIELD_ADDRESS);
-		long port = (long) JsonMessage.get(ChatRoom.FIELD_PORT);
+		String address = (String) JsonMessage.get(ChatRoom.FIELD_MS_ADDRESS);
+		String messAddress = (String) JsonMessage.get(ChatRoom.FIELD_MESSAGE_ADDRESS);
+		long port = (long) JsonMessage.get(ChatRoom.FIELD_MS_PORT);
+		long messagePort = (long) JsonMessage.get(ChatRoom.FIELD_MESSAGE_PORT);
 		
 		try {
-			return new ChatRoom(name,InetAddress.getByName(address),(int) port);
+			return new ChatRoom(name,InetAddress.getByName(address),(int) port,InetAddress.getByName(messAddress), (int) messagePort,false);
 		} catch (UnknownHostException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}

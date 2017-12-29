@@ -1,6 +1,5 @@
 package client.thread;
 
-import java.awt.TrayIcon.MessageType;
 import java.io.BufferedInputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -8,11 +7,8 @@ import java.io.IOException;
 import java.net.BindException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.SocketAddress;
 import java.nio.channels.ServerSocketChannel;
-import java.util.List;
 
 import javax.swing.JTextArea;
 
@@ -20,7 +16,6 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.ParseException;
 
 import client.controller.ChatController;
-import client.controller.Controller;
 import client.controller.HubController;
 import communication.TCPMessages.Message;
 import communication.TCPMessages.MessageAnalyzer;
