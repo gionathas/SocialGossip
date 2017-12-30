@@ -33,7 +33,7 @@ public class ListenerChatRoomMessage extends Thread
 		
 		this.name = chatroom.getName();
 		this.ms = new MulticastSocket(chatroom.getPort());
-		this.chatroomAddr = InetAddress.getByName(chatroom.getIPAddress());
+		this.chatroomAddr = InetAddress.getByName(chatroom.getIPAddress().replace("/",""));
 		
 		//join sull'multicast socket,dove vengono trasmessi i messaggi
 		ms.joinGroup(chatroomAddr);
@@ -49,11 +49,11 @@ public class ListenerChatRoomMessage extends Thread
 
 		while(!Thread.interrupted())
 		{
-			try {
+			try {				
 				ms.receive(receivedPacket);
 				
 				//parso il messaggio arrivato
-				String text = new String(receivedPacket.getData(),receivedPacket.getLength(),0, "UTF-8");
+				String text = new String(receivedPacket.getData(),0,receivedPacket.getLength(), "UTF-8");
 				
 				//prendo il controller della chatrooms
 				ChatRoomController chatroomControl = controller.openChatRoomFromNewMessage(chatroom);

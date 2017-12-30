@@ -7,6 +7,7 @@ import java.net.InetAddress;
 import java.net.MulticastSocket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
+import java.util.Arrays;
 
 import server.model.ChatRoom;
 import utils.PortScanner;
@@ -26,7 +27,7 @@ public class DispatcherChatRoomMessage extends Thread
 	private static final int BUFFER_LEN = 1024; 
 	private static final int timeout = 600; //timeout sul socket
 
-	private byte[] buffer = new byte[BUFFER_LEN];
+	private byte[] buffer;
 	
 	/**
 	 * 
@@ -64,16 +65,18 @@ public class DispatcherChatRoomMessage extends Thread
 
 	public void run() 
 	{
+		buffer = new byte[BUFFER_LEN];
 		DatagramPacket receivedPacket = new DatagramPacket(buffer,buffer.length);
 
 		while(!Thread.interrupted())
 		{
-			try {
+			try {				
 				serverSock.receive(receivedPacket);
 				
 				//ricevuto pacchetto,estraggo i dati e li invio agli iscritti alla chatroom
-				sendMessageToSubscribers(receivedPacket.getData());
-				
+				byte[] dstBuf = new byte[receivedPacket.getLength()];
+				System.arraycopy(receivedPacket.getData(),receivedPacket.getOffset(),dstBuf,0,dstBuf.length);
+				sendMessageToSubscribers(dstBuf);				
 			} 
 			//timeout
 			catch(SocketTimeoutException e) {}

@@ -66,6 +66,7 @@ public class ChatRoom implements Serializable
 
 		
 		//inizializzo multicast
+		this.msAddress = msAddress;
 		this.msPort = PortScanner.freePort();
 		
 		//porta non trovata
