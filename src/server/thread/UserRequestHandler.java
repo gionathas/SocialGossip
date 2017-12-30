@@ -12,6 +12,7 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.net.SocketAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.nio.channels.Pipe.SinkChannel;
@@ -56,7 +57,6 @@ public class UserRequestHandler implements Runnable
 	
 	private Network reteSG; //rete degli utenti di Social Gossip
 	private List<ChatRoom> chatrooms;
-	private List<NotificationUserChatChannel> notificationUsersChatMessage; //canali per notificare gli utenti dell'arrivo dei messaggi 
 	
 	public static final String FIRST_MULTICAST_ADDR = "224.0.0.1";
 	public static final String LAST_MULTICAST_ADDR = "224.0.0.255";
@@ -66,7 +66,7 @@ public class UserRequestHandler implements Runnable
 	private boolean isNotificationThread = false;
 
 
-	public UserRequestHandler(Socket client,Network reteSG,List<ChatRoom> chatrooms,List<NotificationUserChatChannel> notificationUsersChatMessage)
+	public UserRequestHandler(Socket client,Network reteSG,List<ChatRoom> chatrooms)
 	{
 		super();
 
@@ -75,9 +75,7 @@ public class UserRequestHandler implements Runnable
 		
 		this.client = client;
 		this.reteSG = reteSG;
-		this.chatrooms = chatrooms;
-		this.notificationUsersChatMessage = notificationUsersChatMessage;
-		
+		this.chatrooms = chatrooms;		
 	}
 	
 	public void run()
@@ -315,13 +313,10 @@ public class UserRequestHandler implements Runnable
 			//posso creare la nuvoa chatroom
 			else {
 				
-				//creo indirizzo della chatroom
-				int msPort = getFreePort();
 				String msAddress = getNewChatRoomAddress();
-				int messagePort = getFreePort();
 				
 				//indirizzi non piu disponibili
-				if(msAddress == null || msPort == -1 || messagePort == -1)
+				if(msAddress == null)
 				{
 					sendMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.CANNOT_CREATE_CHATROOM), out);
 					return;
@@ -337,7 +332,7 @@ public class UserRequestHandler implements Runnable
 				
 				//aggiungo l'utente che ha creato il gruppo. Essendo il primo e' l'admin
 				try {
-					newChatRoom = new ChatRoom(chatroomName,addr,msPort,messAddr, messagePort,true);
+					newChatRoom = new ChatRoom(chatroomName,addr,messAddr);
 
 					newChatRoom.addNewSubscriber(sender);
 				} 
@@ -375,9 +370,9 @@ public class UserRequestHandler implements Runnable
 	 * 
 	 * @return indirizzo multicast non ancora utilizzato
 	 */
-	private String getNewChatRoomAddress()
+	private synchronized String getNewChatRoomAddress()
 	{		
-		String[] byteIP = FIRST_MULTICAST_ADDR.split(".");
+		String[] byteIP = FIRST_MULTICAST_ADDR.split("\\.");
 		
 		Integer offset = Integer.parseInt(byteIP[3]);
 		
@@ -387,31 +382,7 @@ public class UserRequestHandler implements Runnable
 		if(offset.equals(256))
 			return null;
 		
-		return new String(byteIP[0]+byteIP[1]+byteIP[2]+offset.toString());
-	}
-	
-	/**
-	 * 
-	 * @return una porta libera se esiste,altrimenti -1
-	 */
-	private int getFreePort()
-	{
-		int startingPort = 1024;
-		int lastPort = 9000;
-		
-		for (int i = startingPort; i < lastPort; i++) 
-		{
-			try {
-				DatagramSocket s = new DatagramSocket(i);
-				
-				//porta libera
-				return i;
-			} 
-			catch (BindException e) {} 
-			catch (SocketException e) {}
-		}
-		
-		return -1;
+		return new String(byteIP[0]+"."+byteIP[1]+"."+byteIP[2]+"."+offset.toString());
 	}
 	
 	private void chatNotificationChannelRequestHandler(String nickname,DataOutputStream out) throws IOException
@@ -434,17 +405,8 @@ public class UserRequestHandler implements Runnable
 			return;
 		}
 		
-		//utente valido registro il canale per ricevere notifiche dei messaggi dagli altri utenti
-		synchronized (notificationUsersChatMessage) {
-			
-			NotificationUserChatChannel channel = new NotificationUserChatChannel(user,client);
-			
-			//aggiungo canale alla lista dei canali
-			notificationUsersChatMessage.add(channel);
-			
-			System.out.println(notificationUsersChatMessage.toString());
-
-		}
+		//setto come canale di notifica questa connessione
+		user.setNotificationMessageChannel(client);
 		
 		//mando messaggio di OK al mittente
 		sendMessage(new ResponseSuccessMessage(),out);
@@ -640,38 +602,20 @@ public class UserRequestHandler implements Runnable
 	 */
 	private void messageSendHandler(User a,User b,DataOutputStream out,JSONObject message) throws IOException
 	{	
-		//analizzo tipo del ricevente
-		SendMessageRequest.ReceiverType type = MessageAnalyzer.getReceiverType(message);
-		
 		//prendo messaggio da inviare
 		String text = MessageAnalyzer.getText(message);
 		
 		//se non e' stato trovato il tipo del ricevente oppure il messaggio
-		if(type == null || text == null) {
+		if(text == null) {
 			sendMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.INVALID_REQUEST),out);
 			return;
 		}
 		
-		try {
-			switch(type) 
-			{
-				//il destinatario e' un utente
-				case USER:
-					sendUserMessageHandler(a,b,text,out);
-					break;
-				
-				//il destinatario e' una chatroom
-				case CHATROOM:
-					//TODO
-					break;
-				
-				//errore richiesta
-				default:
-					sendMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.INVALID_REQUEST),out);
-					break;
-				
-			}
-		} catch (Exception e) {
+		try 
+		{
+			sendUserMessageHandler(a,b,text,out);
+		}
+		catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
@@ -687,17 +631,18 @@ public class UserRequestHandler implements Runnable
 			return;
 		}
 		
-		Socket notifyChannelReceiver = null;
-		
 		//se il receiver non e' online,oppure se non ha un canale settato per ricevere i messaggi, invio un messaggio di errore al sender
 		if(!receiver.isOnline()) {
 			sendMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.RECEIVER_USER_INVALID_STATUS),out);
 			return;
 		}
 		
-		//prendo canale di notifica dei messaggi del receiver
-		synchronized (notificationUsersChatMessage) {
-			notifyChannelReceiver = notificationUsersChatMessage.get(notificationUsersChatMessage.indexOf(new NotificationUserChatChannel(receiver,null))).getNotifyChannel();
+		Socket notifyChannelReceiver = receiver.getNotificationMessageChannel();
+
+		//se receiver non ha settato il canale per ricevere messaggi e file
+		if(notifyChannelReceiver == null) {
+			sendMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.RECEIVER_USER_INVALID_STATUS),out);
+			return;
 		}
 		
 		//invio un messaggio di notifica al receiver,dell'arrivo del file
@@ -724,8 +669,6 @@ public class UserRequestHandler implements Runnable
 	 */
 	private void sendUserMessageHandler(User sender,User receiver,String text,DataOutputStream out) throws IOException
 	{
-		Socket notifyChannelReceiver = null;
-		
 		//se il receiver non e' online,oppure se non ha un canale settato per ricevere i messaggi, invio un messaggio di errore al sender
 		if(!receiver.isOnline()) {
 			sendMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.RECEIVER_USER_INVALID_STATUS),out);
@@ -733,8 +676,12 @@ public class UserRequestHandler implements Runnable
 		}
 		
 		//prendo canale di notifica dei messaggi del receiver
-		synchronized (notificationUsersChatMessage) {
-			notifyChannelReceiver = notificationUsersChatMessage.get(notificationUsersChatMessage.indexOf(new NotificationUserChatChannel(receiver,null))).getNotifyChannel();
+		Socket notifyChannelReceiver = receiver.getNotificationMessageChannel();
+		
+		//receiver non ha settato il canale per ricevere messaggi e file
+		if(notifyChannelReceiver == null) {
+			sendMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.RECEIVER_USER_INVALID_STATUS),out);
+			return;
 		}
 		
 		synchronized (notifyChannelReceiver) 
@@ -835,14 +782,6 @@ public class UserRequestHandler implements Runnable
 			sendMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.SENDER_USER_INVALID_STATUS),out);
 			e.printStackTrace();
 			return;
-		}
-		
-		//operazione e' andata a buon fine mando un messaggio di OK,e rimuovo i canali di notifica relativi all'utente
-		synchronized (notificationUsersChatMessage) {
-			NotificationUserChatChannel UserNotifyChannel = notificationUsersChatMessage.get(notificationUsersChatMessage.indexOf(new NotificationUserChatChannel(new User(nickname),null)));
-			Socket connection = UserNotifyChannel.getNotifyChannel();
-			connection.close();
-			notificationUsersChatMessage.remove(UserNotifyChannel);
 		}
 		
 		//invio messaggio di ok

@@ -1,9 +1,9 @@
 package server.model;
 
-import java.io.IOException;
-import java.net.DatagramPacket;
+import java.io.Serializable;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
+
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -12,20 +12,28 @@ import org.json.simple.JSONObject;
 
 import server.model.exception.UserAlreadyRegistered;
 import server.thread.DispatcherChatRoomMessage;
+import utils.PortScanner;
 
 /**
  * Rappresenta un gruppo di utenti in social Gossip
  * @author Gionatha Sturba
  *
  */
-public class ChatRoom 
+public class ChatRoom implements Serializable
 {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -1787928909027681736L;
 	private String name;
-	private MulticastSocket ms; //indirizzo di multicast
+	private InetAddress msAddress;
 	private InetAddress messageAddress;
+	
+	private int msPort; //porta per indirizzo multicast
 	private int messagePort;  //porta per ricezione messaggi
 	
-	private DispatcherChatRoomMessage dispatcherMessage;
+	//thread dispatcher dei messaggi della chatroom
+	private transient DispatcherChatRoomMessage dispatcherMessage;
 	
 	private List<User> subscribers;
 	
@@ -45,35 +53,49 @@ public class ChatRoom
 	 * @param address
 	 * @throws Exception 
 	 */
-	public ChatRoom(String name,InetAddress msAddress,int msPort,InetAddress messageAddress,int messagePort,boolean serverIstance) throws Exception
+	public ChatRoom(String name,InetAddress msAddress,InetAddress messageAddress) throws Exception
 	{
 		if(name == null || msAddress == null)
 			throw new NullPointerException();
 		
-		if(name.isEmpty() || !msAddress.isMulticastAddress() || msPort <= 0 || messagePort <= 0)
+		if(name.isEmpty() || !msAddress.isMulticastAddress())
 			throw new IllegalArgumentException();
 		
 		this.name = name;
+		subscribers = new LinkedList<User>();
+
 		
 		//inizializzo multicast
-		ms = new MulticastSocket(msPort);
+		this.msPort = PortScanner.freePort();
+		
+		//porta non trovata
+		if(msPort == -1)
+			throw new Exception();
+
+		MulticastSocket ms = new MulticastSocket(msPort);
 		ms.setTimeToLive(LOCAL_ADDRESS);
+		
 		
 		//inizializzo indirizzo thread listener messaggi
 		this.messageAddress = messageAddress;
-		this.messagePort = messagePort;
-		
-		//se e' un istanza del server
-		if(serverIstance)
-		{
-			subscribers = new LinkedList<User>();
-
-			//faccio partire il thread che si occupa di gestire i messaggi della chatroom
-			dispatcherMessage = new DispatcherChatRoomMessage(ms,messagePort);
-			dispatcherMessage.start();
-		}
-		
+	
+		//faccio partire il thread che si occupa di gestire i messaggi della chatroom
+		dispatcherMessage = new DispatcherChatRoomMessage(ms,messageAddress);
+		this.messagePort = dispatcherMessage.getListeningPort();
+		dispatcherMessage.start();
 	}
+	
+	public ChatRoom(String name,InetAddress msAddress,int port,InetAddress messageAddress,int messagePort)
+	{
+		if(name == null || msAddress == null || port <= 0 || messageAddress == null || messagePort <= 0)
+			throw new IllegalArgumentException();
+		
+		this.name = name;
+		this.msAddress = msAddress;
+		this.messageAddress = messageAddress;
+		this.messagePort = messagePort;
+	}
+
 	
 	/**
 	 * Crea una chatroom ,a partire dal solo nome
@@ -88,7 +110,7 @@ public class ChatRoom
 			throw new IllegalArgumentException();
 		
 		this.name = name;
-		this.ms = null;
+		this.msAddress = null;
 		this.subscribers = null;
 	}
 	
@@ -160,24 +182,21 @@ public class ChatRoom
 		return "["+name.toUpperCase()+"]"+" Iscritti: "+numSubscribers();
 	}
 	
-	public synchronized MulticastSocket getMulticastSocket() {
-		return ms;
+	public synchronized String getIPAddress() {
+		return msAddress.toString();
+	}
+	
+	public synchronized Integer getPort() {
+		return new Integer(msPort);
 	}
 	
 	public synchronized InetAddress getMessageAddress() {
 		return messageAddress;
 	}
 	
+	
 	public synchronized Integer getMessagePort() {
 		return new Integer(messagePort);
-	}
-	
-	public synchronized String getIPAddress() {
-		return ms.getInetAddress().getHostAddress();
-	}
-	
-	public synchronized Integer getPort() {
-		return new Integer(ms.getPort());
 	}
 	
 	public synchronized void newUser(User newUser) throws UserAlreadyRegistered

@@ -24,6 +24,7 @@ import java.util.Random;
 import javax.management.ListenerNotFoundException;
 import javax.swing.DefaultListModel;
 import javax.swing.JList;
+import javax.swing.ListModel;
 
 import client.thread.ListenerChatMessage;
 import client.thread.ListenerChatRoomMessage;
@@ -58,6 +59,7 @@ public class HubController extends Controller
 	private RMIServerInterface serverRMI = null;
 	private RMIClientNotifyEvent callback;
 	
+	//thread per ricezione messaggi da chat e chatroom
 	private ListenerChatMessage listenerChatMessage; //thread che ascolta i messaggi provenienti da altri utenti
 	private List<ListenerChatRoomMessage> listenersChatRoomMessages; //lista di thread che ascoltano messaggi provenienti da altre chatroom
 	
@@ -230,7 +232,7 @@ public class HubController extends Controller
 			
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				new NewChatRoomRequestSender(controller,connection,in,out,listenersChatRoomMessages).start();
+				new NewChatRoomRequestSender(controller,connection,in,user,out,listenersChatRoomMessages).start();
 			}
 		});
 		
@@ -288,7 +290,7 @@ public class HubController extends Controller
 		}
 	}
 	
-	public void openChatRoomFromList()
+	public void openChatRoomFromList() throws SocketException
 	{
 		JList<ChatRoom> list = hubView.getChatRoomList();
 		
@@ -317,14 +319,11 @@ public class HubController extends Controller
 				//se non ho trovato la chatroom,ne creo una nuova e la aggiungo alla lista
 				if(chatroom == null) 
 				{
-					try {
-						chatroom = new ChatRoomController(connection, in, out,user,selectedRoom,generateRandomLocation());
-					} catch (SocketException e) {
-						controller.showErrorMessage("Impossibile aprire chatroom richiesta","ERRORE APERTURA CHATROOM");
-						return;
-					}
+					chatroom = new ChatRoomController(connection, in, out,user,selectedRoom,generateRandomLocation());
 					
-					chatrooms.add(chatroom);
+					synchronized (chatrooms) {
+						chatrooms.add(chatroom);
+					}
 				}
 				//chat trovata,la mostro
 				else {
@@ -335,6 +334,44 @@ public class HubController extends Controller
 			}
 			
 		}
+	}
+	
+	public ChatRoomController openChatRoomFromList(ChatRoom chatroom) throws SocketException
+	{
+		ListModel<ChatRoom> list = hubView.getChatRoomList().getModel();
+		ChatRoom selectedRoom = null;
+		
+		synchronized (list) {
+			
+			for (int i = 0; i < list.getSize(); i++) 
+			{
+				ChatRoom currentRoom = list.getElementAt(i);
+				
+				//se abbiamo trovato la chatroom che cercavamo
+				if(currentRoom.equals(chatroom)) {
+					selectedRoom = currentRoom;
+					break;
+				}
+			}
+			
+			//chatroom cercata trovata
+			if(selectedRoom != null) {
+				ChatRoomController chatroomControl = new ChatRoomController(connection, in, out,user,selectedRoom,generateRandomLocation());
+				
+				//aggiungo controllo alla liste delle chatrooms
+				synchronized (chatrooms) {
+					chatrooms.add(chatroomControl);
+				}
+				
+				return chatroomControl;
+
+			}
+			
+			//chatroom ricercata non trovata
+			return null;
+
+		}
+
 	}
 	
 	public ChatController openChatFromNewMessage(User sender)
@@ -369,7 +406,7 @@ public class HubController extends Controller
 		return chat;
 	}
 	
-	public ChatRoomController openChatRoomFromNewMessage(ChatRoom chatroom)
+	public ChatRoomController openChatRoomFromNewMessage(ChatRoom chatroom) throws SocketException
 	{
 		ChatRoomController chatroomControl = null;
 		
@@ -384,7 +421,14 @@ public class HubController extends Controller
 			}
 		}
 		
-		if(chatroomControl != null) {
+		//se non ho trovato la chat,ne creo una nuova e la aggiungo alla lista
+		if(chatroomControl == null) 
+		{
+			chatroomControl = new ChatRoomController(connection,in,out,user,chatroom,generateRandomLocation());
+			chatrooms.add(chatroomControl);
+			chatroomControl.setVisible(true);
+		}
+		else{
 			//se non e' gia' visibile
 			if(!chatroomControl.isVisible())
 				chatroomControl.setVisible(true);

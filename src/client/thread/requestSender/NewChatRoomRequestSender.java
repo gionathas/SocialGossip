@@ -2,13 +2,13 @@ package client.thread.requestSender;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.IOException;
 import java.net.Socket;
 import java.util.List;
 
 import javax.swing.JOptionPane;
 
 import client.controller.ChatRoomController;
-import client.controller.Controller;
 import client.controller.HubController;
 import client.thread.ListenerChatRoomMessage;
 import communication.TCPMessages.request.chatroom.NewChatRoom;
@@ -27,15 +27,16 @@ public class NewChatRoomRequestSender extends RequestSenderThread
 	private String chatroomName;
 	private List<ListenerChatRoomMessage> listenersChatRoomMessages;
 	
-	public NewChatRoomRequestSender(HubController controller, Socket connection, DataInputStream in,
+	public NewChatRoomRequestSender(HubController controller, Socket connection, DataInputStream in,User user,
 			DataOutputStream out,List<ListenerChatRoomMessage> listenersChatRoomMessages) 
 	{
 		super(controller, connection, in, out);
 		
-		if(listenersChatRoomMessages == null)
+		if(listenersChatRoomMessages == null || user == null)
 			throw new NullPointerException();
 		
 		this.listenersChatRoomMessages = listenersChatRoomMessages;
+		this.user = user;
 	}
 
 	@Override
@@ -114,12 +115,28 @@ public class NewChatRoomRequestSender extends RequestSenderThread
 	{
 		controller.showInfoMessage("ChatRoom "+chatroomName.toUpperCase()+" creata.","ChatRoom creata",false);
 		
-		//TODO aprire chatroom dalla list,che e' stata aggiornata
+		//apro la nuova chatroom creata
 		HubController hubController = (HubController) controller;
 		
-		ChatRoomController chatroomControl = hubController.openChatRoomFromNewMessage(new ChatRoom(chatroomName));
+		ChatRoomController chatroomControl = null;
 		
-		//TODO manipolare chatroom
+			try {
+				//prendo il controller della chatroom
+				chatroomControl = hubController.openChatRoomFromList(new ChatRoom(chatroomName));
+				
+				//faccio partire il listener dei messaggi della chatroom
+				synchronized (listenersChatRoomMessages) {
+					ListenerChatRoomMessage listener = new ListenerChatRoomMessage(hubController,chatroomControl.getChatRoomReceiver());
+					listenersChatRoomMessages.add(listener);
+					listener.start();
+				}
+			} catch (IOException e) {
+				controller.showErrorMessage("Errore apertura chatroom","ERRORE");
+				return;
+			}		
+		
+		if(chatroomControl != null)
+			chatroomControl.setVisible(true);
 	}
 
 }

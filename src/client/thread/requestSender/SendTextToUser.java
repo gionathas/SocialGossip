@@ -7,7 +7,7 @@ import java.net.Socket;
 import javax.swing.JTextArea;
 
 import client.controller.Controller;
-import communication.TCPMessages.request.interaction.UserMessage;
+import communication.TCPMessages.request.interaction.SendMessageRequest;
 import communication.TCPMessages.response.fail.ResponseFailedMessage.Errors;
 
 public class SendTextToUser extends TextSender
@@ -20,7 +20,7 @@ public class SendTextToUser extends TextSender
 	}
 	
 	protected void createRequest() {
-		request = new UserMessage(senderNick,receiverNick,text);
+		request = new SendMessageRequest(senderNick,receiverNick,text);
 	}
 	
 	protected void failedResponseHandler(Errors error) 

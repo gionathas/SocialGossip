@@ -31,9 +31,6 @@ public class SocialGossipServer implements Runnable
 	private ServerSocket listenerSocket = null; //socket in cui e' in ascolto il server
 	private ThreadPoolExecutor executor = null; //pool di thread per gestire i vari client che arrivano
 	
-	private List<NotificationUserChatChannel> notificationUsersChatMessage; //canali per notificare gli utenti dell'arrivo dei messaggi 
-
-	
 	private static final String SERVER_RMI_SERVICE_NAME = "SocialGossipNotification";
 	private static final int SERVER_RMI_PORT = 6000;
 	
@@ -53,7 +50,6 @@ public class SocialGossipServer implements Runnable
 	{	
 		try 
 		{
-			notificationUsersChatMessage = new LinkedList<NotificationUserChatChannel>();
 			//inizializzo protocollo RMI
 			initRMI();
 			
@@ -62,7 +58,7 @@ public class SocialGossipServer implements Runnable
 				Socket newClient = listenerSocket.accept();
 				
 				//sottometto la gestione del client arrivato ad un thread del pool
-				executor.submit(new UserRequestHandler(newClient,reteSG,chatrooms,notificationUsersChatMessage));
+				executor.submit(new UserRequestHandler(newClient,reteSG,chatrooms));
 				
 			}
 		} 

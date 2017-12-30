@@ -1,17 +1,20 @@
 package communication.TCPMessages.notification;
 
 /**
- * Messaggio di notifica ad un utente dell'arrivo di un messaggio testuale
- * da parte di un amico
+ * Messaggio di notifica dell'arrivo di un messaggio testuale da parte di un utente
  * @author Gionatha Sturba
  *
  */
-public class NewChatMessage extends NewIncomingMessage
+public class NewChatMessage extends NotificationMessage
 {
-
-	public NewChatMessage(String senderNickname, String text) 
+	public static final String FIELD_MESSAGE_TEXT = "message-text";
+	
+	public NewChatMessage(String senderNickname,String text) 
 	{
-		super(NewIncomingMessage.ReceiverType.USER,senderNickname, text);
+		super(EventType.NEW_MESSAGE,senderNickname);
+		
+		//inserisco messaggio testuale
+		jsonMessage.put(FIELD_MESSAGE_TEXT,text);
 	}
 
 }

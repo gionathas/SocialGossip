@@ -12,8 +12,8 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
+import communication.TCPMessages.notification.NewChatMessage;
 import communication.TCPMessages.notification.NewIncomingFile;
-import communication.TCPMessages.notification.NewIncomingMessage;
 import communication.TCPMessages.notification.NotificationMessage;
 import communication.TCPMessages.request.RequestMessage;
 import communication.TCPMessages.request.access.RegisterRequest;
@@ -118,37 +118,14 @@ public class MessageAnalyzer
 	/**
 	 * 
 	 * @param JsonMessage
-	 * @return tipo del mittente del messaggio di notifica del messaggio testuale,null se non e' stato trovato
-	 */
-	public static NewIncomingMessage.ReceiverType getIncomingMessageReceiverType(JSONObject JsonMessage)
-	{
-		if(JsonMessage == null)
-			throw new NullPointerException();
-		
-		String type = (String)JsonMessage.get(NewIncomingMessage.FIELD_INCOMING_MESSAGE_RECEIVER_TYPE);
-		
-		if(type == null)
-			return null;
-		
-		if(type.equals(NewIncomingMessage.ReceiverType.USER.name()))
-			return NewIncomingMessage.ReceiverType.USER;
-		else if(type.equals(NewIncomingMessage.ReceiverType.CHATROOM.name()))
-			return NewIncomingMessage.ReceiverType.CHATROOM;
-		else
-			return null;
-	}
-	
-	/**
-	 * 
-	 * @param JsonMessage
 	 * @return testo del messaggio del messaggio di notifica del messaggio testuale,null se non e' stato trovato
 	 */
-	public static String getIncomingMessageText(JSONObject JsonMessage)
+	public static String getChatMessageText(JSONObject JsonMessage)
 	{
 		if(JsonMessage == null)
 			throw new NullPointerException();
 		
-		return (String) JsonMessage.get(NewIncomingMessage.FIELD_INCOMING_MESSAGE_TEXT);
+		return (String) JsonMessage.get(NewChatMessage.FIELD_MESSAGE_TEXT);
 	}
 	
 	/**
@@ -277,7 +254,7 @@ public class MessageAnalyzer
 		long messagePort = (long) JsonMessage.get(ChatRoom.FIELD_MESSAGE_PORT);
 		
 		try {
-			return new ChatRoom(name,InetAddress.getByName(address),(int) port,InetAddress.getByName(messAddress), (int) messagePort,false);
+			return new ChatRoom(name,InetAddress.getByName(address),(int) port,InetAddress.getByName(messAddress), (int) messagePort);
 		} catch (UnknownHostException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -573,37 +550,6 @@ public class MessageAnalyzer
 			throw new NullPointerException();
 		
 		return (String) JsonMessage.get(InteractionRequest.FIELD_NICKNAME_RECEIVER);
-	}
-	
-	/**
-	 * 
-	 * @param JsonMessage
-	 * @return tipo del ricevente del messaggio testuale,null se non e' stato trovato
-	 */
-	public static SendMessageRequest.ReceiverType getReceiverType(JSONObject JsonMessage)
-	{
-		if(JsonMessage == null)
-			throw new NullPointerException();
-		
-		String type = (String) JsonMessage.get(SendMessageRequest.FIELD_RECEIVER_TYPE);
-		
-		//campo non trovato
-		if(type == null)
-			return null;
-		
-		//se e' un messaggio di richiesta ricerca utente
-		if(type.equals(SendMessageRequest.ReceiverType.USER.name()))
-		{
-			return SendMessageRequest.ReceiverType.USER;
-		}
-		else if(type.equals(SendMessageRequest.ReceiverType.CHATROOM.name()))
-		{
-			return SendMessageRequest.ReceiverType.CHATROOM;
-		}
-		else {
-			return null;
-		}
-		
 	}
 	
 	/**

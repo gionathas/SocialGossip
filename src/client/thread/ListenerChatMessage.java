@@ -20,7 +20,6 @@ import client.controller.HubController;
 import communication.TCPMessages.Message;
 import communication.TCPMessages.MessageAnalyzer;
 import communication.TCPMessages.notification.NotificationMessage;
-import communication.TCPMessages.notification.NewIncomingMessage.ReceiverType;
 import communication.TCPMessages.request.ChatNotification;
 import communication.TCPMessages.response.ResponseMessage;
 import communication.TCPMessages.response.fail.ResponseFailedMessage;
@@ -190,36 +189,28 @@ public class ListenerChatMessage extends Thread
 							//ricevuto messaggio testuale
 							case NEW_MESSAGE:
 								
-								//se e' un messaggio di una chat
-								if(MessageAnalyzer.getIncomingMessageReceiverType(notificationMessage) == ReceiverType.USER)
-								{
+								//se il messaggio e' valido
+								String text = MessageAnalyzer.getChatMessageText(notificationMessage);
 								
-									//se il messaggio e' valido
-									String text = MessageAnalyzer.getIncomingMessageText(notificationMessage);
+								if(text != null)
+								{
+									//cerco la chat con l'utente che ha inviato il messaggio
+									ChatController chat = controller.openChatFromNewMessage(new User(sender));
 									
-									if(text != null)
+									synchronized (chat) 
 									{
-										//cerco la chat con l'utente che ha inviato il messaggio
-										ChatController chat = controller.openChatFromNewMessage(new User(sender));
+										//aggiungo messaggio arrivato alla conversation area della chat
+										JTextArea conversationArea = chat.getJConversationArea();
 										
-										synchronized (chat) 
+										synchronized (conversationArea) 
 										{
-											//aggiungo messaggio arrivato alla conversation area della chat
-											JTextArea conversationArea = chat.getJConversationArea();
-											
-											synchronized (conversationArea) 
-											{
-												conversationArea.append("["+sender+"]"+": "+text+"\n");
-											}
+											conversationArea.append("["+sender+"]"+": "+text+"\n");
 										}
-										
-										//controller.showInfoMessage(sender+" ti ha inviato un messaggio","NUOVO MESSAGGIO",false);
 									}
+									
+									//controller.showInfoMessage(sender+" ti ha inviato un messaggio","NUOVO MESSAGGIO",false);
 								}
-								//caso di chatroom
-								else {
-									//TODO
-								}
+								
 								break;
 							
 							//ricevuto file

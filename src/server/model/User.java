@@ -27,6 +27,7 @@ public class User implements Serializable
 	private boolean online;
 	private String lingua; //ISO 639-2 Code
 	private List<User> amici;
+	private transient Socket notificationMessageChannel;
 
 	
 	//gestione notifiche eventi
@@ -56,6 +57,7 @@ public class User implements Serializable
 		this.online = online;
 		this.lingua = lingua;
 		this.amici = new LinkedList<User>();
+		this.notificationMessageChannel = null;
 	}
 	
 	/**
@@ -73,7 +75,7 @@ public class User implements Serializable
 		this.password = null;
 		this.lingua = null;
 		this.amici = null;
-
+		this.notificationMessageChannel = null;
 	}
 	
 	/**
@@ -90,6 +92,7 @@ public class User implements Serializable
 		this.online = false;
 		this.lingua = null;
 		this.amici = null;
+		this.notificationMessageChannel = null;
 
 	}
 	
@@ -108,6 +111,7 @@ public class User implements Serializable
 		this.online = false;
 		this.lingua = null;
 		this.amici = null;
+		this.notificationMessageChannel = null;
 
 	}
 	
@@ -127,6 +131,7 @@ public class User implements Serializable
 		this.online = false;
 		this.lingua = lingua;
 		this.amici = null;
+		this.notificationMessageChannel = null;
 	}
 	
 	
@@ -138,6 +143,23 @@ public class User implements Serializable
 		return nickname+" ["+status.toUpperCase()+"]";
 	}
 	
+	
+	/**
+	 * 
+	 * @return canale di notifica utilizzato dall'utente per ricevere messaggi da altri utenti,null se non e' settato
+	 */
+	public synchronized Socket getNotificationMessageChannel() {
+		return notificationMessageChannel;
+	}
+	
+	/**
+	 * Setta il canale di notifica per ricevere i messaggi da altri utenti
+	 * @param notificationMessageChannel 
+	 */
+	public synchronized void setNotificationMessageChannel(Socket notificationMessageChannel) {
+		this.notificationMessageChannel = notificationMessageChannel;
+	}
+
 	/**
 	 * 
 	 * @return canale RMI per notificare l'utente di un evento,null se non ha un canale RMI

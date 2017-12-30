@@ -30,7 +30,6 @@ public class ChatRoomController extends Controller
 	
 	//componenti dell'interfaccia grafica dove mostrare il testo
 	private JTextArea textArea;
-	private JTextArea conversationArea;
 	
 	//per invio messaggi
 	private DatagramSocket clientSocket;
@@ -43,7 +42,7 @@ public class ChatRoomController extends Controller
 	{
 		super(connection, in, out);
 		
-		if(sender == null || chatRoomReceiver == null || location == null || textArea == null || conversationArea == null)
+		if(sender == null || chatRoomReceiver == null || location == null)
 			throw new NullPointerException();
 		
 		chatView = new ChatRoomWindow("CHATROOM["+chatRoomReceiver.getName()+"]");
@@ -83,6 +82,7 @@ public class ChatRoomController extends Controller
 	
 	private void sendTextToChatRoom()
 	{
+		JTextArea textArea = getTextArea();
 		String text = textArea.getText();
 		
 		if(text == null || text.isEmpty()) {

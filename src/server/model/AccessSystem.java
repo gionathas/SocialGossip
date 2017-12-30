@@ -129,11 +129,14 @@ public class AccessSystem
 		//utente non online
 		else if(registeredUser.isOnline() == false)
 			throw new UserStatusException();
+		
 		//altrimenti procedo al logout
 		else 
 		{
 			//metto l'utente offline
 			registeredUser.setOnline(false);
+			//tolgo il canale TCP per le notifiche
+			registeredUser.setNotificationMessageChannel(null);
 			
 			//aggiorno gli amici dell'utente che e' andato offline
 			for (User friend : registeredUser.getAmici()) 

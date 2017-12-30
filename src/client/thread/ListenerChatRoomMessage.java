@@ -7,8 +7,6 @@ import java.net.MulticastSocket;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 
-import javax.swing.JTextArea;
-
 import client.controller.ChatRoomController;
 import client.controller.HubController;
 import server.model.ChatRoom;
@@ -33,9 +31,9 @@ public class ListenerChatRoomMessage extends Thread
 		this.chatroom = chatroom;
 		this.controller = controller;
 		
-		this.ms = chatroom.getMulticastSocket();
-		this.chatroomAddr = InetAddress.getByName(chatroom.getIPAddress());
 		this.name = chatroom.getName();
+		this.ms = new MulticastSocket(chatroom.getPort());
+		this.chatroomAddr = InetAddress.getByName(chatroom.getIPAddress());
 		
 		//join sull'multicast socket,dove vengono trasmessi i messaggi
 		ms.joinGroup(chatroomAddr);
