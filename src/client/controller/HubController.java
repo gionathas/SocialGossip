@@ -30,6 +30,7 @@ import javax.swing.ListModel;
 import client.thread.ListenerChatMessage;
 import client.thread.ListenerChatRoomMessage;
 import client.thread.requestSender.FindUserRequestSender;
+import client.thread.requestSender.JoinChatRoomRequestSender;
 import client.thread.requestSender.LogoutRequestSender;
 import client.thread.requestSender.NewChatRoomRequestSender;
 import client.view.ChatRoomWindow;
@@ -115,7 +116,11 @@ public class HubController extends Controller
 		hubView.setWelcomeText("Loggato come: "+nickname);
 		chats = new LinkedList<ChatController>();
 		chatrooms = new LinkedList<ChatRoomController>();
-
+		
+		//configuro thread listener che ascolta i messaggi arrivati da altre chat,e lo faccio partire
+		listenerChatMessage = new ListenerChatMessage(this,user,connection.getInetAddress(),connection.getPort());
+		listenerChatMessage.start();
+		
 		//se mi e' stata passata una lista di amici
 		if(amiciList != null) {
 			//aggiorno lista amici
@@ -124,21 +129,23 @@ public class HubController extends Controller
 			}
 		}
 		
+		//insieme di thread listener messaggi chatrooms
+		listenersChatRoomMessages = new LinkedList<ListenerChatRoomMessage>();	
+		
 		//aggiungo lista chatroom attive
 		for(ChatRoom cr : chatRooms) {
-			hubView.getModelChatRoomList().addElement(cr);;
+			hubView.getModelChatRoomList().addElement(cr);
+			
+			//se l'utente e' iscritto alla chatroom,faccio partite il listener dei messaggi della chatroom
+			if(cr.getSubscribers().contains(user)) {
+				ListenerChatRoomMessage listener = new ListenerChatRoomMessage(this,cr);
+				listenersChatRoomMessages.add(listener);
+				listener.start();
+			}
 		}
 		
-		
 		//configuro RMI per ricevere notifiche sullo stato degli amici e sulle nuove amicizie
-		initRMI(nickname);
-		
-		//configuro thread listener che ascolta i messaggi arrivati da altre chat,e lo faccio partire
-		listenerChatMessage = new ListenerChatMessage(this,user,connection.getInetAddress(),connection.getPort());
-		listenerChatMessage.start();
-		
-		//insieme di thread listener messaggi chatrooms
-		listenersChatRoomMessages = new LinkedList<ListenerChatRoomMessage>();		
+		initRMI(nickname);	
 	}
 	
 	/**
@@ -237,12 +244,26 @@ public class HubController extends Controller
 			}
 		});
 		
-		//al click sul bottone unisciti a chatroom
+		//al click sul bottone UNISCITA A CHATROOM
 		hubView.getBtnUniscitiAChatroom().addActionListener(new ActionListener() {
 			
 			@Override
-			public void actionPerformed(ActionEvent e) {
-				// TODO Auto-generated method stub
+			public void actionPerformed(ActionEvent e) 
+			{	
+				JList<ChatRoom> list = hubView.getChatRoomList();
+				ChatRoom selectedRoom = null;
+				
+				synchronized (list) {
+					 selectedRoom = list.getSelectedValue();
+				}
+				
+				if(selectedRoom == null)
+				{
+					showInfoMessage("Nessuna ChatRoom selezionata..","Ops",false);
+				}
+				else {
+					new JoinChatRoomRequestSender(controller,connection,in,out,user.getNickname(),selectedRoom,listenersChatRoomMessages).start();
+				}
 				
 			}
 		});
@@ -289,7 +310,7 @@ public class HubController extends Controller
 		}
 	}
 	
-	public void openChatRoomFromList() throws SocketException, UnknownHostException
+	public ChatRoomController openChatRoomFromList() throws SocketException, UnknownHostException
 	{
 		JList<ChatRoom> list = hubView.getChatRoomList();
 		
@@ -300,6 +321,7 @@ public class HubController extends Controller
 			if(selectedRoom == null)
 			{
 				showInfoMessage("Seleziona una ChatRoom!","Nessuna ChatRoom selezionata",false);
+				return null;
 			}
 			else {
 				ChatRoomController chatroom = null;
@@ -321,6 +343,7 @@ public class HubController extends Controller
 						synchronized (chatrooms) {
 							chatrooms.add(chatroom);
 						}
+						
 					}
 					//chat trovata,la mostro
 					else {
@@ -328,7 +351,9 @@ public class HubController extends Controller
 						if (!chatroom.isVisible())
 							chatroom.setVisible(true);
 					}
-				}				
+				}
+				
+				return chatroom;
 			}
 			
 		}

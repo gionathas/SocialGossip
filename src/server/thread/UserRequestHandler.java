@@ -288,7 +288,7 @@ public class UserRequestHandler implements Runnable
 			break;
 			
 		case JOIN_CHATROOM:
-			//joinChatRoomRequestHandler(sender,chatroomName,out);
+			joinChatRoomRequestHandler(sender,chatroomName,out);
 			break;
 		
 		default:
@@ -297,6 +297,37 @@ public class UserRequestHandler implements Runnable
 		}
 		
 		
+	}
+	
+	private void joinChatRoomRequestHandler(User sender,String chatroomName,DataOutputStream out) throws IOException
+	{
+		//controllo se la chatroom esiste gia'
+		synchronized (chatrooms) {
+			
+			//chatroom non esistente
+			if(!chatrooms.contains(new ChatRoom(chatroomName)))
+			{
+				sendMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.CHATROOM_NOT_FOUND), out);
+				return;
+			}
+			//chatroom trovata
+			else {
+				ChatRoom selectedRoom = chatrooms.get(chatrooms.indexOf(new ChatRoom(chatroomName)));
+				
+				//aggiungo l'utente alla chatroom, e aggiorno la lista chatroom dell'utente
+				try {
+					selectedRoom.addNewSubscriber(sender);
+					
+					sender.aggiungiChatRoom(selectedRoom);
+				} catch (UserAlreadyRegistered e) {
+					sendMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.USER_ALREADY_REGISTERED), out);
+					return;
+				}
+			}
+		}
+		
+		//operazione andata a buon fine
+		sendMessage(new ResponseSuccessMessage(), out);
 	}
 	
 	private void newChatRoomRequestHandler(User sender,String chatroomName,DataOutputStream out) throws IOException
@@ -335,6 +366,9 @@ public class UserRequestHandler implements Runnable
 					newChatRoom = new ChatRoom(chatroomName,addr,messAddr);
 
 					newChatRoom.addNewSubscriber(sender);
+					
+					//aggiungo la chatroom alla lista delle chatroom a cui l'utente e' iscritto
+					sender.aggiungiChatRoom(newChatRoom);
 				} 
 				catch (UserAlreadyRegistered e) {
 					sendMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.USER_ALREADY_REGISTERED), out);

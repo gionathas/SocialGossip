@@ -9,6 +9,7 @@ import java.util.Locale;
 import org.json.simple.JSONObject;
 
 import communication.RMI.RMIClientNotifyEvent;
+import server.model.exception.UserAlreadyRegistered;
 
 /**
  * Rappresenta un generico utente della rete di Social Gossip
@@ -27,6 +28,7 @@ public class User implements Serializable
 	private boolean online;
 	private String lingua; //ISO 639-2 Code
 	private List<User> amici;
+	private List<ChatRoom> chatrooms; //chatroom a cui e' iscritto l'utente
 	private transient Socket notificationMessageChannel;
 
 	
@@ -57,6 +59,7 @@ public class User implements Serializable
 		this.online = online;
 		this.lingua = lingua;
 		this.amici = new LinkedList<User>();
+		this.chatrooms = new LinkedList<ChatRoom>(); 
 		this.notificationMessageChannel = null;
 	}
 	
@@ -75,6 +78,7 @@ public class User implements Serializable
 		this.password = null;
 		this.lingua = null;
 		this.amici = null;
+		this.chatrooms = null;
 		this.notificationMessageChannel = null;
 	}
 	
@@ -92,6 +96,7 @@ public class User implements Serializable
 		this.online = false;
 		this.lingua = null;
 		this.amici = null;
+		this.chatrooms = null;
 		this.notificationMessageChannel = null;
 
 	}
@@ -111,6 +116,7 @@ public class User implements Serializable
 		this.online = false;
 		this.lingua = null;
 		this.amici = null;
+		this.chatrooms = null;
 		this.notificationMessageChannel = null;
 
 	}
@@ -131,6 +137,7 @@ public class User implements Serializable
 		this.online = false;
 		this.lingua = lingua;
 		this.amici = null;
+		this.chatrooms = null;
 		this.notificationMessageChannel = null;
 	}
 	
@@ -258,6 +265,26 @@ public class User implements Serializable
 		//se non sono gia' amici
 		if(!amici.contains(user)) {
 			amici.add(user);
+		}
+	}
+	
+	/**
+	 * Aggiunge una nuova chatroom a cui l'utente si e' iscritto
+	 * @param chatroom
+	 * @throws UserAlreadyRegistered
+	 */
+	public synchronized void aggiungiChatRoom(ChatRoom chatroom) throws UserAlreadyRegistered
+	{
+		if(chatroom == null)
+			throw new NullPointerException();
+		
+		if(chatroom == null)
+			return;
+		
+		if(chatrooms.contains(chatroom))
+			throw new UserAlreadyRegistered();
+		else {
+			chatrooms.add(chatroom);
 		}
 	}
 	

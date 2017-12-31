@@ -252,9 +252,18 @@ public class MessageAnalyzer
 		String messAddress = (String) JsonMessage.get(ChatRoom.FIELD_MESSAGE_ADDRESS);
 		long port = (long) JsonMessage.get(ChatRoom.FIELD_MS_PORT);
 		long messagePort = (long) JsonMessage.get(ChatRoom.FIELD_MESSAGE_PORT);
+		JSONArray subs = (JSONArray) JsonMessage.get(ChatRoom.FIELD_LIST_SUBS);
+		
+		List<User> listSubs = new LinkedList<User>();
+		Iterator<JSONObject> iterator = subs.iterator();
+		
+		//scorro gli utenti iscritti,e li aggiungo
+		while(iterator.hasNext()) {
+			listSubs.add(getUser(iterator.next()));
+		}
 		
 		try {
-			return new ChatRoom(name,InetAddress.getByName(address),(int) port,InetAddress.getByName(messAddress), (int) messagePort);
+			return new ChatRoom(name,InetAddress.getByName(address),(int) port,InetAddress.getByName(messAddress), (int) messagePort,listSubs);
 		} catch (UnknownHostException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import server.model.exception.UserAlreadyRegistered;
@@ -46,6 +47,7 @@ public class ChatRoom implements Serializable
 	public static final String FIELD_MS_PORT = "ms-port";
 	public static final String FIELD_MESSAGE_ADDRESS = "message-address";
 	public static final String FIELD_MESSAGE_PORT = "message-port";
+	public static final String FIELD_LIST_SUBS = "list-subscriber";
 
 	/**
 	 * Crea una nuova chatroom vuota,con un nome e un indirizzo assegnato
@@ -86,15 +88,16 @@ public class ChatRoom implements Serializable
 		dispatcherMessage.start();
 	}
 	
-	public ChatRoom(String name,InetAddress msAddress,int port,InetAddress messageAddress,int messagePort)
+	public ChatRoom(String name,InetAddress msAddress,int port,InetAddress messageAddress,int messagePort,List<User> subs)
 	{
-		if(name == null || msAddress == null || port <= 0 || messageAddress == null || messagePort <= 0)
+		if(name == null || msAddress == null || port <= 0 || messageAddress == null || messagePort <= 0 || subs == null)
 			throw new IllegalArgumentException();
 		
 		this.name = name;
 		this.msAddress = msAddress;
 		this.messageAddress = messageAddress;
 		this.messagePort = messagePort;
+		this.subscribers = subs;
 	}
 
 	
@@ -174,17 +177,27 @@ public class ChatRoom implements Serializable
 		//porta per ricevere messaggi
 		jsonChatRoom.put(FIELD_MESSAGE_PORT,cr.getMessagePort());
 		
+		//utenti registrati alla chatroom
+		JSONArray subs = new JSONArray();
+		
+		for (User sub : cr.getSubscribers()) 
+		{
+			subs.add(User.toJsonObject(sub));
+		}
+		
+		jsonChatRoom.put(FIELD_LIST_SUBS,subs);
+		
 		return jsonChatRoom;
 	}
 	
 	@Override
 	public String toString()
 	{
-		return "["+name.toUpperCase()+"]";
+		return "["+name.toUpperCase()+"] "+"Iscritti: "+numSubscribers();
 	}
 	
 	public synchronized String getIPAddress() {
-		return msAddress.toString().replace("/","").replace("\\","");
+		return msAddress.toString().replaceAll("[^\\d.]","");
 	}
 	
 	public synchronized Integer getPort() {
@@ -192,7 +205,7 @@ public class ChatRoom implements Serializable
 	}
 	
 	public synchronized String getMessageAddress() {
-		return messageAddress.toString().replace("/","").replace("\\","");
+		return messageAddress.toString().replaceAll("[^\\d.]","");
 	}
 	
 	

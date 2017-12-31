@@ -7,7 +7,7 @@ package communication.TCPMessages.request.chatroom;
  */
 public class JoinChatRoom extends ChatRoomRequest
 {
-	public JoinChatRoom(ChatroomRequests type, String nicknameUser, String chatRoomName) 
+	public JoinChatRoom(String nicknameUser, String chatRoomName) 
 	{
 		super(ChatRoomRequest.ChatroomRequests.JOIN_CHATROOM,nicknameUser,chatRoomName);
 	}

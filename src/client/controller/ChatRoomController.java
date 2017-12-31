@@ -46,7 +46,7 @@ public class ChatRoomController extends Controller
 		if(sender == null || chatRoomReceiver == null || location == null)
 			throw new NullPointerException();
 		
-		chatView = new ChatRoomWindow("CHATROOM["+chatRoomReceiver.getName()+"]");
+		chatView = new ChatRoomWindow(sender.getNickname()+": CHATROOM ["+chatRoomReceiver.getName().toUpperCase()+"]");
 		setWindow(chatView);
 		window.setLocation(location);
 		
