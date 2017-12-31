@@ -355,7 +355,9 @@ public class UserRequestHandler implements Runnable
 					for (User user : users) {
 						RMIClientNotifyEvent notifyEvent = user.getRMIchannel();
 						
-						notifyEvent.newChatRoom(newChatRoom);
+						//se l'utente ha settato il canale di notifica,invio la notifica
+						if(notifyEvent != null)
+							notifyEvent.newChatRoom(newChatRoom);
 					}
 				}
 			}

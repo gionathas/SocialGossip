@@ -133,8 +133,8 @@ public class ChatRoom implements Serializable
 		return Collections.unmodifiableList(subscribers);
 	}
 	
-	public synchronized int numSubscribers() {
-		return subscribers.size();
+	public synchronized Integer numSubscribers() {
+		return new Integer(subscribers.size());
 	}
 	
 	
@@ -180,19 +180,19 @@ public class ChatRoom implements Serializable
 	@Override
 	public String toString()
 	{
-		return "["+name.toUpperCase()+"]"+" Iscritti: "+numSubscribers();
+		return "["+name.toUpperCase()+"]";
 	}
 	
 	public synchronized String getIPAddress() {
-		return msAddress.toString();
+		return msAddress.toString().replace("/","").replace("\\","");
 	}
 	
 	public synchronized Integer getPort() {
 		return new Integer(msPort);
 	}
 	
-	public synchronized InetAddress getMessageAddress() {
-		return messageAddress;
+	public synchronized String getMessageAddress() {
+		return messageAddress.toString().replace("/","").replace("\\","");
 	}
 	
 	

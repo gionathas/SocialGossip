@@ -11,6 +11,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.net.Socket;
 import java.net.SocketException;
+import java.net.UnknownHostException;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
@@ -263,34 +264,32 @@ public class HubController extends Controller
 			else {
 				ChatController chat = null;
 				
-				//cerco se esiste gia' un istanza della chat,tra le liste
-				for (ChatController currentChat : chats) 
-				{
-					//chat trovata
-					if(currentChat.getReceiver().equals(selectedUser))
-					{
-						chat = currentChat;
-						break;
+				synchronized (chats) {
+					//cerco se esiste gia' un istanza della chat,tra le liste
+					for (ChatController currentChat : chats) {
+						//chat trovata
+						if (currentChat.getReceiver().equals(selectedUser)) {
+							chat = currentChat;
+							break;
+						}
 					}
-				}
-				
-				//se non ho trovato la chat,ne creo una nuova e la aggiungo alla lista
-				if(chat == null) 
-				{
-					chat = new ChatController(connection, in, out,user,selectedUser,generateRandomLocation());
-					chats.add(chat);
-				}
-				//chat trovata,la mostro
-				else {
-					//se non e' gia' visibile
-					if(!chat.isVisible())
-						chat.setVisible(true);
+					//se non ho trovato la chat,ne creo una nuova e la aggiungo alla lista
+					if (chat == null) {
+						chat = new ChatController(connection, in, out, user, selectedUser, generateRandomLocation());
+						chats.add(chat);
+					}
+					//chat trovata,la mostro
+					else {
+						//se non e' gia' visibile
+						if (!chat.isVisible())
+							chat.setVisible(true);
+					}
 				}				
 			}
 		}
 	}
 	
-	public void openChatRoomFromList() throws SocketException
+	public void openChatRoomFromList() throws SocketException, UnknownHostException
 	{
 		JList<ChatRoom> list = hubView.getChatRoomList();
 		
@@ -305,38 +304,37 @@ public class HubController extends Controller
 			else {
 				ChatRoomController chatroom = null;
 				
-				//cerco se esiste gia' un istanza della chat,tra le liste
-				for (ChatRoomController currentChatRoom : chatrooms) 
-				{
-					//chat trovata
-					if(currentChatRoom.getChatRoomReceiver().equals(selectedRoom))
-					{
-						chatroom = currentChatRoom;
-						break;
+				synchronized (chatrooms) {
+					//cerco se esiste gia' un istanza della chat,tra le liste
+					for (ChatRoomController currentChatRoom : chatrooms) {
+						//chat trovata
+						if (currentChatRoom.getChatRoomReceiver().equals(selectedRoom)) {
+							chatroom = currentChatRoom;
+							break;
+						}
 					}
-				}
-				
-				//se non ho trovato la chatroom,ne creo una nuova e la aggiungo alla lista
-				if(chatroom == null) 
-				{
-					chatroom = new ChatRoomController(connection, in, out,user,selectedRoom,generateRandomLocation());
-					
-					synchronized (chatrooms) {
-						chatrooms.add(chatroom);
+					//se non ho trovato la chatroom,ne creo una nuova e la aggiungo alla lista
+					if (chatroom == null) {
+						chatroom = new ChatRoomController(connection, in, out, user, selectedRoom,
+								generateRandomLocation());
+
+						synchronized (chatrooms) {
+							chatrooms.add(chatroom);
+						}
 					}
-				}
-				//chat trovata,la mostro
-				else {
-					//se non e' gia' visibile
-					if(!chatroom.isVisible())
-						chatroom.setVisible(true);
+					//chat trovata,la mostro
+					else {
+						//se non e' gia' visibile
+						if (!chatroom.isVisible())
+							chatroom.setVisible(true);
+					}
 				}				
 			}
 			
 		}
 	}
 	
-	public ChatRoomController openChatRoomFromList(ChatRoom chatroom) throws SocketException
+	public ChatRoomController openChatRoomFromList(ChatRoom chatroom) throws SocketException, UnknownHostException
 	{
 		ListModel<ChatRoom> list = hubView.getChatRoomList().getModel();
 		ChatRoom selectedRoom = null;
@@ -355,11 +353,13 @@ public class HubController extends Controller
 			}
 			
 			//chatroom cercata trovata
-			if(selectedRoom != null) {
+			if(selectedRoom != null) 
+			{
 				ChatRoomController chatroomControl = new ChatRoomController(connection, in, out,user,selectedRoom,generateRandomLocation());
 				
 				//aggiungo controllo alla liste delle chatrooms
-				synchronized (chatrooms) {
+				synchronized (chatrooms) 
+				{
 					chatrooms.add(chatroomControl);
 				}
 				
@@ -378,77 +378,78 @@ public class HubController extends Controller
 	{
 		ChatController chat = null;
 		
-		//cerco se esiste gia' un istanza della chat
-		for (ChatController currentChat : chats) 
-		{
-			//chat trovata
-			if(currentChat.getReceiver().equals(sender))
-			{
-				chat = currentChat;
-				break;
+		synchronized (chats) {
+			//cerco se esiste gia' un istanza della chat
+			for (ChatController currentChat : chats) {
+				//chat trovata
+				if (currentChat.getReceiver().equals(sender)) {
+					chat = currentChat;
+					break;
+				}
+			}
+			//se non ho trovato la chat,ne creo una nuova e la aggiungo alla lista
+			if (chat == null) {
+				chat = new ChatController(connection, in, out, user, sender, generateRandomLocation());
+				chats.add(chat);
+				chat.setVisible(true);
+			}
+			//chat trovata,la mostro
+			else {
+				//se non e' gia' visibile
+				if (!chat.isVisible())
+					chat.setVisible(true);
 			}
 		}
-		
-		//se non ho trovato la chat,ne creo una nuova e la aggiungo alla lista
-		if(chat == null) 
-		{
-			chat = new ChatController(connection, in, out,user,sender,generateRandomLocation());
-			chats.add(chat);
-			chat.setVisible(true);
-		}
-		//chat trovata,la mostro
-		else {
-			//se non e' gia' visibile
-			if(!chat.isVisible())
-				chat.setVisible(true);
-		}
-		
 		return chat;
 	}
 	
-	public ChatRoomController openChatRoomFromNewMessage(ChatRoom chatroom) throws SocketException
+	public ChatRoomController openChatRoomFromNewMessage(ChatRoom chatroom) throws SocketException, UnknownHostException
 	{
 		ChatRoomController chatroomControl = null;
 		
-		//cerco se esiste gia' un istanza della chat
-		for (ChatRoomController currentChatRoom : chatrooms) 
-		{
-			//chat trovata
-			if(currentChatRoom.getChatRoomReceiver().equals(chatroom))
-			{
-				chatroomControl = currentChatRoom;
-				break;
+		synchronized (chatrooms) {
+			//cerco se esiste gia' un istanza della chat
+			for (ChatRoomController currentChatRoom : chatrooms) {
+				//chat trovata
+				if (currentChatRoom.getChatRoomReceiver().equals(chatroom)) {
+					chatroomControl = currentChatRoom;
+					break;
+				}
+			}
+			//se non ho trovato la chat,ne creo una nuova e la aggiungo alla lista
+			if (chatroomControl == null) {
+				chatroomControl = new ChatRoomController(connection, in, out, user, chatroom, generateRandomLocation());
+				chatrooms.add(chatroomControl);
+				chatroomControl.setVisible(true);
+			} else {
+				//se non e' gia' visibile
+				if (!chatroomControl.isVisible())
+					chatroomControl.setVisible(true);
 			}
 		}
-		
-		//se non ho trovato la chat,ne creo una nuova e la aggiungo alla lista
-		if(chatroomControl == null) 
-		{
-			chatroomControl = new ChatRoomController(connection,in,out,user,chatroom,generateRandomLocation());
-			chatrooms.add(chatroomControl);
-			chatroomControl.setVisible(true);
-		}
-		else{
-			//se non e' gia' visibile
-			if(!chatroomControl.isVisible())
-				chatroomControl.setVisible(true);
-		}
-		
 		return chatroomControl;
 	}
 	
 	
 	private void closeAllChats()
 	{
-		//chiudo tutte le finestre di chat
-    	for (ChatController chat : chats) {
-			chat.closeWindow();
+		synchronized (chats) {
+			//chiudo tutte le finestre di chat
+			for (ChatController chat : chats) {
+				chat.closeWindow();
+			}
 		}
 	}
 	
 	private void closeAllChatRoom()
 	{
-		//TODO
+		//chiudo tutti i controller delle chatrooms
+		synchronized (chatrooms) {
+			for (ChatRoomController chatRoomController : chatrooms) {
+				chatRoomController.closeChat();
+			}
+		}
+		//termino tutti i listener delle chatrooms
 		synchronized (listenersChatRoomMessages) {
 			//chiudo tutti i thread che ascoltano i messaggi dalle chatroom
 			for (ListenerChatRoomMessage listener : listenersChatRoomMessages) {

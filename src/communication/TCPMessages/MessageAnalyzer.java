@@ -348,6 +348,18 @@ public class MessageAnalyzer
 		{
 			return ResponseFailedMessage.Errors.CANNOT_RECEIVE_FILE;
 		}
+		else if(type.equals(ResponseFailedMessage.Errors.CANNOT_CREATE_CHATROOM.name()))
+		{
+			return ResponseFailedMessage.Errors.CANNOT_CREATE_CHATROOM;
+		}
+		else if(type.equals(ResponseFailedMessage.Errors.CHATROOM_ALREADY_REGISTERED.name()))
+		{
+			return ResponseFailedMessage.Errors.CHATROOM_ALREADY_REGISTERED;
+		}
+		else if(type.equals(ResponseFailedMessage.Errors.CHATROOM_NOT_FOUND.name()))
+		{
+			return ResponseFailedMessage.Errors.CHATROOM_NOT_FOUND;
+		}
 		else {
 			//TODO inserire altri casi
 			return null;

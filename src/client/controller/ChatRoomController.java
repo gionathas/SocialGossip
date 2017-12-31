@@ -14,6 +14,7 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.SocketException;
+import java.net.UnknownHostException;
 
 import javax.swing.JTextArea;
 
@@ -38,7 +39,7 @@ public class ChatRoomController extends Controller
 	private static final int BUFFER_LEN = 1024;
 	private byte[] buffer = new byte[BUFFER_LEN];
 
-	public ChatRoomController(Socket connection, DataInputStream in, DataOutputStream out,User sender,ChatRoom chatRoomReceiver,Point location) throws SocketException 
+	public ChatRoomController(Socket connection, DataInputStream in, DataOutputStream out,User sender,ChatRoom chatRoomReceiver,Point location) throws SocketException, UnknownHostException 
 	{
 		super(connection, in, out);
 		
@@ -53,7 +54,7 @@ public class ChatRoomController extends Controller
 		this.chatRoomReceiver = chatRoomReceiver;
 		
 		openChat();
-		serverAddress = chatRoomReceiver.getMessageAddress();
+		serverAddress = InetAddress.getByName(chatRoomReceiver.getMessageAddress());
 		this.port = chatRoomReceiver.getMessagePort();
 		
 		initListeners();
@@ -115,12 +116,13 @@ public class ChatRoomController extends Controller
 		return chatRoomReceiver;
 	}
 
-	private void closeChat() {
+	public synchronized void closeChat() {
 		clientSocket.close();
 		window.setVisible(false);
+		window.dispose();
 	}
 	
-	public void openChat() throws SocketException {
+	public synchronized void openChat() throws SocketException {
 		clientSocket = new DatagramSocket();
 		window.setVisible(true);
 	}

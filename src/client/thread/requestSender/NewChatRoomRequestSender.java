@@ -86,6 +86,10 @@ public class NewChatRoomRequestSender extends RequestSenderThread
 				controller.showErrorMessage("Sei offline","Errore");
 				break;
 			
+			case CHATROOM_ALREADY_REGISTERED:
+				controller.showErrorMessage("E' gia presente una ChatRoom con lo stesso nome","Ops");
+				break;
+			
 			case CANNOT_CREATE_CHATROOM:
 				controller.showErrorMessage("Impossibile creare Chatroom","Errore");
 				break;

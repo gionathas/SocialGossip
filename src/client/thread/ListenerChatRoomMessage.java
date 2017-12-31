@@ -33,7 +33,7 @@ public class ListenerChatRoomMessage extends Thread
 		
 		this.name = chatroom.getName();
 		this.ms = new MulticastSocket(chatroom.getPort());
-		this.chatroomAddr = InetAddress.getByName(chatroom.getIPAddress().replace("/",""));
+		this.chatroomAddr = InetAddress.getByName(chatroom.getIPAddress());
 		
 		//join sull'multicast socket,dove vengono trasmessi i messaggi
 		ms.joinGroup(chatroomAddr);
