@@ -54,7 +54,6 @@ public class DispatcherChatRoomMessage extends Thread
 		
 		serverSock = new DatagramSocket(listeningPort);
 		serverSock.setSoTimeout(timeout);
-
 	}
 	
 	

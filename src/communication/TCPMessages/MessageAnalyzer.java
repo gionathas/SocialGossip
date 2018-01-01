@@ -264,16 +264,13 @@ public class MessageAnalyzer
 		
 		try {
 			return new ChatRoom(name,InetAddress.getByName(address),(int) port,InetAddress.getByName(messAddress), (int) messagePort,listSubs);
-		} catch (UnknownHostException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (Exception e) {
+		} 
+		catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		
+		//chatroom non valida
 		return null;
 	}
 	

@@ -319,6 +319,19 @@ public class UserRequestHandler implements Runnable
 					selectedRoom.addNewSubscriber(sender);
 					
 					sender.aggiungiChatRoom(selectedRoom);
+					
+					//notifico tutti gli utenti,della nuova iscrizione
+					List<User> users = reteSG.getUtenti();
+					
+					synchronized (users) {
+						for (User user : users) {
+							RMIClientNotifyEvent notifyEvent = user.getRMIchannel();
+							
+							//se l'utente ha settato il canale di notifica,invio la notifica
+							if(notifyEvent != null)
+								notifyEvent.updateChatRoom(selectedRoom);
+						}
+					}
 				} catch (UserAlreadyRegistered e) {
 					sendMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.USER_ALREADY_REGISTERED), out);
 					return;

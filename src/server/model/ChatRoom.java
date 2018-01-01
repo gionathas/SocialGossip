@@ -37,10 +37,7 @@ public class ChatRoom implements Serializable
 	private transient DispatcherChatRoomMessage dispatcherMessage;
 	
 	private List<User> subscribers;
-	
-	//per utilizzare solo indirizzi multicast locali
-	private int LOCAL_ADDRESS = 1;
-	
+		
 	//serializzazione
 	public static final String FIELD_NAME = "name";
 	public static final String FIELD_MS_ADDRESS = "ms-address";
@@ -76,14 +73,12 @@ public class ChatRoom implements Serializable
 			throw new Exception();
 
 		MulticastSocket ms = new MulticastSocket(msPort);
-		ms.setTimeToLive(LOCAL_ADDRESS);
-		
 		
 		//inizializzo indirizzo thread listener messaggi
 		this.messageAddress = messageAddress;
 	
 		//faccio partire il thread che si occupa di gestire i messaggi della chatroom
-		dispatcherMessage = new DispatcherChatRoomMessage(ms,messageAddress);
+		dispatcherMessage = new DispatcherChatRoomMessage(ms,msAddress);
 		this.messagePort = dispatcherMessage.getListeningPort();
 		dispatcherMessage.start();
 	}
@@ -95,6 +90,7 @@ public class ChatRoom implements Serializable
 		
 		this.name = name;
 		this.msAddress = msAddress;
+		this.msPort = port;
 		this.messageAddress = messageAddress;
 		this.messagePort = messagePort;
 		this.subscribers = subs;
@@ -124,8 +120,6 @@ public class ChatRoom implements Serializable
 		while(dispatcherMessage.isAlive()) {
 			//aspetto che il thread termini
 		}
-		
-		
 	}
 	
 	public synchronized String getName() {

@@ -1,5 +1,6 @@
 package client.view;
 
+import java.awt.Color;
 import java.awt.SystemColor;
 
 import javax.swing.JButton;
@@ -35,7 +36,12 @@ public class ChatRoomWindow extends ChatWindow
 		//aggiungo bottone chiusura chatroom
 		btnChiudiChatRoom = new JButton("Chiudi ChatRoom");
 		btnChiudiChatRoom.setBounds(10, 276, 170, 20);
+		btnChiudiChatRoom.setBackground(Color.RED);
 		getContentPane().add(btnChiudiChatRoom);
+	}
+	
+	public void setButtonColor(Color color) {
+		btnChiudiChatRoom.setBackground(color);
 	}
 	
 	public JButton getBtnChiudiChatRoom() {

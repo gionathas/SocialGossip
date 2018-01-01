@@ -67,7 +67,7 @@ public class JoinChatRoomRequestSender extends RequestSenderThread
 		}
 		
 		//se non sono registrato alla chatroom
-		if(init = true)
+		if(init == true)
 		{
 			int yes = 0;
 			

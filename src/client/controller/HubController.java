@@ -244,7 +244,7 @@ public class HubController extends Controller
 			}
 		});
 		
-		//al click sul bottone UNISCITA A CHATROOM
+		//al click sul bottone UNISCIT A CHATROOM
 		hubView.getBtnUniscitiAChatroom().addActionListener(new ActionListener() {
 			
 			@Override
@@ -378,7 +378,7 @@ public class HubController extends Controller
 			}
 			
 			//chatroom cercata trovata
-			if(selectedRoom != null) 
+			if(selectedRoom == null) 
 			{
 				ChatRoomController chatroomControl = new ChatRoomController(connection, in, out,user,selectedRoom,generateRandomLocation());
 				
@@ -391,10 +391,9 @@ public class HubController extends Controller
 				return chatroomControl;
 
 			}
-			
-			//chatroom ricercata non trovata
-			return null;
-
+			else {
+				return openChatRoomFromNewMessage(selectedRoom);
+			}
 		}
 
 	}
@@ -449,7 +448,7 @@ public class HubController extends Controller
 			} else {
 				//se non e' gia' visibile
 				if (!chatroomControl.isVisible())
-					chatroomControl.setVisible(true);
+					chatroomControl.openChat();
 			}
 		}
 		return chatroomControl;
@@ -557,5 +556,55 @@ public class HubController extends Controller
 				list.addElement(chatroom);
 			}
 		}
+
+
+		@Override
+		public void updateChatRoom(ChatRoom chatroom) throws RemoteException 
+		{
+			DefaultListModel<ChatRoom> list = hubView.getModelChatRoomList();
+			
+			synchronized (list) 
+			{
+				for (int i = 0; i < list.size(); i++) 
+				{
+					ChatRoom currentRoom = list.getElementAt(i);
+					
+					//se ho trovato l'amico a cui aggiornare lo stato
+					if(currentRoom.equals(chatroom)) 
+					{
+						list.removeElementAt(i);
+						list.insertElementAt(chatroom,i);
+						break;
+					}
+				}
+
+			}
+		}
+
+
+	@Override
+	public void removeChatRoom(ChatRoom chatroom) throws RemoteException 
+	{
+		DefaultListModel<ChatRoom> list = hubView.getModelChatRoomList();
+		
+		synchronized (list) 
+		{
+			for (int i = 0; i < list.size(); i++) 
+			{
+				ChatRoom currentRoom = list.getElementAt(i);
+				
+				//se ho trovato l'amico a cui aggiornare lo stato
+				if(currentRoom.equals(chatroom)) 
+				{
+					list.removeElementAt(i);
+					break;
+				}
+			}
+		}
 	}
 }
+	
+	
+}
+
+

@@ -33,4 +33,18 @@ public interface RMIClientNotifyEvent extends Remote
 	 * @throws RemoteException se c'e' un errore nel protocollo RMI
 	 */
 	public void newChatRoom(ChatRoom chatroom)throws RemoteException;
+	
+	/**
+	 * Aggiorna una chatroom gia' esistente
+	 * @param chatroom chatroom da aggiornare
+	 * @throws RemoteException se c'e' un errore nel protocollo RMI
+	 */
+	public void updateChatRoom(ChatRoom chatroom)throws RemoteException;
+	
+	/**
+	 * Rimuove una chatroom esistente
+	 * @param chatroom chatroom da rimuovere
+	 * @throws RemoteException se c'e' un errore nel protocollo RMI
+	 */
+	public void removeChatRoom(ChatRoom chatroom)throws RemoteException;
 }
