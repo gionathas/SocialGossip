@@ -236,22 +236,6 @@ public class User implements Serializable
 	}
 	
 	/**
-	 * 
-	 * @param user
-	 * @return se questo utente e' amico di user
-	 */
-	public synchronized boolean amicoDi(User user) {
-		
-		if(user == null)
-			throw new NullPointerException();
-		
-		if(amici == null)
-			return false;
-		
-		return amici.contains(user);
-	}
-	
-	/**
 	 * Aggiunge l'utente user alla lista di amici di questo utente
 	 * @param user
 	 */
@@ -278,14 +262,23 @@ public class User implements Serializable
 		if(chatroom == null)
 			throw new NullPointerException();
 		
-		if(chatroom == null)
-			return;
-		
 		if(chatrooms.contains(chatroom))
 			throw new UserAlreadyRegistered();
 		else {
 			chatrooms.add(chatroom);
 		}
+	}
+	
+	/**
+	 * Rimuove una chatroom a cui era iscrittp
+	 * @param chatroom chatroom da rimuovere
+	 */
+	public synchronized void rimuoviChatRoom(ChatRoom chatroom)
+	{
+		if(chatroom == null)
+			throw new NullPointerException();
+		
+		chatrooms.remove(chatroom);
 	}
 	
 	/**

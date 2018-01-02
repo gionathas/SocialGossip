@@ -354,20 +354,27 @@ public class MessageAnalyzer
 		{
 			return ResponseFailedMessage.Errors.CANNOT_RECEIVE_FILE;
 		}
+		//errore creazione chatroom
 		else if(type.equals(ResponseFailedMessage.Errors.CANNOT_CREATE_CHATROOM.name()))
 		{
 			return ResponseFailedMessage.Errors.CANNOT_CREATE_CHATROOM;
 		}
+		//errore chatroom gia' presente
 		else if(type.equals(ResponseFailedMessage.Errors.CHATROOM_ALREADY_REGISTERED.name()))
 		{
 			return ResponseFailedMessage.Errors.CHATROOM_ALREADY_REGISTERED;
 		}
+		//errore chatroom non trovata
 		else if(type.equals(ResponseFailedMessage.Errors.CHATROOM_NOT_FOUND.name()))
 		{
 			return ResponseFailedMessage.Errors.CHATROOM_NOT_FOUND;
 		}
+		//errore operazione non permessa
+		else if(type.equals(ResponseFailedMessage.Errors.OPERATION_NOT_PERMITTED.name()))
+		{
+			return ResponseFailedMessage.Errors.OPERATION_NOT_PERMITTED;
+		}
 		else {
-			//TODO inserire altri casi
 			return null;
 		}
 		
@@ -457,6 +464,11 @@ public class MessageAnalyzer
 		else if(type.equals(ChatRoomRequest.ChatroomRequests.NEW_CHATROOM.name()))
 		{
 			return ChatRoomRequest.ChatroomRequests.NEW_CHATROOM;
+		}
+		//richiesta chiusura chatroom
+		else if(type.equals(ChatRoomRequest.ChatroomRequests.CLOSE_CHATROOM.name()))
+		{
+			return ChatRoomRequest.ChatroomRequests.CLOSE_CHATROOM;
 		}
 		else {
 			return null;

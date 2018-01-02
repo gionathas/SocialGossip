@@ -26,17 +26,20 @@ public class ChatRoom implements Serializable
 	 * 
 	 */
 	private static final long serialVersionUID = -1787928909027681736L;
-	private String name;
-	private InetAddress msAddress;
-	private InetAddress messageAddress;
 	
+	private String name; //nome chatroom
+	
+	private InetAddress msAddress; //indirizzo ip del multicast socket
+	private InetAddress messageAddress; //indirizzo ip del thread che distribuisce i messaggi della chatroom
 	private int msPort; //porta per indirizzo multicast
 	private int messagePort;  //porta per ricezione messaggi
+	
+	private transient MulticastSocket ms;
 	
 	//thread dispatcher dei messaggi della chatroom
 	private transient DispatcherChatRoomMessage dispatcherMessage;
 	
-	private List<User> subscribers;
+	private List<User> subscribers; //lista utenti iscritti
 		
 	//serializzazione
 	public static final String FIELD_NAME = "name";
@@ -73,6 +76,7 @@ public class ChatRoom implements Serializable
 			throw new Exception();
 
 		MulticastSocket ms = new MulticastSocket(msPort);
+		this.ms = ms;
 		
 		//inizializzo indirizzo thread listener messaggi
 		this.messageAddress = messageAddress;
@@ -122,14 +126,26 @@ public class ChatRoom implements Serializable
 		}
 	}
 	
+	/**
+	 * 
+	 * @return nome della chatroom
+	 */
 	public synchronized String getName() {
 		return this.name;
 	}
 	
+	/**
+	 * 
+	 * @return lista degli utenti iscritti alla chatroom
+	 */
 	public synchronized List<User> getSubscribers(){
 		return Collections.unmodifiableList(subscribers);
 	}
 	
+	/**
+	 * 
+	 * @return numero degli iscritti alla chatroom
+	 */
 	public synchronized Integer numSubscribers() {
 		return new Integer(subscribers.size());
 	}
@@ -190,19 +206,42 @@ public class ChatRoom implements Serializable
 		return "["+name.toUpperCase()+"] "+"Iscritti: "+numSubscribers();
 	}
 	
+	/**
+	 * 
+	 * @return indirizzo ip multicast della chatroom
+	 */
 	public synchronized String getIPAddress() {
 		return msAddress.toString().replaceAll("[^\\d.]","");
 	}
 	
+	/**
+	 * 
+	 * @return porta su cui e' attivo il multicast socket della chatroom
+	 */
 	public synchronized Integer getPort() {
 		return new Integer(msPort);
 	}
 	
+	/**
+	 * 
+	 * @return indirizzo ip del thread che distribuisce i messaggi della chatroom
+	 */
 	public synchronized String getMessageAddress() {
 		return messageAddress.toString().replaceAll("[^\\d.]","");
 	}
 	
+	/**
+	 * 
+	 * @return multicast socket della chatroom
+	 */
+	public synchronized MulticastSocket getMulticastSocket() {
+		return this.ms;
+	}
 	
+	/**
+	 * 
+	 * @return porta sui cui e' in ascolto il thread dispatcher dei messaggi
+	 */
 	public synchronized Integer getMessagePort() {
 		return new Integer(messagePort);
 	}

@@ -19,6 +19,7 @@ import java.net.UnknownHostException;
 
 import javax.swing.JTextArea;
 
+import client.thread.requestSender.CloseChatRoomRequestSender;
 import client.thread.requestSender.SendTextToUser;
 import client.view.ChatRoomWindow;
 import server.model.ChatRoom;
@@ -29,6 +30,7 @@ public class ChatRoomController extends Controller
 	private ChatRoomWindow chatView;
 	private User sender;
 	private ChatRoom chatRoomReceiver;
+	private ChatRoomController controllerRoom = this;
 	
 	//componenti dell'interfaccia grafica dove mostrare il testo
 	private JTextArea textArea;
@@ -78,6 +80,15 @@ public class ChatRoomController extends Controller
 			{
 				//invio messaggio sulla chatroom
 				sendTextToChatRoom();
+			}
+		});
+		
+		//al click sul bottone CHIUDI CHATROOM
+		chatView.getBtnChiudiChatRoom().addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				new CloseChatRoomRequestSender(controllerRoom, connection, in, out,chatRoomReceiver.getName(),sender.getNickname()).start();
 			}
 		});
 	}

@@ -11,7 +11,7 @@ import communication.TCPMessages.request.RequestMessage.Type;
 public class ChatRoomRequest extends RequestMessage
 {
 	public static final String FIELD_CHATROOM_REQUEST_NAME = "chatroom-name";
-	public enum ChatroomRequests{NEW_CHATROOM,JOIN_CHATROOM};
+	public enum ChatroomRequests{NEW_CHATROOM,JOIN_CHATROOM,CLOSE_CHATROOM};
 	public static final String FIELD_CHATROOM_REQUEST_TYPE = "chatroom-request-type";
 	
 	public ChatRoomRequest(ChatroomRequests type,String nicknameUser,String chatRoomName) 

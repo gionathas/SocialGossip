@@ -58,9 +58,17 @@ public class ListenerChatRoomMessage extends Thread
 				//prendo il controller della chatrooms
 				ChatRoomController chatroomControl = controller.openChatRoomFromNewMessage(chatroom);
 				
-				//aggiungo testo alla conversazione della chatroom
-				chatroomControl.getJConversationArea().append(text);
-				
+				//se e' arrivato il messaggio di chiusura
+				if(text.equals("CHATROOM CLOSED"))
+				{
+					chatroomControl.showInfoMessage("ChatRoom CHIUSA!","CHIUSURA",true);
+					chatroomControl.closeChat();
+					break;
+				}
+				else {
+					//aggiungo testo alla conversazione della chatroom
+					chatroomControl.getJConversationArea().append(text);
+				}	
 			} 
 			//timeout
 			catch(SocketTimeoutException e) {}

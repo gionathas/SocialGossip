@@ -22,7 +22,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 
-import javax.management.ListenerNotFoundException;
 import javax.swing.DefaultListModel;
 import javax.swing.JList;
 import javax.swing.ListModel;
@@ -33,7 +32,6 @@ import client.thread.requestSender.FindUserRequestSender;
 import client.thread.requestSender.JoinChatRoomRequestSender;
 import client.thread.requestSender.LogoutRequestSender;
 import client.thread.requestSender.NewChatRoomRequestSender;
-import client.view.ChatRoomWindow;
 import client.view.ChatWindow;
 import client.view.HubWindow;
 import communication.RMI.RMIClientNotifyEvent;
@@ -598,6 +596,24 @@ public class HubController extends Controller
 				{
 					list.removeElementAt(i);
 					break;
+				}
+			}
+			
+			//se c'e' qualche listener attivo su quella chatroom lo rimuovo
+			synchronized (listenersChatRoomMessages) {
+				for (ListenerChatRoomMessage listener : listenersChatRoomMessages) {
+					if(listener.getChatRoomName().equals(chatroom.getName())) {
+						listener.interrupt();
+						listenersChatRoomMessages.remove(listener);
+					}
+				}
+			}
+			
+			//rimuovo l'istanza del controller della chatroom
+			synchronized (chatrooms) {
+				for (ChatRoomController chatRoomController : chatrooms) {
+					if(chatRoomController.getChatRoomReceiver().equals(chatroom))
+						chatrooms.remove(chatRoomController);
 				}
 			}
 		}

@@ -8,9 +8,11 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.lang.Thread.State;
 import java.net.BindException;
+import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.MulticastSocket;
 import java.net.Socket;
 import java.net.SocketAddress;
 import java.net.SocketException;
@@ -291,12 +293,86 @@ public class UserRequestHandler implements Runnable
 			joinChatRoomRequestHandler(sender,chatroomName,out);
 			break;
 		
+		case CLOSE_CHATROOM:
+			closeChatRoomRequestHandler(sender,chatroomName,out);
+			break;
+		
 		default:
 			sendMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.INVALID_REQUEST),out);
 			break;
 		}
 		
 		
+	}
+	
+	private void closeChatRoomRequestHandler(User sender,String chatroomName,DataOutputStream out)throws IOException
+	{
+		//controllo se la chatroom esiste gia'
+		synchronized (chatrooms) {
+			
+			//chatroom non esistente
+			if(!chatrooms.contains(new ChatRoom(chatroomName)))
+			{
+				sendMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.CHATROOM_NOT_FOUND), out);
+				return;
+			}
+			//chatroom trovata
+			else {
+				ChatRoom selectedRoom = chatrooms.get(chatrooms.indexOf(new ChatRoom(chatroomName)));
+				
+				//se l'utente non e' l'admin della chatroom
+				if(!selectedRoom.getSubscribers().get(0).equals(sender)) {
+					sendMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.OPERATION_NOT_PERMITTED), out);
+					return;
+				}
+				
+				//posso procedere alla chiusura della chatroom
+				
+				//mando un messaggio di chiusura agli utenti,via UDP
+				MulticastSocket ms = selectedRoom.getMulticastSocket();
+				byte[] msg = "CHATROOM CLOSED".getBytes();
+				
+				//creo pacchetto per notificare gli iscritti dell'avvenuta chiusura della chatroom
+				DatagramPacket packet = new DatagramPacket(msg,msg.length,InetAddress.getByName(selectedRoom.getIPAddress()),selectedRoom.getPort());
+				
+				//invio pacchetto
+				ms.send(packet);
+				
+				//chiudo la chatroom
+				selectedRoom.close();
+				
+				//rimuovo la chatroom da ogni lista delle chatroom a cui sono iscritti gli utenti
+				List<User> subs = selectedRoom.getSubscribers();
+				synchronized (subs) {
+					for (User user : subs) {
+						user.rimuoviChatRoom(selectedRoom);
+					}
+				}
+				
+				//elimino la chatroom,da quelle attive
+				chatrooms.remove(selectedRoom);
+				
+				//invio una notifica a tutti gli utenti
+				List<User> users = reteSG.getUtenti();
+				
+				synchronized (users) {
+					for (User user : users) {
+						RMIClientNotifyEvent notifyEvent = user.getRMIchannel();
+						
+						//invio notifica,se il canale RMI e' attivo
+						if(notifyEvent != null) {
+							notifyEvent.removeChatRoom(selectedRoom);
+						}
+					}
+				}
+				
+				//elimino definitavemente chatroom
+				selectedRoom = null;	
+			}
+		}
+		
+		//operazione andata a buon fine
+		sendMessage(new ResponseSuccessMessage(), out);	
 	}
 	
 	private void joinChatRoomRequestHandler(User sender,String chatroomName,DataOutputStream out) throws IOException
