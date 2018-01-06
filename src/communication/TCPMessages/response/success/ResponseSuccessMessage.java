@@ -1,7 +1,6 @@
 package communication.TCPMessages.response.success;
 
 import communication.TCPMessages.response.ResponseMessage;
-import communication.TCPMessages.response.ResponseMessage.Type;
 
 /**
  * Messaggio di risposta che segnala un operazione andata a buon fine

@@ -7,7 +7,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.net.Socket;
 
-import client.thread.requestSender.RegisterRequestSender;
+import client.thread.requestSender.implementation.RegisterRequestSender;
 import client.view.RegisterForm;
 
 

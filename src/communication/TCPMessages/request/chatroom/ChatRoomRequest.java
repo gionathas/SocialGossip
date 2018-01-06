@@ -1,7 +1,6 @@
 package communication.TCPMessages.request.chatroom;
 
 import communication.TCPMessages.request.RequestMessage;
-import communication.TCPMessages.request.RequestMessage.Type;
 
 /**
  * Messaggio di richiesta che coinvolge una chatroom

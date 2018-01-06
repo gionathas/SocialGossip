@@ -1,4 +1,4 @@
-package client.thread.requestSender;
+package client.thread.requestSender.implementation;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -7,6 +7,7 @@ import java.net.Socket;
 import javax.swing.JOptionPane;
 
 import client.controller.ChatRoomController;
+import client.thread.requestSender.RequestSenderThread;
 import communication.TCPMessages.request.chatroom.CloseChatRoom;
 import communication.TCPMessages.response.fail.ResponseFailedMessage.Errors;
 
@@ -17,9 +18,9 @@ import communication.TCPMessages.response.fail.ResponseFailedMessage.Errors;
  */
 public class CloseChatRoomRequestSender extends RequestSenderThread
 {
-	private ChatRoomController chatroomControl;
-	private String chatroomName;
-	private String nicknameUser;
+	private ChatRoomController chatroomControl; //controller della chatroom da chiudere
+	private String chatroomName; //nome chatroom da chiudere
+	private String nicknameUser; //nome utente che richiede chiusura
 
 	public CloseChatRoomRequestSender(ChatRoomController controller, Socket connection, DataInputStream in,
 			DataOutputStream out,String chatroomName,String nicknameUser) {

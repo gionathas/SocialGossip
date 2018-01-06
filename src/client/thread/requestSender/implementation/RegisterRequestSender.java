@@ -1,4 +1,4 @@
-package client.thread.requestSender;
+package client.thread.requestSender.implementation;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -8,11 +8,11 @@ import java.util.List;
 import client.controller.Controller;
 import client.controller.FormInputChecker;
 import client.controller.HubController;
+import client.thread.requestSender.RequestSenderThread;
 import communication.TCPMessages.MessageAnalyzer;
 import communication.TCPMessages.request.access.RegisterRequest;
 import communication.TCPMessages.response.fail.ResponseFailedMessage.Errors;
 import server.model.ChatRoom;
-import server.model.User;
 
 /**
  * Thread che gestisce l'invio una richiesta di registrazione

@@ -7,7 +7,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.net.Socket;
 
-import client.thread.requestSender.LoginRequestSender;
+import client.thread.requestSender.implementation.LoginRequestSender;
 import client.view.LoginForm;
 
 

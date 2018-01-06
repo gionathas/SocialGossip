@@ -11,6 +11,11 @@ import client.controller.ChatRoomController;
 import client.controller.HubController;
 import server.model.ChatRoom;
 
+/**
+ * Thread che ascolta i messaggi provenienti da altre chatroom
+ * @author Gionatha Sturba
+ *
+ */
 public class ListenerChatRoomMessage extends Thread
 {
 	private ChatRoom chatroom;
@@ -40,7 +45,10 @@ public class ListenerChatRoomMessage extends Thread
 		ms.setSoTimeout(timeout);
 
 	}
-
+	
+	/**
+	 * Ciclo di vita del thread
+	 */
 	public void run()
 	{
 		byte[] buffer = new byte[BUFFER_LEN];
@@ -85,10 +93,15 @@ public class ListenerChatRoomMessage extends Thread
 		return name;
 	}
 	
+	/**
+	 * Termina il listener
+	 */
 	public void close()
 	{
 		try {
+			//lascio il gruppo di multicast
 			ms.leaveGroup(chatroomAddr);
+			//chiudo il socket
 			ms.close();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block

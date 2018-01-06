@@ -18,18 +18,18 @@ public class DispatcherChatRoomMessage extends Thread
 {
 	private int listeningPort; //porta su cui e' in ascolto questo thread
 	private MulticastSocket ms; //multicast socket della chatroom
-	private InetAddress msAddress;
+	private InetAddress msAddress; //indirizzo multicast della chatroom
 	
 	private DatagramSocket serverSock; //socket su cui ricevere i pacchetti udp,contenenti i messaggi da inoltrare sulla chatroom
 	private static final int BUFFER_LEN = 1024; 
 	private static final int timeout = 600; //timeout sul socket
 
-	private byte[] buffer;
+	private byte[] buffer; //buffer per invio messaggi
 	
 	/**
 	 * 
-	 * @param ms
-	 * @param port
+	 * @param ms coket multicast della chatroom
+	 * @param msAddress indizzo multicast della chatroom
 	 * @throws Excpetion errore inizializzazione dispatcherS
 	 */
 	public DispatcherChatRoomMessage(MulticastSocket ms,InetAddress msAddress) throws Exception 
@@ -53,12 +53,9 @@ public class DispatcherChatRoomMessage extends Thread
 		serverSock.setSoTimeout(timeout);
 	}
 	
-	
-	public int getListeningPort() {
-		return listeningPort;
-	}
-
-
+	/**
+	 * Ciclo di vita del dispatcher
+	 */
 	public void run() 
 	{
 		buffer = new byte[BUFFER_LEN];
@@ -83,6 +80,15 @@ public class DispatcherChatRoomMessage extends Thread
 		
 		//chiudo socket
 		serverSock.close();
+	
+	}
+	
+	/**
+	 * 
+	 * @return porta su cui e' in ascolto il dispatcher
+	 */
+	public int getListeningPort() {
+		return listeningPort;
 	}
 	
 	/**

@@ -1,4 +1,4 @@
-package client.thread.requestSender;
+package client.thread.requestSender.implementation;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -7,23 +7,27 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.net.InetSocketAddress;
 import java.net.Socket;
-import java.net.SocketAddress;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.channels.SocketChannel;
-import java.util.RandomAccess;
 
 import javax.swing.JOptionPane;
 
 import client.controller.Controller;
+import client.thread.requestSender.RequestSenderThread;
 import communication.TCPMessages.MessageAnalyzer;
 import communication.TCPMessages.request.interaction.SendFileRequest;
 import communication.TCPMessages.response.fail.ResponseFailedMessage.Errors;
 
+/**
+ * Thread che si occupa dell'invio di un file tramite chat
+ * @author Gionatha Sturba
+ *
+ */
 public class FileSender extends RequestSenderThread
 {
-	private String senderNickname,receiverNickname;
+	private String senderNickname,receiverNickname; //nomi utenti mittente e destinatario
 	private File file = null;
 	private final String DIR_FILES_PATH = "/resources/";
 	

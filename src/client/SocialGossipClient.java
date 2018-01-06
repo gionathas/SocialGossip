@@ -9,6 +9,7 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 
 import client.controller.LoginController;
+import utils.Config;
 
 /**
  * Bootstrapper del client
@@ -23,11 +24,9 @@ public class SocialGossipClient
 	public static void main(String[] args) 
 	{
 		try 
-		{
-			//TODO parse config file
-			
+		{			
 			//apro connessione TCP con il server
-			Socket connection = new Socket("localhost",5000);
+			Socket connection = new Socket(Config.SERVER_HOST_NAME,Config.SERVER_TCP_PORT);
 			
 			//apro stream di comunicazione
 			DataInputStream in = new DataInputStream(new BufferedInputStream(connection.getInputStream()));

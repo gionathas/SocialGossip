@@ -1,7 +1,6 @@
 package communication.TCPMessages.request.access;
 
 import communication.TCPMessages.request.RequestMessage;
-import communication.TCPMessages.request.RequestMessage.Type;
 
 /**
  * Rappresenta un messaggio di richiesta di accesso al sistema

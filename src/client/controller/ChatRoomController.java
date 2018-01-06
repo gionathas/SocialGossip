@@ -1,6 +1,5 @@
 package client.controller;
 
-import java.awt.Color;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -19,12 +18,16 @@ import java.net.UnknownHostException;
 
 import javax.swing.JTextArea;
 
-import client.thread.requestSender.CloseChatRoomRequestSender;
-import client.thread.requestSender.SendTextToUser;
+import client.thread.requestSender.implementation.CloseChatRoomRequestSender;
 import client.view.ChatRoomWindow;
 import server.model.ChatRoom;
 import server.model.User;
 
+/**
+ * Controller della GUI di una chatRoom
+ * @author Gionatha Sturba
+ *
+ */
 public class ChatRoomController extends Controller
 {
 	private ChatRoomWindow chatView;
@@ -32,13 +35,12 @@ public class ChatRoomController extends Controller
 	private ChatRoom chatRoomReceiver;
 	private ChatRoomController controllerRoom = this;
 	
-	//componenti dell'interfaccia grafica dove mostrare il testo
-	private JTextArea textArea;
-	
 	//per invio messaggi
-	private DatagramSocket clientSocket;
-	private InetAddress serverAddress;
-	private int port;
+	private DatagramSocket clientSocket; //socket per conettersi al dispatcher dei messaggi della chatroom
+	private InetAddress serverAddress; //indirizzo del dispatcher dei messaggi della chatroom
+	private int port; //porta su cui e' in ascolto il dispatcher
+	
+	//buffer
 	private static final int BUFFER_LEN = 1024;
 	private byte[] buffer = new byte[BUFFER_LEN];
 
@@ -93,6 +95,9 @@ public class ChatRoomController extends Controller
 		});
 	}
 	
+	/**
+	 * invia il messaggio sulla chatroom,tramite datagramma UDP
+	 */
 	private void sendTextToChatRoom()
 	{
 		JTextArea textArea = getTextArea();
@@ -111,7 +116,7 @@ public class ChatRoomController extends Controller
 			try {
 				buffer = text.getBytes("UTF-8");
 				
-				//invio il messaggio con un pacchetto UDP
+				//invio il messaggio con un pacchetto UDP,al dispatcher dei messaggi
 				DatagramPacket msg = new DatagramPacket(buffer,buffer.length,serverAddress,port);
 				
 				clientSocket.send(msg);
@@ -124,21 +129,28 @@ public class ChatRoomController extends Controller
 		}
 	}
 	
-	public ChatRoom getChatRoomReceiver() {
-		return chatRoomReceiver;
-	}
-
+	/**
+	 * Chiude la chatroom
+	 */
 	public synchronized void closeChat() {
 		clientSocket.close();
 		window.setVisible(false);
 		window.dispose();
 	}
 	
+	/**
+	 * Apre la chatroom
+	 * @throws SocketException errore di connessione
+	 */
 	public synchronized void openChat() throws SocketException {
 		clientSocket = new DatagramSocket();
 		window.setVisible(true);
 	}
 	
+	public ChatRoom getChatRoomReceiver() {
+		return chatRoomReceiver;
+	}
+
 	public boolean isVisible() {
 		return window.isVisible();
 	}

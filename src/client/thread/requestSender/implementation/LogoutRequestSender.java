@@ -1,4 +1,4 @@
-package client.thread.requestSender;
+package client.thread.requestSender.implementation;
 
 
 import java.io.DataInputStream;
@@ -7,9 +7,9 @@ import java.net.Socket;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 
-import javax.swing.JOptionPane;
 
 import client.controller.Controller;
+import client.thread.requestSender.RequestSenderThread;
 import communication.RMI.RMIClientNotifyEvent;
 import communication.RMI.RMIServerInterface;
 import communication.TCPMessages.request.LogoutRequest;

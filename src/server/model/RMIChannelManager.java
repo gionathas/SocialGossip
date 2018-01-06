@@ -11,7 +11,6 @@ import server.model.exception.UserStatusException;
 /**
  * Implementazione dell'interfaccia per il protocollo RMI,per registrare le callback dei client
  * @author Gionatha Sturba
- *
  */
 public class RMIChannelManager extends RemoteObject implements RMIServerInterface
 {

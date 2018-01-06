@@ -5,6 +5,11 @@ import java.awt.SystemColor;
 
 import javax.swing.JButton;
 
+/**
+ * GUI relativa ad una ChatRoom
+ * @author Gionatha Sturba
+ *
+ */
 public class ChatRoomWindow extends ChatWindow
 {
 	/**

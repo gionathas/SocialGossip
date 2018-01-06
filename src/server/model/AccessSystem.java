@@ -4,7 +4,6 @@ import java.rmi.RemoteException;
 import java.util.LinkedList;
 import java.util.List;
 
-import javax.management.InvalidAttributeValueException;
 
 import communication.RMI.RMIClientNotifyEvent;
 import server.model.exception.PasswordMismatchingException;

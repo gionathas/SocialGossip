@@ -7,6 +7,11 @@ import org.json.simple.JSONArray;
 import server.model.ChatRoom;
 import server.model.User;
 
+/**
+ * Rappresenta un messaggio di risposta ad una richiesta di Login,andata a buon fine
+ * @author Gionatha Sturba
+ *
+ */
 public class SuccessfulLogin extends ResponseSuccessMessage 
 {
 	public static final String FIELD_FRIEND_LIST = "friend-list";

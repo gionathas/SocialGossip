@@ -1,4 +1,4 @@
-package client.thread.requestSender;
+package client.thread.requestSender.implementation;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -9,6 +9,7 @@ import javax.swing.JOptionPane;
 
 import client.controller.Controller;
 import client.controller.FormInputChecker;
+import client.thread.requestSender.RequestSenderThread;
 import communication.TCPMessages.request.interaction.FindUserRequest;
 import communication.TCPMessages.response.fail.ResponseFailedMessage.Errors;
 import server.model.User;

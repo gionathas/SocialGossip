@@ -15,6 +15,11 @@ import java.awt.SystemColor;
 import java.awt.Font;
 import javax.swing.JScrollPane;
 
+/**
+ * GUI della chat con un altro utente
+ * @author Gionatha Sturba
+ *
+ */
 public class ChatWindow extends JFrame {
 
 	/**

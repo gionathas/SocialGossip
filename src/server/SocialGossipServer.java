@@ -16,6 +16,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import communication.RMI.RMIServerInterface;
 import server.model.*;
 import server.thread.UserRequestHandler;
+import utils.Config;
 
 /**
  * Rappresenta la struttura del server di Social Gossip.
@@ -31,13 +32,8 @@ public class SocialGossipServer implements Runnable
 	private ServerSocket listenerSocket = null; //socket in cui e' in ascolto il server
 	private ThreadPoolExecutor executor = null; //pool di thread per gestire i vari client che arrivano
 	
-	private static final String SERVER_RMI_SERVICE_NAME = "SocialGossipNotification";
-	private static final int SERVER_RMI_PORT = 6000;
-	
 	public SocialGossipServer(int port) throws IOException 
-	{
-		//TODO controllo porta server
-		
+	{		
 		reteSG = new Network();
 		listenerSocket = new ServerSocket(port);
 		executor = (ThreadPoolExecutor) Executors.newCachedThreadPool();
@@ -90,7 +86,7 @@ public class SocialGossipServer implements Runnable
 	 * Inizializzazione del protocollo RMI lato server
 	 * @throws RemoteException se c'e' un errore nell'inizializzazione del protocollo RMI. 
 	 */
-	public void initRMI() throws RemoteException
+	private void initRMI() throws RemoteException
 	{
 		//oggetto che gestisce i canali RMI degli utenti
 		RMIChannelManager RMIUserChannelManager = new RMIChannelManager(reteSG);
@@ -99,13 +95,13 @@ public class SocialGossipServer implements Runnable
 		RMIServerInterface stub = (RMIServerInterface) UnicastRemoteObject.exportObject(RMIUserChannelManager,3900);
 		
 		//creo il registro
-		LocateRegistry.createRegistry(SERVER_RMI_PORT);
+		LocateRegistry.createRegistry(Config.SERVER_RMI_PORT);
 		
 		//ottengo il registro
-		Registry reg = LocateRegistry.getRegistry(SERVER_RMI_PORT);
+		Registry reg = LocateRegistry.getRegistry(Config.SERVER_RMI_PORT);
 		
 		//istanzio l'oggetto 
-		reg.rebind(SERVER_RMI_SERVICE_NAME,stub);
+		reg.rebind(Config.SERVER_RMI_SERVICE_NAME,stub);
 	}
 	
 	/**
@@ -114,12 +110,10 @@ public class SocialGossipServer implements Runnable
 	 */
 	public static void main(String[] args) 
 	{
-		//TODO parse con configParse
-
 		try 
 		{
 			//creo istanza del server di social gossip
-			SocialGossipServer server = new SocialGossipServer(5000);
+			SocialGossipServer server = new SocialGossipServer(Config.SERVER_TCP_PORT);
 			
 			//faccio partire il server
 			server.run();

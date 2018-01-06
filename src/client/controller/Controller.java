@@ -116,14 +116,17 @@ public abstract class Controller
 	        });
 	}
 	
+	/**
+	 * Chiude la finestra controllata
+	 */
 	public void closeWindow()
 	{
 		window.setVisible(false);
     	window.dispose();
 	}
 	
-	/*
-	 * Chiusura della finestra
+	/**
+	 * Chiude la connessione con il server
 	 */
 	public void closeConnection()
 	{

@@ -1,8 +1,6 @@
 package communication.TCPMessages;
 
-import java.io.IOException;
 import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -78,7 +76,7 @@ public class MessageAnalyzer
 	
 	/**
 	 * 
-	 * @param JsonMessage
+	 * @param JsonMessage oggetto Json rappresentante il messaggio
 	 * @return tipo del messaggio di notifica,null se non e' stato trovato
 	 */
 	public static NotificationMessage.EventType getNotificationMessageEventType(JSONObject JsonMessage)
@@ -104,7 +102,7 @@ public class MessageAnalyzer
 	
 	/**
 	 * 
-	 * @param JsonMessage
+	 * @param JsonMessage oggetto Json rappresentante il messaggio
 	 * @return nome del mittente del messaggio di notifica del messaggio testuale,null se non e' stato trovato
 	 */
 	public static String getNotificationMessageSenderNickname(JSONObject JsonMessage)
@@ -117,7 +115,7 @@ public class MessageAnalyzer
 	
 	/**
 	 * 
-	 * @param JsonMessage
+	 * @param JsonMessage oggetto Json rappresentante il messaggio
 	 * @return testo del messaggio del messaggio di notifica del messaggio testuale,null se non e' stato trovato
 	 */
 	public static String getChatMessageText(JSONObject JsonMessage)
@@ -130,7 +128,7 @@ public class MessageAnalyzer
 	
 	/**
 	 * 
-	 * @param JsonMessage
+	 * @param JsonMessage oggetto Json rappresentante il messaggio
 	 * @return nome del file che sta inviando il mittente,null se non e' stato trovato
 	 */
 	public static String getIncomingFileFilename(JSONObject JsonMessage)
@@ -242,7 +240,7 @@ public class MessageAnalyzer
 	
 	/**
 	 * 
-	 * @param JsonMessage
+	 * @param JsonMessage oggetto Json rappresentante il messaggio
 	 * @return un istanza di una chatroom che e' presente nel messaggio
 	 */
 	private static ChatRoom getChatRoom(JSONObject JsonMessage)
@@ -422,14 +420,13 @@ public class MessageAnalyzer
 			return RequestMessage.Type.CHATROOM_REQUEST;
 		}
 		else {
-			//TODO implementare altri casi
 			return null;
 		}	
 	}
 	
 	/**
 	 * 
-	 * @param JsonMessage
+	 * @param JsonMessage oggetto Json rappresentante il messaggio
 	 * @return nome della nuova chatroom da creare,null se non e' stata trovata
 	 */
 	public static final String getChatRoomName(JSONObject JsonMessage)
@@ -442,7 +439,7 @@ public class MessageAnalyzer
 	
 	/**
 	 * 
-	 * @param JsonMessage
+	 * @param JsonMessage oggetto Json rappresentante il messaggio
 	 * @return tipo della richiesta che coinvolge una chatroom,null se non e' stata trovata
 	 */
 	public static ChatRoomRequest.ChatroomRequests getChatRoomRequestType(JSONObject JsonMessage)
@@ -478,7 +475,7 @@ public class MessageAnalyzer
 	
 	/**
 	 * 
-	 * @param JsonMessage
+	 * @param JsonMessage oggetto Json rappresentante il messaggio
 	 * @return nome del file che si vuole inviare,null se non e' stato trovato
 	 */
 	public static final String getSendFileFilename(JSONObject JsonMessage)
@@ -491,7 +488,7 @@ public class MessageAnalyzer
 	
 	/**
 	 * 
-	 * @param JsonMessage
+	 * @param JsonMessage oggetto Json rappresentante il messaggio
 	 * @return hostname del client che deve ricevere il file,null se non e' stato trovato
 	 */
 	public static final String getFileReceiverHostname(JSONObject JsonMessage)
@@ -504,7 +501,7 @@ public class MessageAnalyzer
 	
 	/**
 	 * 
-	 * @param JsonMessage
+	 * @param JsonMessage oggetto Json rappresentante il messaggio
 	 * @return porta dell'hostname del client che deve ricevere il file,-1 se non e' stata trovata
 	 */
 	public static final long getFileReceiverPort(JSONObject JsonMessage)
@@ -551,7 +548,6 @@ public class MessageAnalyzer
 			return InteractionRequest.Type.FILE_SEND_REQUEST;
 		}
 		else {
-			//TODO implementare altri casi
 			return null;
 		}
 	}
@@ -571,7 +567,7 @@ public class MessageAnalyzer
 	
 	/**
 	 * 
-	 * @param JsonMessage
+	 * @param JsonMessage oggetto Json rappresentante il messaggio
 	 * @return nickname dell'utente destinatario del messaggio,null se non e' stato trovato
 	 */
 	public static String getNicknameReceiver(JSONObject JsonMessage)
@@ -584,7 +580,7 @@ public class MessageAnalyzer
 	
 	/**
 	 * 
-	 * @param JsonMessage
+	 * @param JsonMessage oggetto Json rappresentante il messaggio
 	 * @return stringa che rappresenta messaggio testuale,null se non e' stato trovato
 	 */
 	public static String getText(JSONObject JsonMessage)
@@ -597,7 +593,7 @@ public class MessageAnalyzer
 	
 	/**
 	 * 
-	 * @param JsonMessage
+	 * @param JsonMessage oggetto Json rappresentante il messaggio
 	 * @return stato dell'utente appena aggiunto come amico,null se non e' stato trovato
 	 */
 	public static boolean getStatusReceiverOfFriendShipRequest(JSONObject JsonMessage)

@@ -25,13 +25,14 @@ import java.util.Random;
 import javax.swing.DefaultListModel;
 import javax.swing.JList;
 import javax.swing.ListModel;
+import utils.Config;
 
 import client.thread.ListenerChatMessage;
 import client.thread.ListenerChatRoomMessage;
-import client.thread.requestSender.FindUserRequestSender;
-import client.thread.requestSender.JoinChatRoomRequestSender;
-import client.thread.requestSender.LogoutRequestSender;
-import client.thread.requestSender.NewChatRoomRequestSender;
+import client.thread.requestSender.implementation.FindUserRequestSender;
+import client.thread.requestSender.implementation.JoinChatRoomRequestSender;
+import client.thread.requestSender.implementation.LogoutRequestSender;
+import client.thread.requestSender.implementation.NewChatRoomRequestSender;
 import client.view.ChatWindow;
 import client.view.HubWindow;
 import communication.RMI.RMIClientNotifyEvent;
@@ -66,9 +67,6 @@ public class HubController extends Controller
 	//gestione finestre chat e chatRoom
 	private List<ChatController> chats;
 	private List<ChatRoomController> chatrooms;
-	
-	private static final String SERVER_RMI_SERVICE_NAME = "SocialGossipNotification";
-	private static final int SERVER_RMI_PORT = 6000;
 	
 	/**
 	 * Inizializza un nuuovo Controller per comandare l'hub principale
@@ -154,10 +152,10 @@ public class HubController extends Controller
 	private void initRMI(String nickname) throws Exception
 	{
 		try {
-			Registry registry = LocateRegistry.getRegistry(SERVER_RMI_PORT);
+			Registry registry = LocateRegistry.getRegistry(Config.SERVER_RMI_PORT);
 			
 			//cerco registro
-			serverRMI = (RMIServerInterface) registry.lookup(SERVER_RMI_SERVICE_NAME);
+			serverRMI = (RMIServerInterface) registry.lookup(Config.SERVER_RMI_SERVICE_NAME);
 			
 			//creo la classe che implementa le callback
 			callback = new NotificationEvents();
@@ -267,6 +265,9 @@ public class HubController extends Controller
 		});
 	}
 	
+	/**
+	 * Apre una chat con l'utente selezionato
+	 */
 	private void openChatFromList()
 	{
 		JList<User> list = hubView.getUserFriendList();
@@ -295,6 +296,7 @@ public class HubController extends Controller
 					//se non ho trovato la chat,ne creo una nuova e la aggiungo alla lista
 					if (chat == null) {
 						chat = new ChatController(connection, in, out, user, selectedUser, generateRandomLocation());
+						chat.setVisible(true);
 						chats.add(chat);
 					}
 					//chat trovata,la mostro
@@ -308,6 +310,12 @@ public class HubController extends Controller
 		}
 	}
 	
+	/**
+	 * Apre un controller di una chatroom dalla chatroom selezionata sulla lista
+	 * @return controller della chatroom
+	 * @throws SocketException errore connessione chatrooom
+	 * @throws UnknownHostException errore connessione chatrooom
+	 */
 	public ChatRoomController openChatRoomFromList() throws SocketException, UnknownHostException
 	{
 		JList<ChatRoom> list = hubView.getChatRoomList();
@@ -357,6 +365,13 @@ public class HubController extends Controller
 		}
 	}
 	
+	/**
+	 * Apre la chatroom passata come argomento,se questa si trova sulla lista
+	 * @param chatroom chatroom da aprire
+	 * @return controller della chatroom
+	 * @throws SocketException errore connessione chatrooom
+	 * @throws UnknownHostException errore connessione chatrooom
+	 */
 	public ChatRoomController openChatRoomFromList(ChatRoom chatroom) throws SocketException, UnknownHostException
 	{
 		ListModel<ChatRoom> list = hubView.getChatRoomList().getModel();
@@ -396,6 +411,11 @@ public class HubController extends Controller
 
 	}
 	
+	/**
+	 * Apre una chat con l'utente passato come argomento,se questo e' presente sulla lista amici
+	 * @param sender utente con cui aprire la chat 
+	 * @return controller della chat,null se non e' stato trovato
+	 */
 	public ChatController openChatFromNewMessage(User sender)
 	{
 		ChatController chat = null;
@@ -425,6 +445,13 @@ public class HubController extends Controller
 		return chat;
 	}
 	
+	/**
+	 * Apre un controller di una chatroom,dopo aver ricevuto un messaggio da quest'ultima
+	 * @param chatroom chatroom da cui e' arrivato il messaggio
+	 * @return controller della chatroom
+	 * @throws SocketException  errore connessione chatrooom
+	 * @throws UnknownHostException  errore connessione chatrooom
+	 */
 	public ChatRoomController openChatRoomFromNewMessage(ChatRoom chatroom) throws SocketException, UnknownHostException
 	{
 		ChatRoomController chatroomControl = null;
@@ -452,7 +479,9 @@ public class HubController extends Controller
 		return chatroomControl;
 	}
 	
-	
+	/**
+	 * Chiude tutte le chat attive
+	 */
 	private void closeAllChats()
 	{
 		synchronized (chats) {
@@ -463,6 +492,9 @@ public class HubController extends Controller
 		}
 	}
 	
+	/**
+	 * Chiude tutte le chatroom attive
+	 */
 	private void closeAllChatRoom()
 	{
 		//chiudo tutti i controller delle chatrooms
@@ -471,6 +503,7 @@ public class HubController extends Controller
 				chatRoomController.closeChat();
 			}
 		}
+		
 		//termino tutti i listener delle chatrooms
 		synchronized (listenersChatRoomMessages) {
 			//chiudo tutti i thread che ascoltano i messaggi dalle chatroom
@@ -481,6 +514,10 @@ public class HubController extends Controller
 		
 	}
 	
+	/**
+	 * Genera un punto casuale sullo schermo
+	 * @return
+	 */
 	private Point generateRandomLocation() {
 		//genero un posizione a caso dove generare la chat
 		Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();

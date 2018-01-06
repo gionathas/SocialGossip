@@ -8,6 +8,12 @@ import java.net.URLConnection;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
+/**
+ * Classe che si occupa di effettua le traduzioni dei testi nelle varie lingue richieste.
+ * Per effettuare le traduzioni utilizza il servizio REST MyMemoryTranslated
+ * @author Gionatha Sturba
+ *
+ */
 public class Translator 
 {
 	public static int LANGUAGE_STRING_LEN = 2;
@@ -71,6 +77,13 @@ public class Translator
 		
 	}
 	
+	/**
+	 * Crea l'url di richiesta al server REST
+	 * @param text testo
+	 * @param fromLang lingua originale
+	 * @param toLang lingua in cui tradurreo
+	 * @return url per la richiesta
+	 */
 	private static String createRequestURL(String text,String fromLang,String toLang)
 	{
 		//sostituisco tutti gli spazi con un nuovo carattere,per una migliore traduzione

@@ -4,13 +4,11 @@ import java.io.Serializable;
 import java.net.Socket;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Locale;
 
 import org.json.simple.JSONObject;
 
 import communication.RMI.RMIClientNotifyEvent;
 import server.model.exception.UserAlreadyRegistered;
-
 /**
  * Rappresenta un generico utente della rete di Social Gossip
  * @author Gionatha Sturba

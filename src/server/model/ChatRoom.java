@@ -87,6 +87,15 @@ public class ChatRoom implements Serializable
 		dispatcherMessage.start();
 	}
 	
+	/**
+	 * Crea una chatroom a partire dal nome,l'indirizzo di multicast,l'indirizzo del dispatcher e la lista degli iscritti
+	 * @param name nome chatroom
+	 * @param msAddress indirizzo multicast
+	 * @param port porta multicast
+	 * @param messageAddress indirzzo dispatcher messaggi
+	 * @param messagePort porta su cui e' in ascolto il dispatcher
+	 * @param subs lista iscritti
+	 */
 	public ChatRoom(String name,InetAddress msAddress,int port,InetAddress messageAddress,int messagePort,List<User> subs)
 	{
 		if(name == null || msAddress == null || port <= 0 || messageAddress == null || messagePort <= 0 || subs == null)
@@ -118,6 +127,9 @@ public class ChatRoom implements Serializable
 		this.subscribers = null;
 	}
 	
+	/**
+	 * Chiude la chatroom
+	 */
 	public synchronized void close() {
 		dispatcherMessage.interrupt();
 		
@@ -244,19 +256,6 @@ public class ChatRoom implements Serializable
 	 */
 	public synchronized Integer getMessagePort() {
 		return new Integer(messagePort);
-	}
-	
-	public synchronized void newUser(User newUser) throws UserAlreadyRegistered
-	{
-		if(newUser == null)
-			throw new NullPointerException();
-		
-		//se l'utente e' gia' registrato
-		if(subscribers.contains(newUser))
-			throw new UserAlreadyRegistered();
-		
-		//inserisco l'utente
-		subscribers.add(newUser);
 	}
 	
 	@Override

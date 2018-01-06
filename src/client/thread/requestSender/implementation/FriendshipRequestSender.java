@@ -1,4 +1,4 @@
-package client.thread.requestSender;
+package client.thread.requestSender.implementation;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -7,6 +7,7 @@ import java.net.Socket;
 import javax.swing.DefaultListModel;
 
 import client.controller.Controller;
+import client.thread.requestSender.RequestSenderThread;
 import communication.TCPMessages.MessageAnalyzer;
 import communication.TCPMessages.request.interaction.FriendshipRequest;
 import communication.TCPMessages.response.fail.ResponseFailedMessage.Errors;

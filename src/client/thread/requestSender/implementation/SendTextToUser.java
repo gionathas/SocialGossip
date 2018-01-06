@@ -1,4 +1,4 @@
-package client.thread.requestSender;
+package client.thread.requestSender.implementation;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -10,9 +10,13 @@ import client.controller.Controller;
 import communication.TCPMessages.request.interaction.SendMessageRequest;
 import communication.TCPMessages.response.fail.ResponseFailedMessage.Errors;
 
+/**
+ * Thread che si occupa della richiesta di invio di un messaggio ad un utente amico
+ * @author Gionatha Sturba
+ *
+ */
 public class SendTextToUser extends TextSender
 {
-
 	public SendTextToUser(Controller controller, Socket connection, DataInputStream in, DataOutputStream out,
 			String senderNick, String receiverNick, JTextArea textArea, JTextArea conversationArea) 
 	{

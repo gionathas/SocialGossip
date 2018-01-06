@@ -11,6 +11,8 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.EnumSet;
 
+import utils.Config;
+
 /**
  * Threa che si occupa di ricevere un file
  * @author Gionatha Sturba
@@ -21,8 +23,6 @@ public class FileReceiver extends Thread
 	private ServerSocketChannel server;
 	private String filename;
 	
-	public static final String DIRECTORY = "/resources/downloads/";
-
 	public FileReceiver(ServerSocketChannel server,String filename) 
 	{
 		if(server == null || filename == null)
@@ -37,7 +37,7 @@ public class FileReceiver extends Thread
 		SocketChannel client = null;
 		
 		//path del file che ci sta per arrivare
-		Path path = Paths.get(new File("").getAbsolutePath()+DIRECTORY+filename);
+		Path path = Paths.get(new File("").getAbsolutePath()+Config.DOWNLOAD_DIRECTORY+filename);
 				
 		try 
 		{

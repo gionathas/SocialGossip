@@ -11,11 +11,16 @@ import java.net.Socket;
 
 import javax.swing.JTextArea;
 
-import client.thread.requestSender.FileSender;
-import client.thread.requestSender.SendTextToUser;
+import client.thread.requestSender.implementation.FileSender;
+import client.thread.requestSender.implementation.SendTextToUser;
 import client.view.ChatWindow;
 import server.model.User;
 
+/**
+ * Controller della GUI di una chat con un altro utente
+ * @author Gionatha Sturba
+ *
+ */
 public class ChatController extends Controller
 {
 	private ChatWindow chatView;

@@ -1,4 +1,4 @@
-package client.thread.requestSender;
+package client.thread.requestSender.implementation;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -11,6 +11,7 @@ import javax.swing.JOptionPane;
 import client.controller.ChatRoomController;
 import client.controller.HubController;
 import client.thread.ListenerChatRoomMessage;
+import client.thread.requestSender.RequestSenderThread;
 import communication.TCPMessages.request.chatroom.NewChatRoom;
 import communication.TCPMessages.response.fail.ResponseFailedMessage.Errors;
 import server.model.ChatRoom;
@@ -23,9 +24,9 @@ import server.model.User;
  */
 public class NewChatRoomRequestSender extends RequestSenderThread
 {
-	private User user;
-	private String chatroomName;
-	private List<ListenerChatRoomMessage> listenersChatRoomMessages;
+	private User user; //utente che richiede creazione chatroom
+	private String chatroomName; //nome chatroom da creare
+	private List<ListenerChatRoomMessage> listenersChatRoomMessages; //lista dei listener delle chatroom
 	
 	public NewChatRoomRequestSender(HubController controller, Socket connection, DataInputStream in,User user,
 			DataOutputStream out,List<ListenerChatRoomMessage> listenersChatRoomMessages) 

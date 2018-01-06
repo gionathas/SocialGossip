@@ -5,11 +5,15 @@ import java.util.List;
 import org.json.simple.JSONArray;
 
 import server.model.ChatRoom;
-import server.model.User;
 
+/**
+ * Rappresenta un messaggio di risposta ad una richiesta di registrazione,andata a buon fine
+ * @author Gionatha Sturba
+ *
+ */
 public class SuccessfulRegistration extends ResponseSuccessMessage
 {
-public static final String FIELD_CHATROOM_LIST = "chatroom-list";
+	public static final String FIELD_CHATROOM_LIST = "chatroom-list";
 	
 	public SuccessfulRegistration(List<ChatRoom> chatrooms)
 	{

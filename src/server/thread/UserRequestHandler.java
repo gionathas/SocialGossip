@@ -1,31 +1,17 @@
 package server.thread;
 
 import java.io.BufferedInputStream;
-import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.EOFException;
 import java.io.IOException;
-import java.lang.Thread.State;
-import java.net.BindException;
 import java.net.DatagramPacket;
-import java.net.DatagramSocket;
 import java.net.InetAddress;
-import java.net.InetSocketAddress;
 import java.net.MulticastSocket;
 import java.net.Socket;
-import java.net.SocketAddress;
-import java.net.SocketException;
-import java.net.UnknownHostException;
-import java.nio.channels.Pipe.SinkChannel;
-import java.util.LinkedList;
 import java.util.List;
-
-import javax.xml.ws.soap.AddressingFeature.Responses;
-
 import org.json.simple.JSONObject;
 import org.json.simple.parser.ParseException;
-
 import communication.RMI.RMIClientNotifyEvent;
 import communication.TCPMessages.Message;
 import communication.TCPMessages.MessageAnalyzer;
@@ -35,8 +21,6 @@ import communication.TCPMessages.request.RequestMessage;
 import communication.TCPMessages.request.access.RequestAccessMessage;
 import communication.TCPMessages.request.chatroom.ChatRoomRequest;
 import communication.TCPMessages.request.interaction.InteractionRequest;
-import communication.TCPMessages.request.interaction.SendMessageRequest;
-import communication.TCPMessages.response.ResponseMessage;
 import communication.TCPMessages.response.fail.ResponseFailedMessage;
 import communication.TCPMessages.response.success.ResponseSuccessMessage;
 import communication.TCPMessages.response.success.SuccessFriendship;
@@ -48,6 +32,7 @@ import server.model.exception.SameUserException;
 import server.model.exception.UserAlreadyRegistered;
 import server.model.exception.UserNotFindException;
 import server.model.exception.UserStatusException;
+import utils.Config;
 
 /**
  * Thread del server che si occupa di gestire una nuova richiesta da parte di un client
@@ -58,12 +43,7 @@ public class UserRequestHandler implements Runnable
 	private Socket client; //connessioni TCP con il client
 	
 	private Network reteSG; //rete degli utenti di Social Gossip
-	private List<ChatRoom> chatrooms;
-	
-	public static final String FIRST_MULTICAST_ADDR = "224.0.0.1";
-	public static final String LAST_MULTICAST_ADDR = "224.0.0.255";
-	public static final int FIRST_MULTICAST_PORT = 8500;
-	public static final int LAST_MULTICAST_PORT = 8755;
+	private List<ChatRoom> chatrooms; //lista delle chatrooms 
 	
 	private boolean isNotificationThread = false;
 
@@ -80,6 +60,9 @@ public class UserRequestHandler implements Runnable
 		this.chatrooms = chatrooms;		
 	}
 	
+	/**
+	 * Ciclo di vita del thread che gestice le richieste
+	 */
 	public void run()
 	{
 		DataInputStream in = null;
@@ -248,6 +231,13 @@ public class UserRequestHandler implements Runnable
 		out.writeUTF(response.getJsonMessage());
 	}
 	
+	/**
+	 * Handler della richiesta che coinvolge una chatroom
+	 * @param message messaggio arrivato
+	 * @param nicknameSender nickname dell'utente mittente
+	 * @param out stream per rispondere al client
+	 * @throws IOException se ci sono errori nell'invio della risposta
+	 */
 	private void ChatRoomRequestHandler(JSONObject message,String nicknameSender,DataOutputStream out) throws IOException
 	{		
 		//cerco utente mittente del messaggio
@@ -305,6 +295,13 @@ public class UserRequestHandler implements Runnable
 		
 	}
 	
+	/**
+	 * Handler della richiesta di chiusura di una chatroom
+	 * @param sender utente mittente
+	 * @param chatroomName nome chatroom da chiudere
+	 * @param out stream outpu
+	 * @throws IOException
+	 */
 	private void closeChatRoomRequestHandler(User sender,String chatroomName,DataOutputStream out)throws IOException
 	{
 		//controllo se la chatroom esiste gia'
@@ -375,6 +372,13 @@ public class UserRequestHandler implements Runnable
 		sendMessage(new ResponseSuccessMessage(), out);	
 	}
 	
+	/**
+	 * Handler per la richiesta di unione ad una chatroom 
+	 * @param sender utente che si vuole unire
+	 * @param chatroomName nome chatroom a cui unirsi
+	 * @param out stream output 
+	 * @throws IOException
+	 */
 	private void joinChatRoomRequestHandler(User sender,String chatroomName,DataOutputStream out) throws IOException
 	{
 		//controllo se la chatroom esiste gia'
@@ -419,6 +423,13 @@ public class UserRequestHandler implements Runnable
 		sendMessage(new ResponseSuccessMessage(), out);
 	}
 	
+	/**
+	 * Handler della richiesta di creazione di una nuova chatroom
+	 * @param sender utente che vuole creare la chatroom
+	 * @param chatroomName nome chatroom da creare
+	 * @param out stream output
+	 * @throws IOException
+	 */
 	private void newChatRoomRequestHandler(User sender,String chatroomName,DataOutputStream out) throws IOException
 	{
 		//controllo se la chatroom esiste gia'
@@ -497,7 +508,7 @@ public class UserRequestHandler implements Runnable
 	 */
 	private synchronized String getNewChatRoomAddress()
 	{		
-		String[] byteIP = FIRST_MULTICAST_ADDR.split("\\.");
+		String[] byteIP = Config.FIRST_MULTICAST_ADDR.split("\\.");
 		
 		Integer offset = Integer.parseInt(byteIP[3]);
 		
@@ -510,6 +521,12 @@ public class UserRequestHandler implements Runnable
 		return new String(byteIP[0]+"."+byteIP[1]+"."+byteIP[2]+"."+offset.toString());
 	}
 	
+	/**
+	 * Handler della richiesta di settaggio del canale di notifica dei messaggi chat relativo ad un utente
+	 * @param nickname nome mittente
+	 * @param out stream output
+	 * @throws IOException
+	 */
 	private void chatNotificationChannelRequestHandler(String nickname,DataOutputStream out) throws IOException
 	{
 		isNotificationThread = true;
@@ -711,9 +728,9 @@ public class UserRequestHandler implements Runnable
 		} 
 		//casi non possibile in quanto gli utenti sono stati gia' controllati
 		catch (UserNotFindException e){
-			e.printStackTrace();
+			//e.printStackTrace();
 		} catch (SameUserException e) {
-			e.printStackTrace();
+			//e.printStackTrace();
 		}
 	}
 	
@@ -746,6 +763,14 @@ public class UserRequestHandler implements Runnable
 		}
 	}
 	
+	/**
+	 * Handler della richiesta di invio di un file
+	 * @param sender utente mittente
+	 * @param receiver utente destinatario
+	 * @param out stream output
+	 * @param message messaggio di richiesta
+	 * @throws IOException seci sono errori nell'analisi del messaggio di richiesta
+	 */
 	private void fileSendRequest(User sender,User receiver,DataOutputStream out,JSONObject message) throws IOException
 	{
 		String filename = MessageAnalyzer.getSendFileFilename(message);
@@ -854,7 +879,7 @@ public class UserRequestHandler implements Runnable
 		{
 			//invio messaggio di errore password errata
 			sendMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.PASSWORD_MISMATCH),out);
-			e.printStackTrace();
+			//e.printStackTrace();
 			return;
 		} 
 		//caso utente gia' online
@@ -862,14 +887,14 @@ public class UserRequestHandler implements Runnable
 		{
 			//invio messaggio di errore stato utente non valido
 			sendMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.SENDER_USER_INVALID_STATUS),out);
-			e.printStackTrace();
+			//e.printStackTrace();
 			return;
 		} 
 		catch (UserNotFindException e) 
 		{
 			//invio messaggio di errore, utente non trovato
 			sendMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.SENDER_USER_NOT_FOUND),out);
-			e.printStackTrace();
+			//e.printStackTrace();
 			return;
 		}
 		
@@ -897,7 +922,7 @@ public class UserRequestHandler implements Runnable
 		{
 			//invio messaggio di errore, utente non trovato
 			sendMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.SENDER_USER_NOT_FOUND),out);
-			e.printStackTrace();
+			//e.printStackTrace();
 			return;
 		} 
 		//utente offline
@@ -905,7 +930,7 @@ public class UserRequestHandler implements Runnable
 		{
 			//invio messaggio di errore stato utente non valido
 			sendMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.SENDER_USER_INVALID_STATUS),out);
-			e.printStackTrace();
+			//e.printStackTrace();
 			return;
 		}
 		
@@ -934,7 +959,7 @@ public class UserRequestHandler implements Runnable
 		catch (UserAlreadyRegistered e) 
 		{	
 			sendMessage(new ResponseFailedMessage(ResponseFailedMessage.Errors.USER_ALREADY_REGISTERED),out);
-			e.printStackTrace();
+			//e.printStackTrace();
 			return;
 		}
 		

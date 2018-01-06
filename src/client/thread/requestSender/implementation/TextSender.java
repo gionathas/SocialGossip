@@ -1,4 +1,4 @@
-package client.thread.requestSender;
+package client.thread.requestSender.implementation;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -7,6 +7,7 @@ import java.net.Socket;
 import javax.swing.JTextArea;
 
 import client.controller.Controller;
+import client.thread.requestSender.RequestSenderThread;
 import communication.TCPMessages.response.fail.ResponseFailedMessage.Errors;
 
 /**
@@ -16,10 +17,10 @@ import communication.TCPMessages.response.fail.ResponseFailedMessage.Errors;
  */
 public class TextSender extends RequestSenderThread
 {
-	protected String senderNick;
-	protected String receiverNick;
-	protected String text = null;
-	private JTextArea textArea;
+	protected String senderNick; //nick mittente
+	protected String receiverNick; //nick destinatario
+	protected String text = null; //testo messaggio
+	private JTextArea textArea; 
 	private JTextArea conversationArea;
 
 	public TextSender(Controller controller, Socket connection, DataInputStream in, DataOutputStream out,String senderNick,String receiverNick,

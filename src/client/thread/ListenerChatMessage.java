@@ -25,6 +25,7 @@ import communication.TCPMessages.response.ResponseMessage;
 import communication.TCPMessages.response.fail.ResponseFailedMessage;
 import communication.TCPMessages.response.success.AcceptedFileReceive;
 import server.model.User;
+import utils.PortScanner;
 
 /**
  * Thread che ascolta i messaggi che arrivano da altri utenti
@@ -40,10 +41,6 @@ public class ListenerChatMessage extends Thread
 	private DataOutputStream out;
 	private int port;
 	private HubController controller;
-	
-	private static final int FIRST_PORT = 7000;
-	private static final int LAST_PORT = 8000;
-
 	
 	/**
 	 * Configura i parametri del thread,per essere avviato
@@ -87,6 +84,11 @@ public class ListenerChatMessage extends Thread
 		
 	}
 	
+	/**
+	 * Analizza risposta alla richiesta del settaggio del canale di notifica
+	 * @param JsonResponse risposta del server
+	 * @throws Exception se viene riscontrato un errore nell'analisi della risposta
+	 */
 	private void analyzeResponse(String JsonResponse) throws Exception
 	{
 		//parso messaggio Json rappresentate risposta del server
@@ -164,6 +166,12 @@ public class ListenerChatMessage extends Thread
 		
 	}
 	
+	/**
+	 * Analizza la notifica appena arrivata
+	 * @param JsonNotification messaggio di notifica
+	 * @throws ParseException 
+	 * @throws IOException
+	 */
 	private void analyzeNotifcation(String JsonNotification) throws ParseException, IOException
 	{
 		System.out.println(JsonNotification); //TODO DEBUG
@@ -217,36 +225,18 @@ public class ListenerChatMessage extends Thread
 							case NEW_FILE:
 								
 								//preparo un socket per ricevere il file,e poi avvio il thread che si occupera' della ricezione del file
-								ServerSocketChannel server= ServerSocketChannel.open();
-								boolean find = false;
-								int port;
 								
-								//cerco una porta libera
-								for (port = FIRST_PORT; port < LAST_PORT ; port++) 
-								{
-									try {
-										server.socket().bind(new InetSocketAddress(port));
-										
-										//se il server e' stato creato,possiamo ritornare
-										find = true;
-									}
-									catch(BindException e) {
-										//si continua la ricerca delle porte
-									}
-									catch (IOException e) {
-										e.printStackTrace();
-									}
-									
-									if(find == true)
-										break;
-									
-								}
+								ServerSocketChannel server= ServerSocketChannel.open();
+								int port = PortScanner.freePort();
 								
 								ResponseMessage response;
 								
 								//se il server per ricevere il file e' stato creato correttamente
-								if(find)
+								if(port != -1)
 								{
+									//creo il socket server
+									server.socket().bind(new InetSocketAddress(port));
+
 									//invio messaggio di successo con ip e porta su cui si e' in ascolto
 									response = new AcceptedFileReceive("localhost",port);
 									
@@ -306,6 +296,9 @@ public class ListenerChatMessage extends Thread
 		}
 	}
 	
+	/**
+	 * Termina il listener dei messaggi delle chat
+	 */
 	public void shutdown()
 	{
 		try {

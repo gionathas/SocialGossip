@@ -1,4 +1,4 @@
-package client.thread.requestSender;
+package client.thread.requestSender.implementation;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -11,16 +11,22 @@ import java.util.List;
 import javax.swing.JOptionPane;
 import client.controller.HubController;
 import client.thread.ListenerChatRoomMessage;
+import client.thread.requestSender.RequestSenderThread;
 import communication.TCPMessages.request.chatroom.JoinChatRoom;
 import communication.TCPMessages.response.fail.ResponseFailedMessage.Errors;
 import server.model.ChatRoom;
 
+/**
+ * Thread che si occupa dell'invio della richiesta di unione ad una chatroom
+ * @author Gionatha Sturba
+ *
+ */
 public class JoinChatRoomRequestSender extends RequestSenderThread
 {
-	private ChatRoom chatroom;
-	private String nicknameUser;
-	private List<ListenerChatRoomMessage> listenersChatRoomMessages;
-	private HubController hubController;
+	private ChatRoom chatroom; //chatroom a cui unirsi
+	private String nicknameUser; //utente da aggiungere alla chatroom
+	private List<ListenerChatRoomMessage> listenersChatRoomMessages; //lista dei listener delle chatroom
+	private HubController hubController; // controlller dell'hub
 
 	public JoinChatRoomRequestSender(HubController controller, Socket connection, DataInputStream in, DataOutputStream out,String nicknameUser,ChatRoom chatRoom,
 			List<ListenerChatRoomMessage> listenersChatRoomMessages) 
